@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "ArrangementView Example",
+    "slug": "react-native-arrangement-view-example",
+    "version": "1.0.0",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "arrangementview.example"
+    },
+    "platforms": [
+      "ios"
+    ],
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "enableSceneSupport": true
+          }
+        }
+      ]
+    ]
+  }
+}
