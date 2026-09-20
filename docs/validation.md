@@ -96,7 +96,7 @@ An existing simulator was leased by another agent-device task. That task and its
 ## Remaining validation
 
 - Physical hardware, arbitrary hinge positions/precision, and release builds.
-- Native navigation/tab containers, interactive transitions, sheets, nested arrangements, keyboard interaction, and multi-window/multitasking resizing. The example's two demo selectors are React controls, not native navigation tabs.
+- Native navigation/tab containers, interactive transitions, sheets, nested arrangements, keyboard interaction, and multi-window/multitasking resizing. The example's arrangement and axis selectors are React controls, not native navigation tabs.
 - Full VoiceOver traversal, Dynamic Type extremes, right-to-left layout, and automated touch testing on the inner display once tooling supports it.
 - Runtime behavior on iOS 16.4–26.4 and React Native versions other than 0.86.3.
 - Disabling/re-enabling hinge observation at runtime is implemented, but not separately exercised in the simulator example.

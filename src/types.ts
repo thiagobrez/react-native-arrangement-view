@@ -12,8 +12,11 @@ export type HingeState = Readonly<{
 }>;
 export type HingeChangeHandler = (hinge: HingeState) => void;
 export interface ArrangementViewProps extends ViewProps {
-  primary: ReactNode;
-  secondary: ReactNode;
+  /**
+   * Exactly one `ArrangementView.Primary` and one `ArrangementView.Secondary`.
+   * Any other child is ignored with a development warning.
+   */
+  children?: ReactNode;
   arrangement?: Arrangement;
   axes?: ArrangementAxes;
   /** Disable hinge observation without affecting adaptive layout. Default true. */

@@ -8,12 +8,17 @@ import {
   normalizeHinge,
   unavailableHinge,
 } from './hinge';
+import {
+  ArrangementPrimary,
+  ArrangementSecondary,
+  resolveSlots,
+  warnOnce,
+} from './slots';
 import type { ArrangementViewProps } from './types';
 import type { NativeProps } from './ArrangementViewNativeComponent';
 
 export function ArrangementView({
-  primary,
-  secondary,
+  children,
   arrangement = 'split',
   axes = 'both',
   observeHinge = true,
@@ -30,6 +35,10 @@ export function ArrangementView({
   useEffect(() => {
     if (!observeHinge) store.update(unavailableHinge);
   }, [observeHinge, store]);
+  // The native view assigns panes by index, so primary is always emitted first
+  // regardless of the order the slots were written in.
+  const { primary, secondary, problems } = resolveSlots(children);
+  warnOnce(problems);
   return (
     <HingeContext value={store}>
       <NativeArrangementView
@@ -57,6 +66,9 @@ export function ArrangementView({
     </HingeContext>
   );
 }
+ArrangementView.Primary = ArrangementPrimary;
+ArrangementView.Secondary = ArrangementSecondary;
+
 const styles = StyleSheet.create({
   pane: {
     position: 'absolute',

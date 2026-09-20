@@ -51,25 +51,27 @@ import { ArrangementView } from 'react-native-arrangement-view';
 
 export function PlayerScreen() {
   return (
-    <ArrangementView
-      style={{ flex: 1 }}
-      arrangement="split"
-      axes="both"
-      primary={<Player />}
-      secondary={<Transcript />}
-    />
+    <ArrangementView style={{ flex: 1 }} arrangement="split" axes="both">
+      <ArrangementView.Primary>
+        <Player />
+      </ArrangementView.Primary>
+      <ArrangementView.Secondary>
+        <Transcript />
+      </ArrangementView.Secondary>
+    </ArrangementView>
   );
 }
 ```
 
 | Prop           | Default   | Meaning                                                                                              |
 | -------------- | --------- | ---------------------------------------------------------------------------------------------------- |
-| `primary`      | required  | Arbitrary React content in the primary slot                                                          |
-| `secondary`    | required  | Arbitrary React content in the secondary slot                                                        |
+| children       | required  | One `ArrangementView.Primary` and one `ArrangementView.Secondary`; see below                         |
 | `arrangement`  | `"split"` | `"split"` or `"overlay"`                                                                             |
 | `axes`         | `"both"`  | `"both"`, `"horizontal"`, or `"vertical"`; applies to either arrangement                             |
 | `observeHinge` | `true`    | Enables observation for hooks inside this arrangement; disabling it does not disable adaptive layout |
 | View props     | —         | Standard React Native `ViewProps`, including `style`, `testID`, and `onLayout`                       |
+
+`ArrangementView.Primary` and `ArrangementView.Secondary` are slot markers: they render no view of their own and do not affect layout. Put your own pane component inside each one. Both must be direct children of `ArrangementView`, in either order. Any other direct child is ignored, and a missing, duplicated, or unrecognized child logs a warning in development builds.
 
 Give the arrangement a bounded size, usually `flex: 1`. Give each pane's root `flex: 1` to fill its assigned space. SwiftUI determines whether a split is appropriate; an axis restriction does not force two panes to stay visible.
 
@@ -128,7 +130,7 @@ yarn example expo prebuild --platform ios
 yarn example ios --device "iPhone Duo" --port 8088
 ```
 
-The app lives in [`apps/example-expo`](apps/example-expo). The Arrangement screen has split/overlay and axis controls, independent counters, scrollable panes, and live `onLayout` dimensions. The Hinge screen uses the same React hook to display the angle and status and animate a folding card.
+The app lives in [`apps/example-expo`](apps/example-expo). It has split/overlay and axis controls and live `onLayout` dimensions. Each pane also calls `useHingeChange` to show the current hinge angle and status, so folding or rotating the device re-arranges the panes and updates the readout at the same time.
 
 ```sh
 yarn test
