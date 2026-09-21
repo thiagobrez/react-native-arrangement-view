@@ -8,6 +8,7 @@ import {
   normalizeHinge,
   unavailableHinge,
   useHingeChange,
+  useHingeStore,
 } from '../src/hinge.ts';
 import type { HingeState } from '../src/types.ts';
 
@@ -90,4 +91,29 @@ test('hook receives changes, uses the latest callback, and cleans up on unmount'
   });
   store.update(unavailableHinge);
   assert.equal(second.length, 1);
+});
+
+test('an arrangement feeds native events to its store, and resets it when observation stops', async () => {
+  let store!: ReturnType<typeof createHingeStore>;
+  let onHingeChange!: ReturnType<typeof useHingeStore>[1];
+  function Arrangement({ observeHinge }: { observeHinge: boolean }) {
+    [store, onHingeChange] = useHingeStore(observeHinge);
+    return null;
+  }
+  let root!: ReactTestRenderer;
+  await act(() => {
+    root = create(createElement(Arrangement, { observeHinge: true }));
+  });
+  const initialStore = store;
+  assert.equal(store.getSnapshot(), unavailableHinge);
+
+  const nativeEvent = { available: true, angle: Math.PI, status: 'fullyOpen' };
+  onHingeChange({ nativeEvent });
+  assert.deepEqual(store.getSnapshot(), nativeEvent);
+
+  await act(() => {
+    root.update(createElement(Arrangement, { observeHinge: false }));
+  });
+  assert.equal(store, initialStore);
+  assert.equal(store.getSnapshot(), unavailableHinge);
 });

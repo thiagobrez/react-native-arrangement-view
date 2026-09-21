@@ -86,4 +86,5 @@ android/generated
 nitrogen/
 
 apps/example-expo/ios/
+apps/example-expo/android/
 .artifacts/

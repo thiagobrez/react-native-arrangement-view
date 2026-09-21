@@ -1,13 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import NativeArrangementView from './ArrangementViewNativeComponent';
 import NativePane from './ArrangementPaneNativeComponent';
-import {
-  createHingeStore,
-  HingeContext,
-  normalizeHinge,
-  unavailableHinge,
-} from './hinge';
+import { HingeContext, useHingeStore } from './hinge';
 import {
   ArrangementPrimary,
   ArrangementSecondary,
@@ -15,7 +9,6 @@ import {
   warnOnce,
 } from './slots';
 import type { ArrangementViewProps } from './types';
-import type { NativeProps } from './ArrangementViewNativeComponent';
 
 export function ArrangementView({
   children,
@@ -24,17 +17,7 @@ export function ArrangementView({
   observeHinge = true,
   ...props
 }: ArrangementViewProps) {
-  const [store] = useState(createHingeStore);
-  const onNativeHinge = useCallback<NonNullable<NativeProps['onHingeChange']>>(
-    (event) => {
-      const hinge = normalizeHinge(event.nativeEvent);
-      store.update(hinge);
-    },
-    [store]
-  );
-  useEffect(() => {
-    if (!observeHinge) store.update(unavailableHinge);
-  }, [observeHinge, store]);
+  const [store, onHingeChange] = useHingeStore(observeHinge);
   // The native view assigns panes by index, so primary is always emitted first
   // regardless of the order the slots were written in.
   const { primary, secondary, problems } = resolveSlots(children);
@@ -46,7 +29,7 @@ export function ArrangementView({
         arrangement={arrangement}
         axes={axes}
         observeHinge={observeHinge}
-        onHingeChange={onNativeHinge}
+        onHingeChange={onHingeChange}
       >
         <NativePane
           collapsable={false}
