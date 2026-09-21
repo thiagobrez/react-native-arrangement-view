@@ -15,21 +15,27 @@ using ArrangementPaneShadowBase = ConcreteViewShadowNode<
 class ArrangementPaneShadowNode final : public ArrangementPaneShadowBase {
  public:
   using ArrangementPaneShadowBase::ArrangementPaneShadowBase;
-  static ShadowNodeTraits BaseTraits() {
-    auto traits = ArrangementPaneShadowBase::BaseTraits();
-    traits.set(ShadowNodeTraits::Trait::RootNodeKind);
-    return traits;
+
+  // Lays the pane out at the frame SwiftUI assigned it within the arrangement,
+  // so measure(), hit testing, clipping and culling see the real geometry and
+  // keep walking up through the ArrangementView to the surface root.
+  void applyNativeFrame() const {
+    const auto &data = getStateData();
+    if (!data.measured) return;
+    setSize(data.size);
+    auto style = yogaNode_.style();
+    style.setPosition(yoga::Edge::Left, yoga::StyleLength::points(data.origin.x));
+    style.setPosition(yoga::Edge::Top, yoga::StyleLength::points(data.origin.y));
+    yogaNode_.setStyle(style);
+    yogaNode_.setDirty(true);
   }
-  Point getContentOriginOffset(bool) const override { return getStateData().origin; }
 };
 class ArrangementPaneComponentDescriptor final
     : public ConcreteComponentDescriptor<ArrangementPaneShadowNode> {
  public:
   using ConcreteComponentDescriptor::ConcreteComponentDescriptor;
   void adopt(ShadowNode &node) const override {
-    auto &pane = static_cast<ArrangementPaneShadowNode &>(node);
-    const auto &data = pane.getStateData();
-    if (data.measured) pane.setSize(data.size);
+    static_cast<ArrangementPaneShadowNode &>(node).applyNativeFrame();
     ConcreteComponentDescriptor::adopt(node);
   }
 };
