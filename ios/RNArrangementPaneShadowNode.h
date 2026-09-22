@@ -2,6 +2,7 @@
 #include <react/renderer/components/RNArrangementViewSpec/Props.h>
 #include <react/renderer/components/view/ConcreteViewShadowNode.h>
 #include <react/renderer/core/ConcreteComponentDescriptor.h>
+#include <react/renderer/core/LayoutContext.h>
 
 namespace facebook::react {
 struct ArrangementPaneState {
@@ -16,18 +17,17 @@ class ArrangementPaneShadowNode final : public ArrangementPaneShadowBase {
  public:
   using ArrangementPaneShadowBase::ArrangementPaneShadowBase;
 
-  // Lays the pane out at the frame SwiftUI assigned it within the arrangement,
-  // so measure(), hit testing, clipping and culling see the real geometry and
-  // keep walking up through the ArrangementView to the surface root.
-  void applyNativeFrame() const {
+  void layout(LayoutContext layoutContext) override {
     const auto &data = getStateData();
-    if (!data.measured) return;
-    setSize(data.size);
-    auto style = yogaNode_.style();
-    style.setPosition(yoga::Edge::Left, yoga::StyleLength::points(data.origin.x));
-    style.setPosition(yoga::Edge::Top, yoga::StyleLength::points(data.origin.y));
-    yogaNode_.setStyle(style);
-    yogaNode_.setDirty(true);
+    if (data.measured) {
+      // SwiftUI supplies a physical origin in the ArrangementView's coordinates.
+      // Apply it after Yoga's directional layout: putting it in left/start would
+      // mirror it in RTL. Descendants still inherit the normal layout direction.
+      auto metrics = getLayoutMetrics();
+      metrics.frame.origin = data.origin;
+      setLayoutMetrics(metrics);
+    }
+    ArrangementPaneShadowBase::layout(layoutContext);
   }
 };
 class ArrangementPaneComponentDescriptor final
@@ -35,7 +35,9 @@ class ArrangementPaneComponentDescriptor final
  public:
   using ConcreteComponentDescriptor::ConcreteComponentDescriptor;
   void adopt(ShadowNode &node) const override {
-    static_cast<ArrangementPaneShadowNode &>(node).applyNativeFrame();
+    auto &pane = static_cast<ArrangementPaneShadowNode &>(node);
+    const auto &data = pane.getStateData();
+    if (data.measured) pane.setSize(data.size);
     ConcreteComponentDescriptor::adopt(node);
   }
 };
