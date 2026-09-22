@@ -1,5 +1,11 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  type LayoutChangeEvent,
+} from 'react-native';
 import {
   useHingeChange,
   type Arrangement,
@@ -17,6 +23,7 @@ export interface PaneProps {
 export function Pane({ primary, arrangement }: PaneProps) {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const hinge = useHingeChange();
+  const [taps, setTaps] = useState(0);
   const name = primary ? 'Primary' : 'Secondary';
   const id = name.toLowerCase();
   const overlay = primary && arrangement === 'overlay';
@@ -52,6 +59,14 @@ export function Pane({ primary, arrangement }: PaneProps) {
             {hinge.status}
           </Text>
         </View>
+        <Pressable
+          testID={`${id}-tap`}
+          accessibilityRole="button"
+          onPress={() => setTaps((count) => count + 1)}
+          style={styles.tap}
+        >
+          <Text style={styles.tapText}>Taps: {taps}</Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -83,4 +98,12 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   hingeStatus: { color: '#e2d9ff', fontSize: 14, fontWeight: '600' },
+  tap: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: '#ffffff26',
+  },
+  tapText: { color: 'white', fontSize: 14, fontWeight: '600' },
 });

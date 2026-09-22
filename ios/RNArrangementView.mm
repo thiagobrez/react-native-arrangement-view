@@ -28,12 +28,26 @@ using namespace facebook::react;
       emitter->onHingeChange({(bool)available, angle, std::string(status.UTF8String)});
     };
     _host.onPaneLayout = ^(UIView *pane, CGRect nativeFrame) {
-      if ([pane isKindOfClass:RNArrangementPane.class]) {
-        [(RNArrangementPane *)pane updateNativeFrame:nativeFrame];
+      RNArrangementView *strongSelf = weakSelf;
+      if (strongSelf && [pane isKindOfClass:RNArrangementPane.class]) {
+        // The host occupies our content frame, inset by padding and borders.
+        CGRect frame = [strongSelf->_host convertRect:nativeFrame toView:strongSelf];
+        [(RNArrangementPane *)pane updateNativeFrame:frame];
       }
     };
   }
   return self;
+}
+- (void)updateLayoutMetrics:(LayoutMetrics const &)metrics oldLayoutMetrics:(LayoutMetrics const &)oldMetrics {
+  [super updateLayoutMetrics:metrics oldLayoutMetrics:oldMetrics];
+  if (metrics.contentInsets == oldMetrics.contentInsets) return;
+  // Moving padding from one edge to another can move the host without resizing
+  // its panes. Refresh their origins even if SwiftUI has no new layout to report.
+  for (UIView *pane in _panes) {
+    if ([pane isKindOfClass:RNArrangementPane.class] && [pane isDescendantOfView:_host]) {
+      [(RNArrangementPane *)pane updateNativeFrame:[pane convertRect:pane.bounds toView:self]];
+    }
+  }
 }
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)child index:(NSInteger)index {
   [_panes insertObject:child atIndex:index];
