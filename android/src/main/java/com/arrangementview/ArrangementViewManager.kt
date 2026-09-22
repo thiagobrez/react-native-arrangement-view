@@ -20,6 +20,10 @@ class ArrangementViewManager : ReactViewManager() {
     view.observeHinge = value
   }
 
+  override fun setPadding(view: ReactViewGroup, left: Int, top: Int, right: Int, bottom: Int) {
+    (view as ArrangementView).setContentInsets(left, top, right, bottom)
+  }
+
   override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Any> =
     (super.getExportedCustomDirectEventTypeConstants() ?: mutableMapOf()).apply {
       put(ArrangementView.HINGE_EVENT, mapOf("registrationName" to "onHingeChange"))

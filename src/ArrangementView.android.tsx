@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { I18nManager, StyleSheet, View } from 'react-native';
 import NativeArrangementView from './ArrangementViewNativeComponent';
-import { arrange, type Geometry } from './arrange';
+import { arrange, type Frame, type Geometry } from './arrange';
 import { HingeContext, useHingeStore } from './hinge';
 import {
   ArrangementPrimary,
@@ -21,8 +21,8 @@ export function ArrangementView({
 }: ArrangementViewProps) {
   const [store, onHingeChange] = useHingeStore(observeHinge);
   // Android has no system arrangement container. The native view reports its
-  // size and fold, and the panes stay hidden until it has: arranging them any
-  // sooner would flash a layout that ignores the fold.
+  // content box and the fold within it, and the panes stay hidden until it
+  // has: arranging them any sooner would flash a layout that ignores the fold.
   const [geometry, setGeometry] = useState<Geometry | null>(null);
   const onGeometryChange = useCallback<
     NonNullable<NativeProps['onGeometryChange']>
@@ -39,20 +39,24 @@ export function ArrangementView({
         onHingeChange={onHingeChange}
         onGeometryChange={onGeometryChange}
       >
-        {/* Primary renders last so that it is in front when the panes overlay. */}
-        <View
-          collapsable={false}
-          pointerEvents="box-none"
-          style={[styles.pane, frames?.secondary ?? styles.hidden]}
-        >
-          {secondary}
-        </View>
-        <View
-          collapsable={false}
-          pointerEvents="box-none"
-          style={[styles.pane, frames?.primary ?? styles.hidden]}
-        >
-          {primary}
+        {/* Fills the content box, so pane frames are relative to it and not
+            to the border edge where Yoga puts absolute children. */}
+        <View style={styles.content}>
+          {/* Primary renders last so that it is in front when the panes overlay. */}
+          <View
+            collapsable={false}
+            pointerEvents="box-none"
+            style={[styles.pane, paneStyle(frames?.secondary)]}
+          >
+            {secondary}
+          </View>
+          <View
+            collapsable={false}
+            pointerEvents="box-none"
+            style={[styles.pane, paneStyle(frames?.primary)]}
+          >
+            {primary}
+          </View>
         </View>
       </NativeArrangementView>
     </HingeContext>
@@ -61,7 +65,18 @@ export function ArrangementView({
 ArrangementView.Primary = ArrangementPrimary;
 ArrangementView.Secondary = ArrangementSecondary;
 
+// Frames are physical. In RTL, Yoga swaps `left` and `right` before layout (see
+// I18nManager.doLeftAndRightSwapInRTL), so a physical `left` must be written
+// as `right` for it to come out where arrange() put it.
+const mirrored = I18nManager.isRTL && I18nManager.doLeftAndRightSwapInRTL;
+function paneStyle(frame: Frame | null | undefined) {
+  if (!frame) return styles.hidden;
+  const { left, ...rest } = frame;
+  return mirrored ? { ...rest, right: left } : frame;
+}
+
 const styles = StyleSheet.create({
+  content: { flex: 1, alignSelf: 'stretch' },
   pane: { position: 'absolute', overflow: 'hidden' },
   // A hidden pane keeps its React tree mounted.
   hidden: { display: 'none' },

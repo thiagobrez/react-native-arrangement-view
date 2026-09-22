@@ -54,6 +54,19 @@ class ArrangementView(private val reactContext: ThemedReactContext) :
   private var hingeDegrees: Float? = null
   private var lastHinge: Triple<Boolean, Double, String>? = null
 
+  /**
+   * Yoga's padding and border for this view. Fabric does not apply them to the Android view,
+   * because Yoga has already positioned the descendants. JS lays the panes out inside a wrapper
+   * that fills the content box, so geometry is reported in that box.
+   */
+  val contentInsets = Rect()
+
+  fun setContentInsets(left: Int, top: Int, right: Int, bottom: Int) {
+    contentInsets.set(left, top, right, bottom)
+    // Moving padding from one edge to another keeps the size and moves the fold.
+    emitGeometry()
+  }
+
   // Geometry is withheld until the first WindowLayoutInfo so JS never arranges without the fold.
   private var hasWindowLayout = false
   private var separatingFold: Rect? = null
@@ -156,11 +169,13 @@ class ArrangementView(private val reactContext: ThemedReactContext) :
         view = parent
       }
       foldInView.set(fold)
-      foldInView.offset(-x, -y)
+      foldInView.offset(-x - contentInsets.left, -y - contentInsets.top)
     } else {
       foldInView.setEmpty()
     }
     val hasFold = fold != null
+    val width = width - contentInsets.left - contentInsets.right
+    val height = height - contentInsets.top - contentInsets.bottom
     if (
       width == lastWidth &&
         height == lastHeight &&
