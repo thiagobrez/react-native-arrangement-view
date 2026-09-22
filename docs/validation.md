@@ -1,46 +1,6 @@
 # Simulator validation
 
-Validated locally on September 20 and 22, 2026. These are simulator results, not physical-device certification.
-
-## Coordinate regression checks — September 22, 2026
-
-This pass covers the pane-origin fixes after PR #1's initial implementation. Earlier results below are historical and were not all repeated.
-
-Environment: Xcode 27.1 beta (27A9269), iOS 27.1 SDK/runtime, React Native 0.86.3, Expo 57.0.24, Node 24.13.0. Dedicated simulator `Arrangement Coordinate QA` (`388623F6-7925-4AA2-A697-2668EC7419FB`), session `rav-coordinates`. Agent-device 0.19.2 reproduced the padding failure; 0.21.8 was used for the subsequent checks. Device Hub controlled hardware postures and the inner display's controls.
-
-A temporary fixture used two measured Pressables, a bounded arrangement with a 4pt border, three padding configurations, and an ancestor ScrollView. Padding 1 was left/right/top/bottom = 72/8/64/8; padding 2 moved those insets to 8/72/8/64, keeping the content size unchanged. RTL was applied at app startup to test React Native's global left/right swapping and inherited RTL content layout.
-
-The original binary failed the device regression command with `primary x: JS=28, native=100` (72pt of missing padding). On the open RTL panel it returned primary x=833.33 for a native x=416. The corrected binary returned x=416 in that same scene.
-
-### Results
-
-| Scenario | Result |
-| --- | --- |
-| Closed, LTR and RTL, split and overlay, padding 0/1/2 | Both panes matched native rectangles within 1pt. All counter presses registered, including after moving padding without changing the content size. |
-| Closed, LTR and RTL, ancestor scroll | Both measurement methods and presses passed before/after an asserted 60pt scroll. The complete closed matrices passed 32/32 presses. |
-| Open, RTL | Split passed with padding 0/1/2; overlay passed with padding 2. |
-| Book, RTL | Split and overlay passed with padding 2. |
-| Open and book, LTR | Split and overlay passed with padding 1 and the ancestor already scrolled. |
-
-Open/book rows compare measurements, not injected presses. Agent-device's inner-panel taps also missed controls outside the arrangement, so they were not counted as library failures or successful touch coverage. Device Hub supplied those control actions. This run does not cover physical hardware, rotation, older iOS runtimes, or additional React Native versions.
-
-The normal example was restored afterward; both pane counters incremented through agent-device. The dedicated session was closed and its simulator shut down.
-
-`yarn test` (9/9), `yarn typecheck`, `yarn lint`, `yarn build`, and the complete simulator Xcode build passed. The build retained dependency build-phase/AppIntents warnings. Build logs, screenshots, and agent-device request logs are under the ignored `.artifacts/coordinates/` directory.
-
-### Native build command
-
-```sh
-xcodebuild \
-  -workspace apps/example-expo/ios/ArrangementViewExample.xcworkspace \
-  -scheme ArrangementViewExample -configuration Debug -sdk iphonesimulator \
-  -destination 'id=388623F6-7925-4AA2-A697-2668EC7419FB' \
-  -derivedDataPath .artifacts/coordinates/DerivedData CODE_SIGNING_ALLOWED=NO
-```
-
-Both `measureInWindow` and `measure` page position/size were compared against native rectangles with a 1pt tolerance. On the inner display, agent-device reported `window-coordinate-space-unresolved` and returned rotated XCTest rectangles. The conversion `(x,y,w,h) → (y,669-x-w,h,w)` was checked against the 951×669pt screenshot. Posture readouts confirmed closed (0 radians), book (2.23014 radians), and open (π radians).
-
-The temporary measurement fixture and device runner were removed after validation; the example entry point was restored. The results above record that validation pass.
+Validated locally on September 20, 2026. These are simulator results, not physical-device certification.
 
 ## Environment
 
