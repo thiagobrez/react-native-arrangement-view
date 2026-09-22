@@ -32,7 +32,9 @@
     "typecheck": "tsc",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "build": "bob build",
-    "test": "node --test tests/*.test.ts"
+    "test": "node --test tests/*.test.ts",
+    "version-packages": "changeset version && yarn install --no-immutable",
+    "publish-packages": "yarn lint && yarn typecheck && yarn test && yarn build && changeset publish"
   },
   "keywords": [
     "react-native",
@@ -52,9 +54,12 @@
   },
   "homepage": "https://github.com/thiagobrez/react-native-arrangement-view#readme",
   "publishConfig": {
-    "registry": "https://registry.npmjs.org/"
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.6.0",
+    "@changesets/cli": "^2.30.0",
     "@eslint/compat": "^2.1.0",
     "@eslint/eslintrc": "^3.3.6",
     "@eslint/js": "^9.39.5",
@@ -81,6 +86,7 @@
     "react-native": ">=0.83.0"
   },
   "workspaces": [
+    ".",
     "apps/*"
   ],
   "packageManager": "yarn@4.11.0",

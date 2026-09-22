@@ -20,3 +20,15 @@ yarn build
 Select Xcode 27.1+ before CocoaPods installation to enable arrangement APIs. Older SDKs compile only the fallback. The CI macOS job checks the fallback build with its installed SDK; native posture validation requires an iOS 27.1 Duo simulator.
 
 Keep app interactions serial within an agent-device session. Follow `agent-device help workflow`, use a dedicated device/session, and do not terminate another task's simulator lease. Use Device Hub for hardware postures and agent-device for app actions, assertions, and evidence. Record exact SDK, runtime, commands, and observed behavior in `docs/validation.md`.
+
+## Releasing
+
+Releases use [changesets](https://github.com/changesets/changesets). If a change affects the published library, add a changeset:
+
+```sh
+yarn changeset
+```
+
+Changes to the example app or docs don't need one.
+
+When a changeset is merged to `main`, the release workflow opens or updates a `chore(release): version packages` PR. That PR bumps the version and updates `CHANGELOG.md`. Merging it builds the library and publishes it to npm through trusted publishing.
