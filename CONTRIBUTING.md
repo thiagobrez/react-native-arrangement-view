@@ -6,10 +6,10 @@ Use Node 24 and Yarn 4 (the repository includes its Yarn release).
 yarn install
 
 yarn example expo prebuild --platform ios
-yarn example ios --device "iPhone Duo" --port 8088
+yarn example ios --port 8088       # iPhone Duo simulator
 
 yarn example expo prebuild --platform android
-yarn example android --port 8088   # with a foldable emulator already running
+yarn example android --port 8088   # Pixel_10_Pro_Fold emulator
 ```
 
 Native code is in `ios/` and `android/`, the TypeScript API in `src/`, and the Expo app in `apps/example-expo/`. Generated app-native directories are ignored; change Expo configuration and regenerate them instead. Rebuild the app after changing native code. JavaScript changes use Metro Fast Refresh.
@@ -29,7 +29,7 @@ Select Xcode 27.1+ before CocoaPods installation to enable arrangement APIs. Old
 
 SwiftUI arranges the panes on iOS. Android has no equivalent container, so the native view only reports its size, the separating fold, and the hinge; `src/arrange.ts` is the layout policy, and `tests/arrange.test.ts` is its contract. Change pane placement there, not in Kotlin.
 
-Validate on a foldable AVD (Android Studio's Pixel Fold profile, or `avdmanager create avd -d pixel_fold`). Drive the posture through the emulator console:
+The Android script runs on an AVD named `Pixel_10_Pro_Fold`; create it with Android Studio's Pixel 10 Pro Fold profile, or `avdmanager create avd -n Pixel_10_Pro_Fold -d pixel_10_pro_fold -k <system image>`. Drive the posture through the emulator console:
 
 ```sh
 adb emu sensor set hinge-angle0 180   # open; the fold is flat and separates nothing
