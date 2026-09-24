@@ -42,6 +42,8 @@ export default function App() {
           </View>
         </View>
 
+        {/*<View style={{flex: 1, backgroundColor: 'red'}} />*/}
+
         <ArrangementView
           style={styles.arrangement}
           arrangement={arrangement}

@@ -1,10 +1,36 @@
-import type { Arrangement, ArrangementAxes } from './types';
+import type { Arrangement, ArrangementAxes, HingePolicy } from './types';
 
-/** The arrangement's size and, when one crosses it, the separating fold within it. */
+/** A fold within the arrangement, as Jetpack WindowManager reports it. */
+export interface Fold {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  /** A vertical fold runs top to bottom, as in book posture. */
+  orientation: 'vertical' | 'horizontal';
+  /** Half-open, or a hinge that hides content. */
+  separating: boolean;
+  halfOpened: boolean;
+}
+
+/**
+ * The arrangement's size, the size of the window it is in, and the fold, if
+ * any. All in dp; the fold is relative to the arrangement.
+ */
 export interface Geometry {
   width: number;
   height: number;
-  fold?: Readonly<{ x: number; y: number; width: number; height: number }>;
+  window: Readonly<{ width: number; height: number }>;
+  fold?: Readonly<Fold>;
+}
+
+export interface ArrangeOptions {
+  arrangement: Arrangement;
+  axes: ArrangementAxes;
+  hingePolicy?: HingePolicy;
+  hingeGap?: number;
+  twoPanesOnMediumWidth?: boolean;
+  rtl?: boolean;
 }
 
 export interface Frame {
@@ -22,25 +48,51 @@ export interface PaneFrames {
 
 type Axis = 'horizontal' | 'vertical';
 
+// Material's window size class breakpoints.
+const MEDIUM_WIDTH = 600;
+const EXPANDED_WIDTH = 840;
+const EXPANDED_HEIGHT = 900;
+
 /**
  * Android's layout policy; iOS delegates the same decisions to SwiftUI.
  *
- * A separating fold (a half-opened or dual-screen device) splits either
- * arrangement around itself. Otherwise `split` halves the longer side and
- * `overlay` stacks both panes at full size. A split along an axis that `axes`
- * excludes never happens: `split` then shows only the primary pane.
+ * It follows Material's pane scaffold (calculatePaneScaffoldDirective). The
+ * window, not the arrangement, decides how many panes fit: two side by side
+ * from an expanded width, and two stacked in tabletop or in a single-column
+ * window with expanded height. A hinge the policy avoids decides the axis and
+ * separates the panes by `hingeGap` around it. A split that doesn't fit, or
+ * that `axes` excludes, shows only the primary pane.
  */
 export function arrange(
-  { width, height, fold }: Geometry,
-  arrangement: Arrangement,
-  axes: ArrangementAxes,
-  rtl = false
+  { width, height, window, fold }: Geometry,
+  {
+    arrangement,
+    axes,
+    hingePolicy = 'avoidSeparating',
+    hingeGap = 24,
+    twoPanesOnMediumWidth = false,
+    rtl = false,
+  }: ArrangeOptions
 ): PaneFrames {
-  const allows = (axis: Axis) => axes === 'both' || axes === axis;
   const full = { left: 0, top: 0, width, height };
+  const tabletop =
+    fold?.halfOpened === true && fold.orientation === 'horizontal';
+  const twoColumns =
+    window.width >= EXPANDED_WIDTH ||
+    (twoPanesOnMediumWidth && window.width >= MEDIUM_WIDTH);
+  const twoRows = tabletop || (!twoColumns && window.height >= EXPANDED_HEIGHT);
+  const fits = (axis: Axis) =>
+    (axes === 'both' || axes === axis) &&
+    (axis === 'horizontal' ? twoColumns : twoRows);
 
-  // Panes before and after the span [start, end] along the axis.
-  const split = (axis: Axis, start: number, end: number): PaneFrames => {
+  // Panes before and after the span [start, end] along the axis. The primary
+  // pane goes first, on the leading side, unless `primaryAfter`.
+  const split = (
+    axis: Axis,
+    start: number,
+    end: number,
+    primaryAfter = false
+  ): PaneFrames => {
     const [before, after] =
       axis === 'horizontal'
         ? [
@@ -51,27 +103,45 @@ export function arrange(
             { ...full, height: start },
             { ...full, top: end, height: height - end },
           ];
-    return rtl && axis === 'horizontal'
+    const leadingIsAfter = rtl && axis === 'horizontal';
+    return leadingIsAfter !== primaryAfter
       ? { primary: after, secondary: before }
       : { primary: before, secondary: after };
   };
 
-  if (fold) {
-    // A vertical fold, taller than wide, puts the panes side by side.
-    const axis: Axis = fold.height >= fold.width ? 'horizontal' : 'vertical';
+  const avoided =
+    hingePolicy === 'alwaysAvoid' ||
+    (hingePolicy === 'avoidSeparating' && fold?.separating);
+  if (fold && avoided) {
+    // A vertical fold, running top to bottom, puts the panes side by side.
+    const axis: Axis =
+      fold.orientation === 'vertical' ? 'horizontal' : 'vertical';
     const [start, end, extent] =
       axis === 'horizontal'
         ? [fold.x, fold.x + fold.width, width]
         : [fold.y, fold.y + fold.height, height];
     // A fold outside the arrangement, or along its edge, separates nothing.
-    if (allows(axis) && start > 0 && end < extent)
-      return split(axis, start, end);
+    if (start > 0 && end < extent) {
+      const middle = (start + end) / 2;
+      const half = Math.max(end - start, hingeGap) / 2;
+      const before = Math.max(0, middle - half);
+      const after = Math.min(extent, middle + half);
+      // Overlay's primary pane goes after the hinge, as SwiftUI puts it.
+      if (fits(axis))
+        return split(axis, before, after, arrangement === 'overlay');
+      if (arrangement === 'overlay') return { primary: full, secondary: full };
+      // A single pane stays clear of the hinge, on its leading side.
+      return { primary: split(axis, before, after).primary, secondary: null };
+    }
   }
 
   if (arrangement === 'overlay') return { primary: full, secondary: full };
-
-  const axis: Axis = width >= height ? 'horizontal' : 'vertical';
-  if (!allows(axis)) return { primary: full, secondary: null };
+  const axis = fits('horizontal')
+    ? 'horizontal'
+    : fits('vertical')
+      ? 'vertical'
+      : null;
+  if (!axis) return { primary: full, secondary: null };
   const middle = (axis === 'horizontal' ? width : height) / 2;
   return split(axis, middle, middle);
 }

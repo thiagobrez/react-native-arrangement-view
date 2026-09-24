@@ -17,18 +17,33 @@ export function ArrangementView({
   arrangement = 'split',
   axes = 'both',
   observeHinge = true,
+  hingePolicy,
+  hingeGap,
+  twoPanesOnMediumWidth,
   ...props
 }: ArrangementViewProps) {
   const [store, onHingeChange] = useHingeStore(observeHinge);
   // Android has no system arrangement container. The native view reports its
-  // content box and the fold within it, and the panes stay hidden until it
+  // content box, its window and the fold, and the panes stay hidden until it
   // has: arranging them any sooner would flash a layout that ignores the fold.
   const [geometry, setGeometry] = useState<Geometry | null>(null);
   const onGeometryChange = useCallback<
     NonNullable<NativeProps['onGeometryChange']>
-  >((event) => setGeometry(event.nativeEvent), []);
+  >(
+    // Codegen types the fold orientation as a plain string.
+    (event) => setGeometry(event.nativeEvent as Geometry),
+    []
+  );
   const frames =
-    geometry && arrange(geometry, arrangement, axes, I18nManager.isRTL);
+    geometry &&
+    arrange(geometry, {
+      arrangement,
+      axes,
+      hingePolicy,
+      hingeGap,
+      twoPanesOnMediumWidth,
+      rtl: I18nManager.isRTL,
+    });
   const { primary, secondary, problems } = resolveSlots(children);
   warnOnce(problems);
   return (

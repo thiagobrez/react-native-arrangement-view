@@ -13,11 +13,18 @@ type HingeEvent = Readonly<{
 type GeometryEvent = Readonly<{
   width: CodegenTypes.Double;
   height: CodegenTypes.Double;
+  window: Readonly<{
+    width: CodegenTypes.Double;
+    height: CodegenTypes.Double;
+  }>;
   fold?: Readonly<{
     x: CodegenTypes.Double;
     y: CodegenTypes.Double;
     width: CodegenTypes.Double;
     height: CodegenTypes.Double;
+    orientation: string;
+    separating: boolean;
+    halfOpened: boolean;
   }>;
 }>;
 
@@ -28,7 +35,7 @@ export interface NativeProps extends ViewProps {
   axes?: CodegenTypes.WithDefault<'both' | 'horizontal' | 'vertical', 'both'>;
   observeHinge?: CodegenTypes.WithDefault<boolean, true>;
   onHingeChange?: CodegenTypes.DirectEventHandler<HingeEvent>;
-  /** Android only: the size and separating fold that arrange.ts lays the panes out by. */
+  /** Android only: the sizes and fold that arrange.ts lays the panes out by. */
   onGeometryChange?: CodegenTypes.DirectEventHandler<GeometryEvent>;
 }
 

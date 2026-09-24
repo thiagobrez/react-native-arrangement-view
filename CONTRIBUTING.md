@@ -27,7 +27,7 @@ Select Xcode 27.1+ before CocoaPods installation to enable arrangement APIs. Old
 
 ## Android
 
-SwiftUI arranges the panes on iOS. Android has no equivalent container, so the native view only reports its size, the separating fold, and the hinge; `src/arrange.ts` is the layout policy, and `tests/arrange.test.ts` is its contract. Change pane placement there, not in Kotlin.
+SwiftUI arranges the panes on iOS. Android has no equivalent container, so the native view only reports its size, its window's size, the fold, and the hinge; `src/arrange.ts` is the layout policy, following Material's adaptive layout rules, and `tests/arrange.test.ts` is its contract. Change pane placement there, not in Kotlin.
 
 The Android script runs on an AVD named `Pixel_10_Pro_Fold`; create it with Android Studio's Pixel 10 Pro Fold profile, or `avdmanager create avd -n Pixel_10_Pro_Fold -d pixel_10_pro_fold -k <system image>`. Drive the posture through the emulator console:
 

@@ -25,8 +25,8 @@ import com.facebook.react.views.view.ReactViewGroup
 
 /**
  * Android has no system arrangement container, so this view only reports what the layout policy
- * in src/arrange.ts needs: its size, the fold separating it, and the hinge. Jetpack WindowManager
- * decides what counts as a separating fold; React lays out the panes.
+ * in src/arrange.ts needs: its size, its window's size, the fold crossing it, and the hinge. React
+ * lays out the panes.
  */
 class ArrangementView(private val reactContext: ThemedReactContext) :
   ReactViewGroup(reactContext), SensorEventListener {
@@ -69,16 +69,11 @@ class ArrangementView(private val reactContext: ThemedReactContext) :
 
   // Geometry is withheld until the first WindowLayoutInfo so JS never arranges without the fold.
   private var hasWindowLayout = false
-  private var separatingFold: Rect? = null
   private val foldInView = Rect()
-  private val lastFoldInView = Rect()
-  private var lastHasFold = false
-  private var lastWidth = -1
-  private var lastHeight = -1
+  private var lastGeometry: List<Any?>? = null
 
   private val onWindowLayout = Consumer<WindowLayoutInfo> { info ->
     fold = info.displayFeatures.filterIsInstance<FoldingFeature>().firstOrNull()
-    separatingFold = fold?.takeIf { it.isSeparating }?.bounds
     hasWindowLayout = true
     emitGeometry()
     emitHinge()
@@ -153,7 +148,7 @@ class ArrangementView(private val reactContext: ThemedReactContext) :
 
   private fun emitGeometry() {
     if (!hasWindowLayout) return
-    val fold = separatingFold
+    val fold = fold
     if (fold != null) {
       // Fold bounds are in window coordinates. Use this view's layout position rather than
       // getLocationInWindow so a screen transition's transform doesn't drag the fold along.
@@ -168,31 +163,38 @@ class ArrangementView(private val reactContext: ThemedReactContext) :
         y -= parent.scrollY
         view = parent
       }
-      foldInView.set(fold)
+      foldInView.set(fold.bounds)
       foldInView.offset(-x - contentInsets.left, -y - contentInsets.top)
     } else {
       foldInView.setEmpty()
     }
-    val hasFold = fold != null
     val width = width - contentInsets.left - contentInsets.right
     val height = height - contentInsets.top - contentInsets.bottom
-    if (
-      width == lastWidth &&
-        height == lastHeight &&
-        hasFold == lastHasFold &&
-        foldInView == lastFoldInView
-    ) {
-      return
-    }
-    lastWidth = width
-    lastHeight = height
-    lastHasFold = hasFold
-    lastFoldInView.set(foldInView)
+    // Material sizes panes by the window, as iOS size classes are by the scene.
+    val window = rootView
+    val geometry =
+      listOf(
+        width,
+        height,
+        window.width,
+        window.height,
+        Rect(foldInView),
+        fold?.orientation,
+        fold?.isSeparating,
+        fold?.state)
+    if (geometry == lastGeometry) return
+    lastGeometry = geometry
     dispatch(
       GEOMETRY_EVENT,
       Arguments.createMap().apply {
         putDouble("width", dp(width))
         putDouble("height", dp(height))
+        putMap(
+          "window",
+          Arguments.createMap().apply {
+            putDouble("width", dp(window.width))
+            putDouble("height", dp(window.height))
+          })
         if (fold != null) {
           putMap(
             "fold",
@@ -201,6 +203,12 @@ class ArrangementView(private val reactContext: ThemedReactContext) :
               putDouble("y", dp(foldInView.top))
               putDouble("width", dp(foldInView.width()))
               putDouble("height", dp(foldInView.height()))
+              putString(
+                "orientation",
+                if (fold.orientation == FoldingFeature.Orientation.VERTICAL) "vertical"
+                else "horizontal")
+              putBoolean("separating", fold.isSeparating)
+              putBoolean("halfOpened", fold.state == FoldingFeature.State.HALF_OPENED)
             })
         }
       })
