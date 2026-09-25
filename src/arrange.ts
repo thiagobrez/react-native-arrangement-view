@@ -50,6 +50,7 @@ type Axis = 'horizontal' | 'vertical';
 
 // Material's window size class breakpoints.
 const MEDIUM_WIDTH = 600;
+const COMPACT_HEIGHT = 480;
 const EXPANDED_WIDTH = 840;
 const EXPANDED_HEIGHT = 900;
 
@@ -59,7 +60,9 @@ const EXPANDED_HEIGHT = 900;
  * It follows Material's pane scaffold (calculatePaneScaffoldDirective). The
  * window, not the arrangement, decides how many panes fit: two side by side
  * from an expanded width, and two stacked in tabletop or in a single-column
- * window with expanded height. A hinge the policy avoids decides the axis and
+ * window with expanded height. A compact-height window, such as a phone in
+ * landscape, gets no columns: Android's window size class guidance calls two
+ * panes impractical there, though Material's scaffold checks only the width. A hinge the policy avoids decides the axis and
  * separates the panes by `hingeGap` around it. A split that doesn't fit, or
  * that `axes` excludes, shows only the primary pane.
  */
@@ -78,8 +81,9 @@ export function arrange(
   const tabletop =
     fold?.halfOpened === true && fold.orientation === 'horizontal';
   const twoColumns =
-    window.width >= EXPANDED_WIDTH ||
-    (twoPanesOnMediumWidth && window.width >= MEDIUM_WIDTH);
+    window.height >= COMPACT_HEIGHT &&
+    (window.width >= EXPANDED_WIDTH ||
+      (twoPanesOnMediumWidth && window.width >= MEDIUM_WIDTH));
   const twoRows = tabletop || (!twoColumns && window.height >= EXPANDED_HEIGHT);
   const fits = (axis: Axis) =>
     (axes === 'both' || axes === axis) &&

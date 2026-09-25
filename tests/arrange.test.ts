@@ -47,14 +47,34 @@ const tabletop: Geometry = {
 const split = { arrangement: 'split', axes: 'both' } as const;
 const overlay = { arrangement: 'overlay', axes: 'both' } as const;
 
-test('an expanded-width window puts the panes side by side, however tall it is', () => {
+test('an expanded-width window puts the panes side by side', () => {
   assert.deepEqual(arrange(inner, split), {
     primary: { left: 0, top: 0, width: 425, height: 880 },
     secondary: { left: 425, top: 0, width: 425, height: 880 },
   });
-  assert.deepEqual(arrange(coverLandscape, split), {
-    primary: { left: 0, top: 0, width: 480, height: 440 },
-    secondary: { left: 480, top: 0, width: 480, height: 440 },
+  // From 480 dp tall, the end of compact height.
+  const shortest = window(960, 480);
+  assert.deepEqual(arrange(shortest, split), {
+    primary: { left: 0, top: 0, width: 480, height: 480 },
+    secondary: { left: 480, top: 0, width: 480, height: 480 },
+  });
+});
+
+test('a compact-height window, such as a phone in landscape, shows one pane', () => {
+  for (const axes of ['both', 'horizontal', 'vertical'] as const) {
+    assert.deepEqual(arrange(coverLandscape, { ...split, axes }), {
+      primary: full(coverLandscape),
+      secondary: null,
+    });
+  }
+  const mediumLandscape = window(700, 440);
+  assert.deepEqual(
+    arrange(mediumLandscape, { ...split, twoPanesOnMediumWidth: true }),
+    { primary: full(mediumLandscape), secondary: null }
+  );
+  assert.deepEqual(arrange(coverLandscape, overlay), {
+    primary: full(coverLandscape),
+    secondary: full(coverLandscape),
   });
 });
 

@@ -40,7 +40,7 @@ export function PlayerScreen() {
 | `observeHinge`          | `true`              | Enables observation for hooks inside this arrangement; disabling it does not disable adaptive layout                                       |
 | `hingePolicy`           | `"avoidSeparating"` | Android only. The hinges the panes keep clear of: `"avoidSeparating"` a half-open one, `"alwaysAvoid"` a flat one too, `"neverAvoid"` none |
 | `hingeGap`              | `24`                | Android only. The space in dp between the panes around an avoided hinge, never narrower than the hinge itself                              |
-| `twoPanesOnMediumWidth` | `false`             | Android only. Allows two panes side by side in a window 600–839 dp wide                                                                    |
+| `twoPanesOnMediumWidth` | `false`             | Android only. Allows two panes side by side in a window 600–839 dp wide, unless it is under 480 dp tall                                    |
 
 `ArrangementView.Primary` and `ArrangementView.Secondary` are slot markers: they render no view of their own and do not affect layout. Put your own pane component inside each one. Both must be direct children of `ArrangementView`, in either order. Any other direct child is ignored, and a missing, duplicated, or unrecognized child logs a warning in development builds.
 
@@ -64,7 +64,7 @@ On iOS, as observed from SwiftUI on iOS 27.1:
 
 On Android:
 
-- The window decides how many panes fit: two side by side from 840 dp wide, or from 600 dp with `twoPanesOnMediumWidth`. Two stacked fit in tabletop posture, or in a single-column window at least 900 dp tall.
+- The window decides how many panes fit: two side by side from 840 dp wide, or from 600 dp with `twoPanesOnMediumWidth`, and never in a window under 480 dp tall, such as a phone in landscape, which Android's guidance considers too short for two panes. Two stacked fit in tabletop posture, or in a single-column window at least 900 dp tall.
 - A hinge that `hingePolicy` avoids decides the axis, and the panes are separated by `hingeGap` centred on the crease. When that split doesn't fit, or `axes` excludes it, the primary pane shows alone on the leading side of the hinge, or above it.
 - Otherwise the panes halve the arrangement and touch.
 - `overlay` puts both panes at full size, primary in front. An avoided hinge separates them, as on iOS.
@@ -72,13 +72,13 @@ On Android:
 
 Where the platforms differ:
 
-| Situation                                                     | iOS                                                              | Android                                                                                          |
-| ------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Phone in landscape, such as a closed foldable turned sideways | Primary only, except on models with a regular width in landscape | Side by side when the window is at least 840 dp wide, as the Pixel 10 Pro Fold's cover screen is |
-| No hinge, two panes fit both ways                             | The arrangement's longer side is halved                          | Side by side, whatever the arrangement's shape                                                   |
-| Space around a half-open hinge                                | 20 pt on each side, fixed                                        | `hingeGap`, 24 dp by default; `hingePolicy` can include a flat hinge or ignore hinges            |
-| A window 600–839 dp wide in book posture                      | Decided by size classes                                          | Primary only, beside the hinge, unless `twoPanesOnMediumWidth`                                   |
-| A half-open hinge whose split `axes` excludes                 | Primary only, at full size across the hinge                      | Primary only, on the leading or top side of the hinge                                            |
+| Situation                                     | iOS                                                  | Android                                                                               |
+| --------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Plus / Pro Max iPhones in landscape           | Side by side: they have a regular width in landscape | Primary only: the window is under 480 dp tall, as on every phone in landscape         |
+| No hinge, two panes fit both ways             | The arrangement's longer side is halved              | Side by side, whatever the arrangement's shape                                        |
+| Space around a half-open hinge                | 20 pt on each side, fixed                            | `hingeGap`, 24 dp by default; `hingePolicy` can include a flat hinge or ignore hinges |
+| A window 600–839 dp wide in book posture      | Decided by size classes                              | Primary only, beside the hinge, unless `twoPanesOnMediumWidth`                        |
+| A half-open hinge whose split `axes` excludes | Primary only, at full size across the hinge          | Primary only, on the leading or top side of the hinge                                 |
 
 ### useHingeChange
 
@@ -127,7 +127,7 @@ Android has no fallback mode: a device without a fold is arranged as flat, and i
 
 ## Platform comparison
 
-Captured on September 24, 2026 from the example app on two simulators: the iOS 27.1 iPhone Duo and the Pixel 10 Pro Fold emulator (Android API 37).
+Captured on September 24, 2026 from the example app on two simulators: the iOS 27.1 iPhone Duo and the Pixel 10 Pro Fold emulator (Android API 37). The Android `split` captures of the closed device turned sideways were retaken on September 25, after Android stopped showing two panes in windows under 480 dp tall.
 Half-open was a 134° hinge on the iPhone Duo and 128° on the Pixel.
 Turned right and turned left mean the device was rotated 90° clockwise or counterclockwise from portrait; the frames show how it was held.
 The two devices have different screen sizes, so the pane sizes are not comparable between them; the placement is.
@@ -297,14 +297,14 @@ Pane sizes are in points on iOS and dp on Android. ⚠️ marks a placement that
 | Closed    | Portrait     | `both`       | stacked: 262 / 262               | stacked: 398 / 397                           |
 | Closed    | Portrait     | `horizontal` | primary only: 382 × 523          | primary only: 443 × 795                      |
 | Closed    | Portrait     | `vertical`   | stacked: 262 / 262               | stacked: 398 / 397                           |
-| Closed    | Turned right | `both`       | primary only: 594 × 348          | side by side: 454 \| 454 ⚠️                  |
-| Closed    | Turned right | `horizontal` | primary only: 594 × 348          | side by side: 454 \| 454 ⚠️                  |
+| Closed    | Turned right | `both`       | primary only: 594 × 348          | primary only: 907 × 278                      |
+| Closed    | Turned right | `horizontal` | primary only: 594 × 348          | primary only: 907 × 278                      |
 | Closed    | Turned right | `vertical`   | primary only: 594 × 348          | primary only: 907 × 278                      |
-| Closed    | Upside down  | `both`       | primary only: 594 × 348          | side by side: 454 \| 454 ⚠️                  |
-| Closed    | Upside down  | `horizontal` | primary only: 594 × 348          | side by side: 454 \| 454 ⚠️                  |
+| Closed    | Upside down  | `both`       | primary only: 594 × 348          | primary only: 907 × 278                      |
+| Closed    | Upside down  | `horizontal` | primary only: 594 × 348          | primary only: 907 × 278                      |
 | Closed    | Upside down  | `vertical`   | primary only: 594 × 348          | primary only: 907 × 278                      |
-| Closed    | Turned left  | `both`       | primary only: 594 × 348          | side by side: 454 \| 454 ⚠️                  |
-| Closed    | Turned left  | `horizontal` | primary only: 594 × 348          | side by side: 454 \| 454 ⚠️                  |
+| Closed    | Turned left  | `both`       | primary only: 594 × 348          | primary only: 907 × 278                      |
+| Closed    | Turned left  | `horizontal` | primary only: 594 × 348          | primary only: 907 × 278                      |
 | Closed    | Turned left  | `vertical`   | primary only: 594 × 348          | primary only: 907 × 278                      |
 | Half-open | Portrait     | `both`       | side by side: 456 \| 371, 40 gap | side by side: 414 \| 414, 24 gap             |
 | Half-open | Portrait     | `horizontal` | side by side: 456 \| 371, 40 gap | side by side: 414 \| 414, 24 gap             |
