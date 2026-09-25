@@ -28,6 +28,8 @@ export default defineConfig([
       '**/node_modules/',
       'lib/',
       'apps/example-expo/ios/',
+      'apps/example-expo/android/',
+      'android/build/',
       '.artifacts/',
     ],
   },

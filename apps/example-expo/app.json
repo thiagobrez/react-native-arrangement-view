@@ -10,8 +10,12 @@
       "supportsTablet": true,
       "bundleIdentifier": "arrangementview.example"
     },
+    "android": {
+      "package": "arrangementview.example"
+    },
     "platforms": [
-      "ios"
+      "ios",
+      "android"
     ],
     "plugins": [
       [

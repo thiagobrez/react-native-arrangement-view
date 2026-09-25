@@ -8,6 +8,25 @@
     "NODE_ENV"
   ],
   "tasks": {
+    "build:android": {
+      "env": [
+        "ANDROID_HOME",
+        "ORG_GRADLE_PROJECT_newArchEnabled"
+      ],
+      "inputs": [
+        "package.json",
+        "android",
+        "!android/build",
+        "src/*.ts",
+        "src/*.tsx",
+        "apps/example-expo/package.json",
+        "apps/example-expo/android",
+        "!apps/example-expo/android/.gradle",
+        "!apps/example-expo/android/build",
+        "!apps/example-expo/android/app/build"
+      ],
+      "outputs": []
+    },
     "build:ios": {
       "env": [
         "RCT_NEW_ARCH_ENABLED",

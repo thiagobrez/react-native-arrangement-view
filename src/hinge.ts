@@ -1,8 +1,10 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useRef,
+  useState,
   useSyncExternalStore,
 } from 'react';
 import type { HingeChangeHandler, HingeState, HingeStatus } from './types';
@@ -55,6 +57,20 @@ export function createHingeStore() {
 export const HingeContext = createContext<ReturnType<
   typeof createHingeStore
 > | null>(null);
+
+/** One arrangement's store, and the native event handler that feeds it. */
+export function useHingeStore(observeHinge: boolean) {
+  const [store] = useState(createHingeStore);
+  const onHingeChange = useCallback(
+    (event: { nativeEvent: Parameters<typeof normalizeHinge>[0] }) =>
+      store.update(normalizeHinge(event.nativeEvent)),
+    [store]
+  );
+  useEffect(() => {
+    if (!observeHinge) store.update(unavailableHinge);
+  }, [observeHinge, store]);
+  return [store, onHingeChange] as const;
+}
 
 /** Observe the nearest ArrangementView. Call inside either pane's component. */
 export function useHingeChange(onChange?: HingeChangeHandler): HingeState {
