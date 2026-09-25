@@ -127,12 +127,11 @@ Android has no fallback mode: a device without a fold is arranged as flat, and i
 
 ## Platform comparison
 
-Captured on September 24, 2026 from the example app on two simulators: the iOS 27.1 iPhone Duo and the Pixel 10 Pro Fold emulator (Android API 37). The Android `split` captures of the closed device turned sideways were retaken on September 25, after Android stopped showing two panes in windows under 480 dp tall.
-Half-open was a 134° hinge on the iPhone Duo and 128° on the Pixel.
-Turned right and turned left mean the device was rotated 90° clockwise or counterclockwise from portrait; the frames show how it was held.
-The two devices have different screen sizes, so the pane sizes are not comparable between them; the placement is.
+The iPhone Duo and Pixel 10 Pro Fold have different screen sizes, so the pane sizes are not comparable between them, but the placement is.
 
-The differences are described in [How panes are arranged](#how-panes-are-arranged). One more comes from the devices, not the library: neither cover screen rotates upside down, so each keeps the previous landscape layout. The unfolded inner screens do rotate.
+Because of that, some poses and orientations might behave differently stacking on one while splitting on other. The differences are described in [How panes are arranged](#how-panes-are-arranged).
+
+For example, when unfolded and turned sideways, the iPhone Duo is taller than wide, so the panels stack. The Pixel 10 Pro Fold is wider than tall, so the panels split side by side.
 
 ### `split`, `axes="both"`
 
@@ -209,7 +208,7 @@ The differences are described in [How panes are arranged](#how-panes-are-arrange
 | <img src="docs/comparison/ios/flat-landscape-left-split.jpg" width="400"> | <img src="docs/comparison/android/flat-landscape-left-split.jpg" width="400"> |
 
 <details>
-<summary><code>overlay</code>, <code>axes="both"</code></summary>
+<summary><h3><code>overlay</code>, <code>axes="both"</code></h3></summary>
 
 **Closed · Portrait**
 
@@ -282,98 +281,6 @@ The differences are described in [How panes are arranged](#how-panes-are-arrange
 | iOS                                                                         | Android                                                                         |
 | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | <img src="docs/comparison/ios/flat-landscape-left-overlay.jpg" width="400"> | <img src="docs/comparison/android/flat-landscape-left-overlay.jpg" width="400"> |
-
-</details>
-
-### Every `axes` value
-
-Pane sizes are in points on iOS and dp on Android. ⚠️ marks a placement that differs between the platforms.
-
-<details>
-<summary><code>split</code></summary>
-
-| Posture   | Orientation  | `axes`       | iOS                              | Android                                      |
-| --------- | ------------ | ------------ | -------------------------------- | -------------------------------------------- |
-| Closed    | Portrait     | `both`       | stacked: 262 / 262               | stacked: 398 / 397                           |
-| Closed    | Portrait     | `horizontal` | primary only: 382 × 523          | primary only: 443 × 795                      |
-| Closed    | Portrait     | `vertical`   | stacked: 262 / 262               | stacked: 398 / 397                           |
-| Closed    | Turned right | `both`       | primary only: 594 × 348          | primary only: 907 × 278                      |
-| Closed    | Turned right | `horizontal` | primary only: 594 × 348          | primary only: 907 × 278                      |
-| Closed    | Turned right | `vertical`   | primary only: 594 × 348          | primary only: 907 × 278                      |
-| Closed    | Upside down  | `both`       | primary only: 594 × 348          | primary only: 907 × 278                      |
-| Closed    | Upside down  | `horizontal` | primary only: 594 × 348          | primary only: 907 × 278                      |
-| Closed    | Upside down  | `vertical`   | primary only: 594 × 348          | primary only: 907 × 278                      |
-| Closed    | Turned left  | `both`       | primary only: 594 × 348          | primary only: 907 × 278                      |
-| Closed    | Turned left  | `horizontal` | primary only: 594 × 348          | primary only: 907 × 278                      |
-| Closed    | Turned left  | `vertical`   | primary only: 594 × 348          | primary only: 907 × 278                      |
-| Half-open | Portrait     | `both`       | side by side: 456 \| 371, 40 gap | side by side: 414 \| 414, 24 gap             |
-| Half-open | Portrait     | `horizontal` | side by side: 456 \| 371, 40 gap | side by side: 414 \| 414, 24 gap             |
-| Half-open | Portrait     | `vertical`   | primary only: 867 × 551          | primary only, beside the hinge: 414 × 706 ⚠️ |
-| Half-open | Turned right | `both`       | stacked: 289 / 421, 41 gap       | stacked: 289 / 358, 24 gap                   |
-| Half-open | Turned right | `horizontal` | primary only: 669 × 751          | primary only, beside the hinge: 883 × 289 ⚠️ |
-| Half-open | Turned right | `vertical`   | stacked: 289 / 421, 41 gap       | stacked: 289 / 358, 24 gap                   |
-| Half-open | Upside down  | `both`       | side by side: 456 \| 371, 40 gap | side by side: 414 \| 414, 24 gap             |
-| Half-open | Upside down  | `horizontal` | side by side: 456 \| 371, 40 gap | side by side: 414 \| 414, 24 gap             |
-| Half-open | Upside down  | `vertical`   | primary only: 867 × 551          | primary only, beside the hinge: 414 × 702 ⚠️ |
-| Half-open | Turned left  | `both`       | stacked: 289 / 421, 41 gap       | stacked: 270 / 382, 24 gap                   |
-| Half-open | Turned left  | `horizontal` | primary only: 669 × 751          | primary only, beside the hinge: 883 × 270 ⚠️ |
-| Half-open | Turned left  | `vertical`   | stacked: 289 / 421, 41 gap       | stacked: 270 / 382, 24 gap                   |
-| Flat      | Portrait     | `both`       | side by side: 434 \| 433         | side by side: 426 \| 426                     |
-| Flat      | Portrait     | `horizontal` | side by side: 434 \| 433         | side by side: 426 \| 426                     |
-| Flat      | Portrait     | `vertical`   | primary only: 867 × 551          | primary only: 852 × 706                      |
-| Flat      | Turned right | `both`       | stacked: 375 / 375               | side by side: 441 \| 441 ⚠️                  |
-| Flat      | Turned right | `horizontal` | primary only: 669 × 751          | side by side: 441 \| 441 ⚠️                  |
-| Flat      | Turned right | `vertical`   | stacked: 375 / 375               | primary only: 883 × 671 ⚠️                   |
-| Flat      | Upside down  | `both`       | side by side: 434 \| 433         | side by side: 426 \| 426                     |
-| Flat      | Upside down  | `horizontal` | side by side: 434 \| 433         | side by side: 426 \| 426                     |
-| Flat      | Upside down  | `vertical`   | primary only: 867 × 551          | primary only: 852 × 702                      |
-| Flat      | Turned left  | `both`       | stacked: 375 / 375               | side by side: 441 \| 441 ⚠️                  |
-| Flat      | Turned left  | `horizontal` | primary only: 669 × 751          | side by side: 441 \| 441 ⚠️                  |
-| Flat      | Turned left  | `vertical`   | stacked: 375 / 375               | primary only: 883 × 675 ⚠️                   |
-
-</details>
-
-<details>
-<summary><code>overlay</code></summary>
-
-| Posture   | Orientation  | `axes`       | iOS                                             | Android                                         |
-| --------- | ------------ | ------------ | ----------------------------------------------- | ----------------------------------------------- |
-| Closed    | Portrait     | `both`       | overlaid                                        | overlaid                                        |
-| Closed    | Portrait     | `horizontal` | overlaid                                        | overlaid                                        |
-| Closed    | Portrait     | `vertical`   | overlaid                                        | overlaid                                        |
-| Closed    | Turned right | `both`       | overlaid                                        | overlaid                                        |
-| Closed    | Turned right | `horizontal` | overlaid                                        | overlaid                                        |
-| Closed    | Turned right | `vertical`   | overlaid                                        | overlaid                                        |
-| Closed    | Upside down  | `both`       | overlaid                                        | overlaid                                        |
-| Closed    | Upside down  | `horizontal` | overlaid                                        | overlaid                                        |
-| Closed    | Upside down  | `vertical`   | overlaid                                        | overlaid                                        |
-| Closed    | Turned left  | `both`       | overlaid                                        | overlaid                                        |
-| Closed    | Turned left  | `horizontal` | overlaid                                        | overlaid                                        |
-| Closed    | Turned left  | `vertical`   | overlaid                                        | overlaid                                        |
-| Half-open | Portrait     | `both`       | side by side, primary right: 456 \| 371, 40 gap | side by side, primary right: 414 \| 414, 24 gap |
-| Half-open | Portrait     | `horizontal` | side by side, primary right: 456 \| 371, 40 gap | side by side, primary right: 414 \| 414, 24 gap |
-| Half-open | Portrait     | `vertical`   | overlaid                                        | overlaid                                        |
-| Half-open | Turned right | `both`       | stacked, primary below: 289 / 421, 41 gap       | stacked, primary below: 289 / 358, 24 gap       |
-| Half-open | Turned right | `horizontal` | overlaid                                        | overlaid                                        |
-| Half-open | Turned right | `vertical`   | stacked, primary below: 289 / 421, 41 gap       | stacked, primary below: 289 / 358, 24 gap       |
-| Half-open | Upside down  | `both`       | side by side, primary right: 456 \| 371, 40 gap | side by side, primary right: 414 \| 414, 24 gap |
-| Half-open | Upside down  | `horizontal` | side by side, primary right: 456 \| 371, 40 gap | side by side, primary right: 414 \| 414, 24 gap |
-| Half-open | Upside down  | `vertical`   | overlaid                                        | overlaid                                        |
-| Half-open | Turned left  | `both`       | stacked, primary below: 289 / 421, 41 gap       | stacked, primary below: 270 / 382, 24 gap       |
-| Half-open | Turned left  | `horizontal` | overlaid                                        | overlaid                                        |
-| Half-open | Turned left  | `vertical`   | stacked, primary below: 289 / 421, 41 gap       | stacked, primary below: 270 / 382, 24 gap       |
-| Flat      | Portrait     | `both`       | overlaid                                        | overlaid                                        |
-| Flat      | Portrait     | `horizontal` | overlaid                                        | overlaid                                        |
-| Flat      | Portrait     | `vertical`   | overlaid                                        | overlaid                                        |
-| Flat      | Turned right | `both`       | overlaid                                        | overlaid                                        |
-| Flat      | Turned right | `horizontal` | overlaid                                        | overlaid                                        |
-| Flat      | Turned right | `vertical`   | overlaid                                        | overlaid                                        |
-| Flat      | Upside down  | `both`       | overlaid                                        | overlaid                                        |
-| Flat      | Upside down  | `horizontal` | overlaid                                        | overlaid                                        |
-| Flat      | Upside down  | `vertical`   | overlaid                                        | overlaid                                        |
-| Flat      | Turned left  | `both`       | overlaid                                        | overlaid                                        |
-| Flat      | Turned left  | `horizontal` | overlaid                                        | overlaid                                        |
-| Flat      | Turned left  | `vertical`   | overlaid                                        | overlaid                                        |
 
 </details>
 
