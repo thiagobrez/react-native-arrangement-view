@@ -1,7 +1,7 @@
 {
   "name": "react-native-arrangement-view",
   "version": "0.1.0",
-  "description": "SwiftUI adaptive arrangements and hinge observation for React Native",
+  "description": "Foldable-aware adaptive arrangements and hinge observation for React Native",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {
@@ -15,11 +15,16 @@
   "files": [
     "src",
     "lib",
+    "android",
     "ios",
     "cpp",
     "*.podspec",
-    "react-native.config.js",
     "!ios/build",
+    "!android/build",
+    "!android/gradle",
+    "!android/gradlew",
+    "!android/gradlew.bat",
+    "!android/local.properties",
     "!**/__tests__",
     "!**/__fixtures__",
     "!**/__mocks__",
@@ -39,9 +44,12 @@
   "keywords": [
     "react-native",
     "ios",
+    "android",
     "swiftui",
+    "jetpack-windowmanager",
     "arrangement",
-    "foldable"
+    "foldable",
+    "hinge"
   ],
   "repository": {
     "type": "git",
@@ -121,6 +129,9 @@
           "className": "RNArrangementPane"
         }
       }
+    },
+    "android": {
+      "javaPackageName": "com.arrangementview"
     }
   },
   "prettier": {

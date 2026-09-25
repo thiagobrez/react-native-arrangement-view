@@ -6,6 +6,7 @@ export type {
   ArrangementAxes,
   ArrangementViewProps,
   HingeChangeHandler,
+  HingePolicy,
   HingeState,
   HingeStatus,
 } from './types';
