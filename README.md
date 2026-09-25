@@ -136,7 +136,7 @@ Because of that, some poses and orientations might behave differently stacking o
 For example, when unfolded and turned sideways, the iPhone Duo is taller than wide, so the panels stack. The Pixel 10 Pro Fold is wider than tall, so the panels split side by side.
 
 <details>
-<summary><h3><code>split</code>, <code>axes="both"</code></h3></summary>
+<summary><h3><code>arrangement="split"</code>, <code>axes="both"</code></h3></summary>
 
 **Closed · Portrait**
 
@@ -213,7 +213,7 @@ For example, when unfolded and turned sideways, the iPhone Duo is taller than wi
 </details>
 
 <details>
-<summary><h3><code>overlay</code>, <code>axes="both"</code></h3></summary>
+<summary><h3><code>arrangement="overlay"</code>, <code>axes="both"</code></h3></summary>
 
 **Closed · Portrait**
 
