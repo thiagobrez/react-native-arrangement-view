@@ -1,6 +1,16 @@
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/logo/logo-icon-dark.png" />
+  <source media="(prefers-color-scheme: light)" srcset="docs/logo/logo-icon-light.png" />
+  <img src="docs/logo/logo-icon-light.png" alt="react-native-arrangement-view logo" width="128" height="128" />
+</picture>
+
 # react-native-arrangement-view
 
-Foldable devices adaptive arrangement views and hinge observation for React Native.
+**Foldable devices adaptive arrangement views and hinge observation for React Native.**
+
+</div>
 
 > Android coming soon!
 
