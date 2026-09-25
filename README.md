@@ -1,9 +1,9 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/logo/logo-icon-dark.png" />
-  <source media="(prefers-color-scheme: light)" srcset="docs/logo/logo-icon-light.png" />
-  <img src="docs/logo/logo-icon-light.png" alt="react-native-arrangement-view logo" width="128" height="128" />
+  <source media="(prefers-color-scheme: dark)" srcset="docs/logo/logo-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset="docs/logo/logo-light.svg" />
+  <img src="docs/logo/logo-light.svg" alt="react-native-arrangement-view logo" width="160" />
 </picture>
 
 # react-native-arrangement-view
