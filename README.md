@@ -41,42 +41,17 @@ export function PlayerScreen() {
 | `hingePolicy`  | `"avoidSeparating"` | Android only. The hinges the panes keep clear of: `"avoidSeparating"` a half-open one, `"alwaysAvoid"` a flat one too, `"neverAvoid"` none |
 | `hingeGap`     | `24`                | Android only. The space in dp between the panes around an avoided hinge, never narrower than the hinge itself                              |
 
-`ArrangementView.Primary` and `ArrangementView.Secondary` are slot markers: they render no view of their own and do not affect layout. Put your own pane component inside each one. Both must be direct children of `ArrangementView`, in either order. Any other direct child is ignored, and a missing, duplicated, or unrecognized child logs a warning in development builds.
-
-Give the arrangement a bounded size, usually `flex: 1`. Give each pane's root `flex: 1` to fill its assigned space. The platform determines whether a split is appropriate; an axis restriction does not force two panes to stay visible.
-
-In overlay mode the **primary is in front of the secondary**. Use a transparent primary background and `pointerEvents="box-none"` on its full-size React wrapper for floating controls; its visible controls can still receive touches. Hiding a pane does not unmount its React tree.
+Give the arrangement a bounded size, usually `flex: 1`. The platform determines whether a split is appropriate; an axis restriction does not force two panes to stay visible.
 
 The component adds no safe-area padding. Place it within the safe area supplied by your screen/navigation container, or handle insets in your content.
 
-### How panes are arranged
+### ArrangementView.Primary / ArrangementView.Secondary
 
-Each platform follows its own conventions. iOS delegates arrangement to SwiftUI's `ArrangementView`. Android has no system equivalent, so the library applies Material's adaptive layout rules, the ones behind Compose's `calculatePaneScaffoldDirective`, to the window size and the fold that Jetpack WindowManager reports.
+`ArrangementView.Primary` and `ArrangementView.Secondary` are slot markers: they render no view of their own and do not affect layout. Put your own pane component inside each one. Both must be direct children of `ArrangementView`, in either order. Any other direct child is ignored, and a missing, duplicated, or unrecognized child logs a warning in development builds.
 
-`axes` names the directions in which panes may be placed: `"horizontal"` is side by side, `"vertical"` is stacked. A split along an excluded axis never happens; the primary pane shows alone instead.
+Give each pane's root `flex: 1` to fill its assigned space.
 
-On iOS, as observed from SwiftUI on iOS 27.1:
-
-- A half-open hinge splits the panes on either side of it, keeping 20 pt clear on each side of the crease.
-- Otherwise the size classes decide. Side by side needs a regular horizontal size class and stacked a regular vertical one. When both are regular, the arrangement's longer side is halved. When both are compact, as on an iPhone in landscape, the primary pane shows alone.
-- `overlay` puts both panes at full size, primary in front. A half-open hinge separates them, with the primary after the hinge: on the trailing side, or below it.
-
-On Android:
-
-- The window decides how many panes fit: two side by side from 840 dp wide, and never in a window under 480 dp tall, such as a phone in landscape, which Android's guidance considers too short for two panes. Two stacked fit in tabletop posture, or in a single-column window at least 900 dp tall.
-- A hinge that `hingePolicy` avoids decides the axis, and the panes are separated by `hingeGap` centred on the crease. A half-open hinge splits the panes whatever the window size, as on iOS; a flat one only where two panes fit anyway. When the split doesn't fit, or `axes` excludes it, the primary pane shows alone on the leading side of the hinge, or above it.
-- Otherwise the panes halve the arrangement and touch.
-- `overlay` puts both panes at full size, primary in front. An avoided hinge separates them, as on iOS.
-- Right-to-left layouts put the primary pane on the right.
-
-Where the platforms differ:
-
-| Situation                                     | iOS                                                  | Android                                                                               |
-| --------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Plus / Pro Max iPhones in landscape           | Side by side: they have a regular width in landscape | Primary only: the window is under 480 dp tall, as on every phone in landscape         |
-| No hinge, two panes fit both ways             | The arrangement's longer side is halved              | Side by side, whatever the arrangement's shape                                        |
-| Space around a half-open hinge                | 20 pt on each side, fixed                            | `hingeGap`, 24 dp by default; `hingePolicy` can include a flat hinge or ignore hinges |
-| A half-open hinge whose split `axes` excludes | Primary only, at full size across the hinge          | Primary only, on the leading or top side of the hinge                                 |
+In overlay mode the **primary is in front of the secondary**. Use a transparent primary background and `pointerEvents="box-none"` on its full-size React wrapper for floating controls; its visible controls can still receive touches. Hiding a pane does not unmount its React tree.
 
 ### useHingeChange
 
@@ -112,6 +87,35 @@ type HingeState = {
 Before the first native update, without hardware, or when observation is disabled, the state is `{ available: false, angle: null, status: 'unknown' }`.
 
 On Android, `angle` comes from the hinge angle sensor (Android 11+) and is `null` on a foldable without one. `status` comes from the window's `FoldingFeature`: `FLAT` is `fullyOpen` and `HALF_OPENED` is `partiallyOpen`. A closed device reports no fold, because the app is on its cover display, so `closed` is a hinge angle under 5° with no fold in the window. Anything else is `unknown`, such as a window that the fold does not cross.
+
+## How panes are arranged
+
+Each platform follows its own conventions. iOS delegates arrangement to SwiftUI's `ArrangementView`. Android has no system equivalent, so the library applies Material's adaptive layout rules, the ones behind Compose's `calculatePaneScaffoldDirective`, to the window size and the fold that Jetpack WindowManager reports.
+
+`axes` names the directions in which panes may be placed: `"horizontal"` is side by side, `"vertical"` is stacked. A split along an excluded axis never happens; the primary pane shows alone instead.
+
+On iOS, as observed from SwiftUI on iOS 27.1:
+
+- A half-open hinge splits the panes on either side of it, keeping 20 pt clear on each side of the crease.
+- Otherwise the size classes decide. Side by side needs a regular horizontal size class and stacked a regular vertical one. When both are regular, the arrangement's longer side is halved. When both are compact, as on an iPhone in landscape, the primary pane shows alone.
+- `overlay` puts both panes at full size, primary in front. A half-open hinge separates them, with the primary after the hinge: on the trailing side, or below it.
+
+On Android:
+
+- The window decides how many panes fit: two side by side from 840 dp wide, and never in a window under 480 dp tall, such as a phone in landscape, which Android's guidance considers too short for two panes. Two stacked fit in tabletop posture, or in a single-column window at least 900 dp tall.
+- A hinge that `hingePolicy` avoids decides the axis, and the panes are separated by `hingeGap` centred on the crease. A half-open hinge splits the panes whatever the window size, as on iOS; a flat one only where two panes fit anyway. When the split doesn't fit, or `axes` excludes it, the primary pane shows alone on the leading side of the hinge, or above it.
+- Otherwise the panes halve the arrangement and touch.
+- `overlay` puts both panes at full size, primary in front. An avoided hinge separates them, as on iOS.
+- Right-to-left layouts put the primary pane on the right.
+
+Where the platforms differ:
+
+| Situation                                     | iOS                                                  | Android                                                                               |
+| --------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Plus / Pro Max iPhones in landscape           | Side by side: they have a regular width in landscape | Primary only: the window is under 480 dp tall, as on every phone in landscape         |
+| No hinge, two panes fit both ways             | The arrangement's longer side is halved              | Side by side, whatever the arrangement's shape                                        |
+| Space around a half-open hinge                | 20 pt on each side, fixed                            | `hingeGap`, 24 dp by default; `hingePolicy` can include a flat hinge or ignore hinges |
+| A half-open hinge whose split `axes` excludes | Primary only, at full size across the hinge          | Primary only, on the leading or top side of the hinge                                 |
 
 ### Fallback
 
