@@ -86,7 +86,7 @@ type HingeState = {
 
 Before the first native update, without hardware, or when observation is disabled, the state is `{ available: false, angle: null, status: 'unknown' }`.
 
-On Android, `angle` comes from the hinge angle sensor (Android 11+) and is `null` on a foldable without one. `status` comes from the window's `FoldingFeature`: `FLAT` is `fullyOpen` and `HALF_OPENED` is `partiallyOpen`. A closed device reports no fold, because the app is on its cover display, so `closed` is a hinge angle under 5° with no fold in the window. Anything else is `unknown`, such as a window that the fold does not cross.
+On Android, `angle` comes from the hinge angle sensor (Android 11+) and is `null` on a foldable without one.
 
 ## How panes are arranged
 
@@ -94,7 +94,7 @@ Each platform follows its own conventions. iOS delegates arrangement to SwiftUI'
 
 `axes` names the directions in which panes may be placed: `"horizontal"` is side by side, `"vertical"` is stacked. A split along an excluded axis never happens; the primary pane shows alone instead.
 
-On iOS, as observed from SwiftUI on iOS 27.1:
+On iOS:
 
 - A half-open hinge splits the panes on either side of it, keeping 20 pt clear on each side of the crease.
 - Otherwise the size classes decide. Side by side needs a regular horizontal size class and stacked a regular vertical one. When both are regular, the arrangement's longer side is halved. When both are compact, as on an iPhone in landscape, the primary pane shows alone.
@@ -131,11 +131,12 @@ Android has no fallback mode: a device without a fold is arranged as flat, and i
 
 The iPhone Duo and Pixel 10 Pro Fold have different screen sizes, so the pane sizes are not comparable between them, but the placement is.
 
-Because of that, some poses and orientations might behave differently stacking on one while splitting on other. The differences are described in [How panes are arranged](#how-panes-are-arranged).
+Because of that, some poses and orientations might behave differently stacking on one while side by side on another.
 
 For example, when unfolded and turned sideways, the iPhone Duo is taller than wide, so the panels stack. The Pixel 10 Pro Fold is wider than tall, so the panels split side by side.
 
-### `split`, `axes="both"`
+<details>
+<summary><h3><code>split</code>, <code>axes="both"</code></h3></summary>
 
 **Closed · Portrait**
 
@@ -208,6 +209,8 @@ For example, when unfolded and turned sideways, the iPhone Duo is taller than wi
 | iOS                                                                       | Android                                                                       |
 | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | <img src="docs/comparison/ios/flat-landscape-left-split.jpg" width="400"> | <img src="docs/comparison/android/flat-landscape-left-split.jpg" width="400"> |
+
+</details>
 
 <details>
 <summary><h3><code>overlay</code>, <code>axes="both"</code></h3></summary>
