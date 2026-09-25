@@ -18,7 +18,6 @@ export function ArrangementView({
   // Android only: SwiftUI has its own rules for hinges and window sizes.
   hingePolicy: _hingePolicy,
   hingeGap: _hingeGap,
-  twoPanesOnMediumWidth: _twoPanesOnMediumWidth,
   ...props
 }: ArrangementViewProps) {
   const [store, onHingeChange] = useHingeStore(observeHinge);

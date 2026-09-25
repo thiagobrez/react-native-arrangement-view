@@ -31,9 +31,4 @@ export interface ArrangementViewProps extends ViewProps {
   hingePolicy?: HingePolicy;
   /** Android only. The space in dp between the panes around an avoided hinge. Default 24. */
   hingeGap?: number;
-  /**
-   * Android only. Allow two panes side by side in a medium-width window
-   * (600–839 dp), which otherwise shows one. Default false.
-   */
-  twoPanesOnMediumWidth?: boolean;
 }

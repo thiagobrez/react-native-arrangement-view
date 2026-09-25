@@ -29,7 +29,6 @@ export interface ArrangeOptions {
   axes: ArrangementAxes;
   hingePolicy?: HingePolicy;
   hingeGap?: number;
-  twoPanesOnMediumWidth?: boolean;
   rtl?: boolean;
 }
 
@@ -49,7 +48,6 @@ export interface PaneFrames {
 type Axis = 'horizontal' | 'vertical';
 
 // Material's window size class breakpoints.
-const MEDIUM_WIDTH = 600;
 const COMPACT_HEIGHT = 480;
 const EXPANDED_WIDTH = 840;
 const EXPANDED_HEIGHT = 900;
@@ -62,9 +60,12 @@ const EXPANDED_HEIGHT = 900;
  * from an expanded width, and two stacked in tabletop or in a single-column
  * window with expanded height. A compact-height window, such as a phone in
  * landscape, gets no columns: Android's window size class guidance calls two
- * panes impractical there, though Material's scaffold checks only the width. A hinge the policy avoids decides the axis and
- * separates the panes by `hingeGap` around it. A split that doesn't fit, or
- * that `axes` excludes, shows only the primary pane.
+ * panes impractical there, though Material's scaffold checks only the width.
+ *
+ * A hinge the policy avoids decides the axis and separates the panes by
+ * `hingeGap` around it. A separating hinge always splits, whatever the window
+ * size, as it does on iOS. A split that doesn't fit, or that `axes` excludes,
+ * shows only the primary pane.
  */
 export function arrange(
   { width, height, window, fold }: Geometry,
@@ -73,7 +74,6 @@ export function arrange(
     axes,
     hingePolicy = 'avoidSeparating',
     hingeGap = 24,
-    twoPanesOnMediumWidth = false,
     rtl = false,
   }: ArrangeOptions
 ): PaneFrames {
@@ -81,13 +81,11 @@ export function arrange(
   const tabletop =
     fold?.halfOpened === true && fold.orientation === 'horizontal';
   const twoColumns =
-    window.height >= COMPACT_HEIGHT &&
-    (window.width >= EXPANDED_WIDTH ||
-      (twoPanesOnMediumWidth && window.width >= MEDIUM_WIDTH));
+    window.height >= COMPACT_HEIGHT && window.width >= EXPANDED_WIDTH;
   const twoRows = tabletop || (!twoColumns && window.height >= EXPANDED_HEIGHT);
+  const allows = (axis: Axis) => axes === 'both' || axes === axis;
   const fits = (axis: Axis) =>
-    (axes === 'both' || axes === axis) &&
-    (axis === 'horizontal' ? twoColumns : twoRows);
+    allows(axis) && (axis === 'horizontal' ? twoColumns : twoRows);
 
   // Panes before and after the span [start, end] along the axis. The primary
   // pane goes first, on the leading side, unless `primaryAfter`.
@@ -131,7 +129,9 @@ export function arrange(
       const before = Math.max(0, middle - half);
       const after = Math.min(extent, middle + half);
       // Overlay's primary pane goes after the hinge, as SwiftUI puts it.
-      if (fits(axis))
+      // A separating hinge already divides the window, so it splits whatever
+      // the window size. A flat one only splits where two panes fit anyway.
+      if (fold.separating ? allows(axis) : fits(axis))
         return split(axis, before, after, arrangement === 'overlay');
       if (arrangement === 'overlay') return { primary: full, secondary: full };
       // A single pane stays clear of the hinge, on its leading side.

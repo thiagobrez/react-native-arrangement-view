@@ -67,11 +67,6 @@ test('a compact-height window, such as a phone in landscape, shows one pane', ()
       secondary: null,
     });
   }
-  const mediumLandscape = window(700, 440);
-  assert.deepEqual(
-    arrange(mediumLandscape, { ...split, twoPanesOnMediumWidth: true }),
-    { primary: full(mediumLandscape), secondary: null }
-  );
   assert.deepEqual(arrange(coverLandscape, overlay), {
     primary: full(coverLandscape),
     secondary: full(coverLandscape),
@@ -89,18 +84,22 @@ test('a single-column window stacks the panes only when it has expanded height',
   });
 });
 
-test('a medium-width window shows one pane unless two are allowed there', () => {
+test('a medium-width window shows one pane', () => {
   assert.deepEqual(arrange(mediumTablet, split), {
     primary: full(mediumTablet),
     secondary: null,
   });
-  assert.deepEqual(
-    arrange(mediumTablet, { ...split, twoPanesOnMediumWidth: true }),
-    {
-      primary: { left: 0, top: 0, width: 350, height: 700 },
-      secondary: { left: 350, top: 0, width: 350, height: 700 },
-    }
-  );
+});
+
+test('a half-open hinge splits the panes whatever the window size', () => {
+  const narrowBook = {
+    ...mediumTablet,
+    fold: { ...bookFold, x: 350, height: 700 },
+  };
+  assert.deepEqual(arrange(narrowBook, split), {
+    primary: { left: 0, top: 0, width: 338, height: 700 },
+    secondary: { left: 362, top: 0, width: 338, height: 700 },
+  });
 });
 
 test('the window decides, not the arrangement inside it', () => {
@@ -181,18 +180,14 @@ test('one pane beside a hinge stays on its leading side', () => {
     primary: { left: 0, top: 0, width: 880, height: 413 },
     secondary: null,
   });
-  // ...or the window is too narrow for two panes.
-  const narrowBook = {
+  // ...or a flat hinge is avoided in a window too narrow for two panes.
+  const narrowFlat = {
     ...mediumTablet,
-    fold: { ...bookFold, x: 350, height: 700 },
+    fold: { ...flatFold, x: 350, height: 700 },
   };
-  assert.deepEqual(arrange(narrowBook, split), {
-    primary: { left: 0, top: 0, width: 338, height: 700 },
-    secondary: null,
-  });
-  assert.notEqual(
-    arrange(narrowBook, { ...split, twoPanesOnMediumWidth: true }).secondary,
-    null
+  assert.deepEqual(
+    arrange(narrowFlat, { ...split, hingePolicy: 'alwaysAvoid' }),
+    { primary: { left: 0, top: 0, width: 338, height: 700 }, secondary: null }
   );
 });
 

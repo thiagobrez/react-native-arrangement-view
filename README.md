@@ -32,15 +32,14 @@ export function PlayerScreen() {
 }
 ```
 
-| Prop                    | Default             | Meaning                                                                                                                                    |
-| ----------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| children                | required            | One `ArrangementView.Primary` and one `ArrangementView.Secondary`; see below                                                               |
-| `arrangement`           | `"split"`           | `"split"` or `"overlay"`                                                                                                                   |
-| `axes`                  | `"both"`            | `"both"`, `"horizontal"`, or `"vertical"`; applies to either arrangement                                                                   |
-| `observeHinge`          | `true`              | Enables observation for hooks inside this arrangement; disabling it does not disable adaptive layout                                       |
-| `hingePolicy`           | `"avoidSeparating"` | Android only. The hinges the panes keep clear of: `"avoidSeparating"` a half-open one, `"alwaysAvoid"` a flat one too, `"neverAvoid"` none |
-| `hingeGap`              | `24`                | Android only. The space in dp between the panes around an avoided hinge, never narrower than the hinge itself                              |
-| `twoPanesOnMediumWidth` | `false`             | Android only. Allows two panes side by side in a window 600–839 dp wide, unless it is under 480 dp tall                                    |
+| Prop           | Default             | Meaning                                                                                                                                    |
+| -------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| children       | required            | One `ArrangementView.Primary` and one `ArrangementView.Secondary`; see below                                                               |
+| `arrangement`  | `"split"`           | `"split"` or `"overlay"`                                                                                                                   |
+| `axes`         | `"both"`            | `"both"`, `"horizontal"`, or `"vertical"`; applies to either arrangement                                                                   |
+| `observeHinge` | `true`              | Enables observation for hooks inside this arrangement; disabling it does not disable adaptive layout                                       |
+| `hingePolicy`  | `"avoidSeparating"` | Android only. The hinges the panes keep clear of: `"avoidSeparating"` a half-open one, `"alwaysAvoid"` a flat one too, `"neverAvoid"` none |
+| `hingeGap`     | `24`                | Android only. The space in dp between the panes around an avoided hinge, never narrower than the hinge itself                              |
 
 `ArrangementView.Primary` and `ArrangementView.Secondary` are slot markers: they render no view of their own and do not affect layout. Put your own pane component inside each one. Both must be direct children of `ArrangementView`, in either order. Any other direct child is ignored, and a missing, duplicated, or unrecognized child logs a warning in development builds.
 
@@ -64,8 +63,8 @@ On iOS, as observed from SwiftUI on iOS 27.1:
 
 On Android:
 
-- The window decides how many panes fit: two side by side from 840 dp wide, or from 600 dp with `twoPanesOnMediumWidth`, and never in a window under 480 dp tall, such as a phone in landscape, which Android's guidance considers too short for two panes. Two stacked fit in tabletop posture, or in a single-column window at least 900 dp tall.
-- A hinge that `hingePolicy` avoids decides the axis, and the panes are separated by `hingeGap` centred on the crease. When that split doesn't fit, or `axes` excludes it, the primary pane shows alone on the leading side of the hinge, or above it.
+- The window decides how many panes fit: two side by side from 840 dp wide, and never in a window under 480 dp tall, such as a phone in landscape, which Android's guidance considers too short for two panes. Two stacked fit in tabletop posture, or in a single-column window at least 900 dp tall.
+- A hinge that `hingePolicy` avoids decides the axis, and the panes are separated by `hingeGap` centred on the crease. A half-open hinge splits the panes whatever the window size, as on iOS; a flat one only where two panes fit anyway. When the split doesn't fit, or `axes` excludes it, the primary pane shows alone on the leading side of the hinge, or above it.
 - Otherwise the panes halve the arrangement and touch.
 - `overlay` puts both panes at full size, primary in front. An avoided hinge separates them, as on iOS.
 - Right-to-left layouts put the primary pane on the right.
@@ -77,7 +76,6 @@ Where the platforms differ:
 | Plus / Pro Max iPhones in landscape           | Side by side: they have a regular width in landscape | Primary only: the window is under 480 dp tall, as on every phone in landscape         |
 | No hinge, two panes fit both ways             | The arrangement's longer side is halved              | Side by side, whatever the arrangement's shape                                        |
 | Space around a half-open hinge                | 20 pt on each side, fixed                            | `hingeGap`, 24 dp by default; `hingePolicy` can include a flat hinge or ignore hinges |
-| A window 600–839 dp wide in book posture      | Decided by size classes                              | Primary only, beside the hinge, unless `twoPanesOnMediumWidth`                        |
 | A half-open hinge whose split `axes` excludes | Primary only, at full size across the hinge          | Primary only, on the leading or top side of the hinge                                 |
 
 ### useHingeChange

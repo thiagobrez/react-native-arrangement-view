@@ -19,7 +19,6 @@ export function ArrangementView({
   observeHinge = true,
   hingePolicy,
   hingeGap,
-  twoPanesOnMediumWidth,
   ...props
 }: ArrangementViewProps) {
   const [store, onHingeChange] = useHingeStore(observeHinge);
@@ -41,7 +40,6 @@ export function ArrangementView({
       axes,
       hingePolicy,
       hingeGap,
-      twoPanesOnMediumWidth,
       rtl: I18nManager.isRTL,
     });
   const { primary, secondary, problems } = resolveSlots(children);
