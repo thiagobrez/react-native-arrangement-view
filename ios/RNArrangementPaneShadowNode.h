@@ -2,6 +2,7 @@
 #include <react/renderer/components/RNArrangementViewSpec/Props.h>
 #include <react/renderer/components/view/ConcreteViewShadowNode.h>
 #include <react/renderer/core/ConcreteComponentDescriptor.h>
+#include <react/renderer/core/LayoutContext.h>
 
 namespace facebook::react {
 struct ArrangementPaneState {
@@ -15,12 +16,19 @@ using ArrangementPaneShadowBase = ConcreteViewShadowNode<
 class ArrangementPaneShadowNode final : public ArrangementPaneShadowBase {
  public:
   using ArrangementPaneShadowBase::ArrangementPaneShadowBase;
-  static ShadowNodeTraits BaseTraits() {
-    auto traits = ArrangementPaneShadowBase::BaseTraits();
-    traits.set(ShadowNodeTraits::Trait::RootNodeKind);
-    return traits;
+
+  void layout(LayoutContext layoutContext) override {
+    const auto &data = getStateData();
+    if (data.measured) {
+      // SwiftUI supplies a physical origin in the ArrangementView's coordinates.
+      // Apply it after Yoga's directional layout: putting it in left/start would
+      // mirror it in RTL. Descendants still inherit the normal layout direction.
+      auto metrics = getLayoutMetrics();
+      metrics.frame.origin = data.origin;
+      setLayoutMetrics(metrics);
+    }
+    ArrangementPaneShadowBase::layout(layoutContext);
   }
-  Point getContentOriginOffset(bool) const override { return getStateData().origin; }
 };
 class ArrangementPaneComponentDescriptor final
     : public ConcreteComponentDescriptor<ArrangementPaneShadowNode> {

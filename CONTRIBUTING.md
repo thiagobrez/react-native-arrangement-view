@@ -41,3 +41,15 @@ adb emu rotate                        # a vertical fold becomes a horizontal one
 ## Device automation
 
 Keep app interactions serial within an agent-device session. Follow `agent-device help workflow`, use a dedicated device/session, and do not terminate another task's simulator lease. On iOS use Device Hub (`agent-device fold`) for hardware postures; on Android use the emulator console above. Use agent-device for app actions, assertions, and evidence. A posture change invalidates every ref, so re-snapshot after one.
+
+## Releasing
+
+Releases use [changesets](https://github.com/changesets/changesets). If a change affects the published library, add a changeset:
+
+```sh
+yarn changeset
+```
+
+Changes to the example app or docs don't need one.
+
+When a changeset is merged to `main`, the release workflow opens or updates a `chore(release): version packages` PR. That PR bumps the version and updates `CHANGELOG.md`. Merging it builds the library and publishes it to npm through trusted publishing.
