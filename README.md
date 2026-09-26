@@ -1,10 +1,6 @@
 <div align="center">
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/logo/logo-dark.svg" />
-  <source media="(prefers-color-scheme: light)" srcset="docs/logo/logo-light.svg" />
-  <img src="docs/logo/logo-light.svg" alt="react-native-arrangement-view logo" width="160" />
-</picture>
+<img src="docs/logo/logo.svg" alt="react-native-arrangement-view logo" width="160" />
 
 # react-native-arrangement-view
 
