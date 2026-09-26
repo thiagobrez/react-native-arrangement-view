@@ -1,6 +1,12 @@
+<div align="center">
+
+<img src="docs/logo/logo.svg" alt="react-native-arrangement-view logo" width="160" />
+
 # react-native-arrangement-view
 
-Foldable devices adaptive arrangement views and hinge observation for React Native.
+**Foldable devices adaptive arrangement views and hinge observation for React Native.**
+
+</div>
 
 ## Install
 
