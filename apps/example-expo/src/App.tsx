@@ -6,6 +6,7 @@ import {
   ArrangementView,
   type Arrangement,
   type ArrangementAxes,
+  type PrimaryEdge,
 } from 'react-native-arrangement-view';
 import { Chip } from './Chip';
 import { Pane } from './Pane';
@@ -13,6 +14,7 @@ import { Pane } from './Pane';
 export default function App() {
   const [arrangement, setArrangement] = useState<Arrangement>('split');
   const [axes, setAxes] = useState<ArrangementAxes>('both');
+  const [primaryEdge, setPrimaryEdge] = useState<PrimaryEdge>();
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.screen}>
@@ -39,6 +41,15 @@ export default function App() {
                 onPress={() => setAxes(axis)}
               />
             ))}
+            <View style={styles.separator} />
+            {([undefined, 'left', 'right'] as const).map((edge) => (
+              <Chip
+                key={edge ?? 'default'}
+                label={edge ? `Primary ${edge}` : 'Default edge'}
+                selected={edge === primaryEdge}
+                onPress={() => setPrimaryEdge(edge)}
+              />
+            ))}
           </View>
         </View>
 
@@ -48,6 +59,7 @@ export default function App() {
           style={styles.arrangement}
           arrangement={arrangement}
           axes={axes}
+          primaryEdge={primaryEdge}
         >
           <ArrangementView.Primary>
             <Pane primary arrangement={arrangement} />

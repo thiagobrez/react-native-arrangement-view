@@ -9,4 +9,5 @@ export type {
   HingePolicy,
   HingeState,
   HingeStatus,
+  PrimaryEdge,
 } from './types';

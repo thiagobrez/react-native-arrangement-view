@@ -16,6 +16,7 @@ export function ArrangementView({
   children,
   arrangement = 'split',
   axes = 'both',
+  primaryEdge,
   observeHinge = true,
   hingePolicy,
   hingeGap,
@@ -40,6 +41,7 @@ export function ArrangementView({
       axes,
       hingePolicy,
       hingeGap,
+      primaryEdge,
       rtl: I18nManager.isRTL,
     });
   const { primary, secondary, problems } = resolveSlots(children);

@@ -33,6 +33,8 @@ export interface NativeProps extends ViewProps {
   arrangement?: CodegenTypes.WithDefault<'split' | 'overlay', 'split'>;
   /** iOS only, as above. */
   axes?: CodegenTypes.WithDefault<'both' | 'horizontal' | 'vertical', 'both'>;
+  /** iOS only, as above. `auto` keeps SwiftUI's placement. */
+  primaryEdge?: CodegenTypes.WithDefault<'auto' | 'left' | 'right', 'auto'>;
   observeHinge?: CodegenTypes.WithDefault<boolean, true>;
   onHingeChange?: CodegenTypes.DirectEventHandler<HingeEvent>;
   /** Android only: the sizes and fold that arrange.ts lays the panes out by. */

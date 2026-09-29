@@ -67,7 +67,10 @@ using namespace facebook::react;
   NSString *axes = @"both";
   if (next.axes == RNArrangementViewAxes::Horizontal) axes = @"horizontal";
   if (next.axes == RNArrangementViewAxes::Vertical) axes = @"vertical";
-  [_host configure:arrangement axes:axes observeHinge:next.observeHinge];
+  NSString *primaryEdge = @"auto";
+  if (next.primaryEdge == RNArrangementViewPrimaryEdge::Left) primaryEdge = @"left";
+  if (next.primaryEdge == RNArrangementViewPrimaryEdge::Right) primaryEdge = @"right";
+  [_host configure:arrangement axes:axes primaryEdge:primaryEdge observeHinge:next.observeHinge];
   [super updateProps:props oldProps:oldProps];
 }
 @end

@@ -14,6 +14,7 @@ export function ArrangementView({
   children,
   arrangement = 'split',
   axes = 'both',
+  primaryEdge,
   observeHinge = true,
   // Android only: SwiftUI has its own rules for hinges and window sizes.
   hingePolicy: _hingePolicy,
@@ -31,6 +32,7 @@ export function ArrangementView({
         {...props}
         arrangement={arrangement}
         axes={axes}
+        primaryEdge={primaryEdge}
         observeHinge={observeHinge}
         onHingeChange={onHingeChange}
       >

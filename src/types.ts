@@ -3,6 +3,8 @@ import type { ViewProps } from 'react-native';
 
 export type Arrangement = 'split' | 'overlay';
 export type ArrangementAxes = 'both' | 'horizontal' | 'vertical';
+/** The physical side the primary pane takes when the panes are side by side. */
+export type PrimaryEdge = 'left' | 'right';
 /** Which hinges the panes keep clear of, after Material's `HingePolicy`. */
 export type HingePolicy = 'avoidSeparating' | 'alwaysAvoid' | 'neverAvoid';
 export type HingeStatus = 'unknown' | 'closed' | 'partiallyOpen' | 'fullyOpen';
@@ -21,6 +23,14 @@ export interface ArrangementViewProps extends ViewProps {
   children?: ReactNode;
   arrangement?: Arrangement;
   axes?: ArrangementAxes;
+  /**
+   * The physical side the primary pane takes when the panes are side by side,
+   * whatever the layout direction. `right` keeps the content that was on a
+   * book-style foldable's cover display under the user as they unfold it.
+   * Stacked panes are unaffected. By default a split's primary pane is on the
+   * leading side, and an overlay's is after the hinge.
+   */
+  primaryEdge?: PrimaryEdge;
   /** Disable hinge observation without affecting adaptive layout. Default true. */
   observeHinge?: boolean;
   /**
