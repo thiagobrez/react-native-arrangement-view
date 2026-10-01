@@ -127,6 +127,9 @@
         },
         "RNArrangementPane": {
           "className": "RNArrangementPane"
+        },
+        "RNHingeObserver": {
+          "className": "RNHingeObserver"
         }
       }
     },

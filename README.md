@@ -61,7 +61,7 @@ In overlay mode the **primary is in front of the secondary**. Use a transparent 
 
 ### useHingeChange
 
-Call the hook **inside a component rendered in either pane**. It observes the nearest `ArrangementView`, keeping events associated with that view's scene. It is not a process-wide sensor subscription.
+Call the hook **inside a `HingeObserver` or a component rendered in either pane** of an `ArrangementView`. It observes whichever of the two is nearer, keeping events associated with that view's window. It is not a process-wide sensor subscription.
 
 ```tsx
 import { Text } from 'react-native';
@@ -93,6 +93,42 @@ type HingeState = {
 Before the first native update, without hardware, or when observation is disabled, the state is `{ available: false, angle: null, status: 'unknown' }`.
 
 On Android, `angle` comes from the hinge angle sensor (Android 11+) and is `null` on a foldable without one.
+
+A view that leaves the window, such as a screen under a pushed one, keeps the last state it observed instead of becoming unavailable. It reports the current state, and calls the callback if it changed, when it returns.
+
+### HingeObserver
+
+Observes the hinge for `useHingeChange` anywhere among its children, without arranging anything. It renders a hidden native view as a sibling of the children, so it takes no space and no touches.
+
+Mount it **above your navigator**. The app root never leaves the window, so every screen reads live values, including one beneath a pushed screen:
+
+```tsx
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { HingeObserver, useHingeChange } from 'react-native-arrangement-view';
+
+const Stack = createNativeStackNavigator();
+
+export default function App() {
+  return (
+    <HingeObserver>
+      <NavigationContainer>
+        <Stack.Navigator>
+          <Stack.Screen name="Home" component={Home} />
+          <Stack.Screen name="Camera" component={Camera} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </HingeObserver>
+  );
+}
+
+function Camera() {
+  const hinge = useHingeChange();
+  return hinge.status === 'partiallyOpen' ? <TabletopCamera /> : <FullCamera />;
+}
+```
+
+Hooks inside an `ArrangementView`'s panes read that arrangement, which is nearer. Its `observeHinge` prop has no equivalent here: unmount the observer to stop observing.
 
 ## How panes are arranged
 
@@ -129,7 +165,7 @@ When running below iOS 27.1 **or building with an older SDK**:
 
 - `split` displays only the primary pane. The secondary React tree remains mounted but is outside the visible native hierarchy.
 - `overlay` layers primary over secondary at full size.
-- `axes` has no effect. Hinge state remains unavailable.
+- `axes` has no effect. Hinge state remains unavailable, for `HingeObserver` too.
 
 Android has no fallback mode: a device without a fold is arranged as flat, and its hinge state is unavailable.
 

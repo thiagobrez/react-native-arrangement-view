@@ -9,7 +9,7 @@ import com.facebook.react.uimanager.ViewManager
 class ArrangementViewPackage : BaseReactPackage() {
   override fun createViewManagers(
     reactContext: ReactApplicationContext
-  ): List<ViewManager<*, *>> = listOf(ArrangementViewManager())
+  ): List<ViewManager<*, *>> = listOf(ArrangementViewManager(), HingeObserverViewManager())
 
   override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? = null
 

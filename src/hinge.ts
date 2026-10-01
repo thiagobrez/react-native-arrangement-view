@@ -58,7 +58,7 @@ export const HingeContext = createContext<ReturnType<
   typeof createHingeStore
 > | null>(null);
 
-/** One arrangement's store, and the native event handler that feeds it. */
+/** One observer's store, and the native event handler that feeds it. */
 export function useHingeStore(observeHinge: boolean) {
   const [store] = useState(createHingeStore);
   const onHingeChange = useCallback(
@@ -72,12 +72,15 @@ export function useHingeStore(observeHinge: boolean) {
   return [store, onHingeChange] as const;
 }
 
-/** Observe the nearest ArrangementView. Call inside either pane's component. */
+/**
+ * Observe the nearest HingeObserver, or the ArrangementView whose pane this is,
+ * whichever is closer.
+ */
 export function useHingeChange(onChange?: HingeChangeHandler): HingeState {
   const store = useContext(HingeContext);
   if (!store)
     throw new Error(
-      'useHingeChange must be used inside an ArrangementView pane.'
+      'useHingeChange must be used inside a HingeObserver or an ArrangementView pane.'
     );
   const callback = useRef(onChange);
   useEffect(() => {

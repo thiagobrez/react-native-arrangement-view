@@ -13,6 +13,10 @@ export type HingeState = Readonly<{
   status: HingeStatus;
 }>;
 export type HingeChangeHandler = (hinge: HingeState) => void;
+export interface HingeObserverProps {
+  /** The tree in which `useHingeChange` observes this observer's window. */
+  children?: ReactNode;
+}
 export interface ArrangementViewProps extends ViewProps {
   /**
    * Exactly one `ArrangementView.Primary` and one `ArrangementView.Secondary`.
