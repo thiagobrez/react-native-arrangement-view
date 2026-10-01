@@ -32,10 +32,7 @@ export function ExamplesList() {
           onPress={() => navigation.navigate(item.name)}
           style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
         >
-          <View style={styles.rowText}>
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.description}>{item.description}</Text>
-          </View>
+          <Text style={styles.title}>{item.title}</Text>
           <Text style={styles.chevron}>›</Text>
         </Pressable>
       )}
@@ -59,9 +56,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a1d2a',
   },
   rowPressed: { backgroundColor: '#222637' },
-  rowText: { flex: 1, gap: 6 },
-  title: { color: 'white', fontSize: 17, fontWeight: '700' },
-  description: { color: '#aab3ce', fontSize: 13, lineHeight: 18 },
+  title: { flex: 1, color: 'white', fontSize: 17, fontWeight: '700' },
   chevron: { color: '#5d6580', fontSize: 28, fontWeight: '300' },
   separator: { height: 10 },
 });

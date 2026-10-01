@@ -24,7 +24,7 @@ export default function App() {
     <SafeAreaProvider style={styles.root}>
       <StatusBar style="light" />
       <NavigationContainer theme={theme}>
-        <Stack.Navigator>
+        <Stack.Navigator screenOptions={{ headerShadowVisible: false }}>
           <Stack.Screen
             name="examples"
             component={ExamplesList}

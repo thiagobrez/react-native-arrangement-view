@@ -5,7 +5,6 @@ export interface Example {
   /** Route name; also used for testIDs. */
   name: string;
   title: string;
-  description: string;
   component: ComponentType;
 }
 
@@ -14,8 +13,6 @@ export const examples: Example[] = [
   {
     name: 'features-demo',
     title: 'Features demo',
-    description:
-      'Toggle split and overlay arrangements and axes, and watch pane sizes and the hinge angle update live.',
     component: FeaturesDemo,
   },
 ];
