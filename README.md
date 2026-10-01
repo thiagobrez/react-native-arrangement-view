@@ -38,19 +38,22 @@ export function PlayerScreen() {
 }
 ```
 
-| Prop           | Default             | Meaning                                                                                                                                    |
-| -------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| children       | required            | One `ArrangementView.Primary` and one `ArrangementView.Secondary`; see below                                                               |
-| `arrangement`  | `"split"`           | `"split"` or `"overlay"`                                                                                                                   |
-| `axes`         | `"both"`            | `"both"`, `"horizontal"`, or `"vertical"`; applies to either arrangement                                                                   |
-| `primaryEdge`  | none                | `"left"` or `"right"`: the physical side the primary pane takes when the panes are side by side; see below                                 |
-| `observeHinge` | `true`              | Enables observation for hooks inside this arrangement; disabling it does not disable adaptive layout                                       |
-| `hingePolicy`  | `"avoidSeparating"` | Android only. The hinges the panes keep clear of: `"avoidSeparating"` a half-open one, `"alwaysAvoid"` a flat one too, `"neverAvoid"` none |
-| `hingeGap`     | `24`                | Android only. The space in dp between the panes around an avoided hinge, never narrower than the hinge itself                              |
+| Prop                        | Default             | Meaning                                                                                                                                    |
+| --------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| children                    | required            | One `ArrangementView.Primary` and one `ArrangementView.Secondary`; see below                                                               |
+| `arrangement`               | `"split"`           | `"split"` or `"overlay"`                                                                                                                   |
+| `axes`                      | `"both"`            | `"both"`, `"horizontal"`, or `"vertical"`; applies to either arrangement                                                                   |
+| `primaryEdge`               | none                | `"leading"` or `"trailing"`: the side the primary pane takes when the panes are side by side; see below                                    |
+| `onArrangementLayoutChange` | none                | Called with the `ArrangementLayout` when it changes; see `useArrangementLayout`                                                            |
+| `observeHinge`              | `true`              | Enables observation for hooks inside this arrangement; disabling it does not disable adaptive layout                                       |
+| `hingePolicy`               | `"avoidSeparating"` | Android only. The hinges the panes keep clear of: `"avoidSeparating"` a half-open one, `"alwaysAvoid"` a flat one too, `"neverAvoid"` none |
+| `hingeGap`                  | `24`                | Android only. The space in dp between the panes around an avoided hinge, never narrower than the hinge itself                              |
 
 Give the arrangement a bounded size, usually `flex: 1`. The platform determines whether a split is appropriate; an axis restriction does not force two panes to stay visible.
 
-`primaryEdge="right"` suits a book-style foldable: closed, its cover display sits over the right half of the inner one, so the content on the cover stays in place as the device unfolds, and the secondary pane opens beside it. The side is physical, the same in right-to-left layouts, and stacked panes are unaffected. Without it, a split's primary pane is on the leading side and an overlay's goes after the hinge.
+`primaryEdge="trailing"` suits a book-style foldable in a left-to-right app: closed, its cover display sits over the right half of the inner one, so the content on the cover stays in place as the device unfolds, and the secondary pane opens beside it. Leading and trailing follow the layout direction, and stacked panes, such as in tabletop posture, are unaffected. Without it, a split's primary pane is on the leading side and an overlay's goes after the hinge, on the trailing side.
+
+Screen readers go through the panes in reading order, whichever is primary: with the primary pane on the trailing side, the secondary pane is read first.
 
 The component adds no safe-area padding. Place it within the safe area supplied by your screen/navigation container, or handle insets in your content.
 
@@ -97,6 +100,37 @@ Before the first native update, without hardware, or when observation is disable
 
 On Android, `angle` comes from the hinge angle sensor (Android 11+) and is `null` on a foldable without one.
 
+### useArrangementLayout
+
+Call the hook inside a component rendered in either pane. It returns what the nearest `ArrangementView` shows, and re-renders when that changes, so a pane can adapt to its sibling: for example, hide a button that opens the secondary pane while the secondary pane is already on screen.
+
+```tsx
+import { useArrangementLayout } from 'react-native-arrangement-view';
+
+function Dashboard() {
+  const layout = useArrangementLayout();
+  return <Rail showCalendarButton={!layout?.secondaryVisible} />;
+}
+```
+
+```ts
+type ArrangementLayout = {
+  secondaryVisible: boolean; // beside the primary pane, or behind it in overlay
+  axis: 'horizontal' | 'vertical' | null; // null when only the primary shows or the panes overlap
+};
+```
+
+| On screen                               | `secondaryVisible` | `axis`                         |
+| --------------------------------------- | ------------------ | ------------------------------ |
+| The primary pane only                   | `false`            | `null`                         |
+| Split side by side, or stacked          | `true`             | `"horizontal"` or `"vertical"` |
+| Overlay, the panes on top of each other | `true`             | `null`                         |
+| Overlay, separated by a hinge           | `true`             | `"horizontal"` or `"vertical"` |
+
+The layout is `null` until the panes are first laid out, so content that depends on it can wait rather than flash. It describes the panes' placement, not the hinge: a device unfolded with only the primary pane on screen, such as in a multi-window split, reports `secondaryVisible: false`. An optional callback receives each known layout. To observe the layout from outside the panes, use the `onArrangementLayoutChange` prop.
+
+Don't move content between `ArrangementView.Primary` and `ArrangementView.Secondary` based on the layout or the hinge: React remounts content that changes slots, losing its state. Use `primaryEdge` to choose the primary pane's side, and this hook to adapt content within a pane.
+
 ## How panes are arranged
 
 Each platform follows its own conventions. iOS delegates arrangement to SwiftUI's `ArrangementView`. Android has no system equivalent, so the library applies Material's adaptive layout rules, the ones behind Compose's `calculatePaneScaffoldDirective`, to the window size and the fold that Jetpack WindowManager reports.
@@ -113,10 +147,10 @@ On iOS:
 On Android:
 
 - The window decides how many panes fit: two side by side from 840 dp wide, and never in a window under 480 dp tall, such as a phone in landscape, which Android's guidance considers too short for two panes. Two stacked fit in tabletop posture, or in a single-column window at least 900 dp tall.
-- A hinge that `hingePolicy` avoids decides the axis, and the panes are separated by `hingeGap` centred on the crease. A half-open hinge splits the panes whatever the window size, as on iOS; a flat one only where two panes fit anyway. When the split doesn't fit, or `axes` excludes it, the primary pane shows alone on the leading side of the hinge, or above it.
+- A hinge that `hingePolicy` avoids decides the axis, and the panes are separated by `hingeGap` centred on the crease. A half-open hinge splits the panes whatever the window size, as on iOS; a flat one only where two panes fit anyway. When the split doesn't fit, or `axes` excludes it, the primary pane shows alone on the side of the hinge `primaryEdge` names, leading by default, or above it.
 - Otherwise the panes halve the arrangement and touch.
 - `overlay` puts both panes at full size, primary in front. An avoided hinge separates them, as on iOS.
-- Right-to-left layouts put the primary pane on the right, unless `primaryEdge` names a side.
+- Right-to-left layouts put the primary pane on the right, and `primaryEdge` sides are mirrored with them.
 
 Where the platforms differ:
 
@@ -133,7 +167,7 @@ When running below iOS 27.1 **or building with an older SDK**:
 
 - `split` displays only the primary pane. The secondary React tree remains mounted but is outside the visible native hierarchy.
 - `overlay` layers primary over secondary at full size.
-- `axes` and `primaryEdge` have no effect. Hinge state remains unavailable.
+- `axes` and `primaryEdge` have no effect. Hinge state remains unavailable. The layout reports the primary pane only for `split`, and overlapping panes for `overlay`.
 
 Android has no fallback mode: a device without a fold is arranged as flat, and its hinge state is unavailable.
 

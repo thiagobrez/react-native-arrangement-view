@@ -71,8 +71,8 @@ const EXPANDED_HEIGHT = 900;
  * A hinge the policy avoids decides the axis and separates the panes by
  * `hingeGap` around it. A separating hinge always splits, whatever the window
  * size, as it does on iOS. A split that doesn't fit, or that `axes` excludes,
- * shows only the primary pane. `primaryEdge` puts the primary pane on a
- * physical side of panes placed side by side.
+ * shows only the primary pane. `primaryEdge` puts the primary pane on the
+ * leading or trailing side of panes placed side by side.
  */
 export function arrange(
   { width, height, window, fold }: Geometry,
@@ -116,7 +116,7 @@ export function arrange(
           ];
     const primaryIsAfter =
       axis === 'horizontal' && primaryEdge
-        ? primaryEdge === 'right'
+        ? (primaryEdge === 'trailing') !== rtl
         : (rtl && axis === 'horizontal') !== primaryAfter;
     return primaryIsAfter
       ? { primary: after, secondary: before }

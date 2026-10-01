@@ -27,6 +27,16 @@ using namespace facebook::react;
       auto emitter = std::static_pointer_cast<const RNArrangementViewEventEmitter>(strongSelf->_eventEmitter);
       emitter->onHingeChange({(bool)available, angle, std::string(status.UTF8String)});
     };
+    _host.onPanesChange = ^(CGRect primary, CGRect secondary, BOOL secondaryVisible) {
+      RNArrangementView *strongSelf = weakSelf;
+      if (!strongSelf || !strongSelf->_eventEmitter) return;
+      auto emitter = std::static_pointer_cast<const RNArrangementViewEventEmitter>(strongSelf->_eventEmitter);
+      RNArrangementViewEventEmitter::OnPanesChange event;
+      event.primary = {primary.origin.x, primary.origin.y, primary.size.width, primary.size.height};
+      event.secondary = {secondary.origin.x, secondary.origin.y, secondary.size.width, secondary.size.height};
+      event.secondaryVisible = secondaryVisible;
+      emitter->onPanesChange(event);
+    };
     _host.onPaneLayout = ^(UIView *pane, CGRect nativeFrame) {
       RNArrangementView *strongSelf = weakSelf;
       if (strongSelf && [pane isKindOfClass:RNArrangementPane.class]) {
@@ -68,8 +78,8 @@ using namespace facebook::react;
   if (next.axes == RNArrangementViewAxes::Horizontal) axes = @"horizontal";
   if (next.axes == RNArrangementViewAxes::Vertical) axes = @"vertical";
   NSString *primaryEdge = @"auto";
-  if (next.primaryEdge == RNArrangementViewPrimaryEdge::Left) primaryEdge = @"left";
-  if (next.primaryEdge == RNArrangementViewPrimaryEdge::Right) primaryEdge = @"right";
+  if (next.primaryEdge == RNArrangementViewPrimaryEdge::Leading) primaryEdge = @"leading";
+  if (next.primaryEdge == RNArrangementViewPrimaryEdge::Trailing) primaryEdge = @"trailing";
   [_host configure:arrangement axes:axes primaryEdge:primaryEdge observeHinge:next.observeHinge];
   [super updateProps:props oldProps:oldProps];
 }

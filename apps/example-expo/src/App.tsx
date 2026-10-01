@@ -42,7 +42,7 @@ export default function App() {
               />
             ))}
             <View style={styles.separator} />
-            {([undefined, 'left', 'right'] as const).map((edge) => (
+            {([undefined, 'leading', 'trailing'] as const).map((edge) => (
               <Chip
                 key={edge ?? 'default'}
                 label={edge ? `Primary ${edge}` : 'Default edge'}
