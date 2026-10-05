@@ -21,15 +21,11 @@ features:
     icon: 🗂️
     link: /api/arrangement-view
   - title: Hinge-aware
-    details: A half-open hinge separates the panes on either side of the crease, on iOS and Android alike.
+    details: A half-open hinge separates the panes on either side of the crease. useHingeChange() reports the hinge angle and device posture.
     icon: 📖
-    link: /guide/how-panes-are-arranged
+    link: /api/use-hinge-change
   - title: Native conventions
     details: SwiftUI's ArrangementView arranges the panes on iOS; Android follows Material's adaptive layout rules with Jetpack WindowManager.
     icon: 📱
     link: /guide/platform-comparison
-  - title: Hinge observation
-    details: useHingeChange reports the hinge angle and posture of the arrangement it is rendered in.
-    icon: 📐
-    link: /api/use-hinge-change
 ---

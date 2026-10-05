@@ -31,8 +31,5 @@ export default defineConfig({
     editLink: {
       docRepoBaseUrl: `${repo}/tree/main/apps/docs/docs`,
     },
-    footer: {
-      message: 'Released under the MIT License.',
-    },
   },
 });

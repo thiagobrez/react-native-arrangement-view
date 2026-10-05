@@ -8,3 +8,13 @@
   --rp-c-brand-tint: #7c6cf229;
   --rp-home-hero-secondary-color: #2dc2b4;
 }
+
+/* Keep the home page feature cards flat: drop the theme's hover tilt and glare. */
+.rp-home-feature__item,
+.rp-home-feature__item-wrapper {
+  transform: none !important;
+}
+
+.rp-home-feature__item__shine {
+  display: none;
+}
