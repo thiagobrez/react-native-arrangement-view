@@ -1,0 +1,42 @@
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+# Installation
+
+<PackageManagerTabs command="install react-native-arrangement-view" />
+
+Then install the iOS pods:
+
+```sh
+cd ios && pod install
+```
+
+:::warning
+Expo Go is not supported. Use a development build (`npx expo run:ios`, `npx expo run:android`).
+:::
+
+## Requirements
+
+- React 19 or later
+- React Native 0.83 or later
+- On iOS, the native arrangement needs iOS 27.1 and the iOS 27.1 SDK. Older versions use the [fallback](./how-panes-are-arranged#fallback).
+
+## Usage
+
+```tsx
+import { ArrangementView } from 'react-native-arrangement-view';
+
+export function PlayerScreen() {
+  return (
+    <ArrangementView style={{ flex: 1 }} arrangement="split" axes="both">
+      <ArrangementView.Primary>
+        {/* Add your primary view here */}
+      </ArrangementView.Primary>
+      <ArrangementView.Secondary>
+        {/* Add your secondary view here */}
+      </ArrangementView.Secondary>
+    </ArrangementView>
+  );
+}
+```
+
+See [`ArrangementView`](../api/arrangement-view) for its props, and [How panes are arranged](./how-panes-are-arranged) for what each platform does with them.
