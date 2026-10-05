@@ -1,4 +1,4 @@
-import { useState, type ComponentProps } from 'react';
+import type { ComponentProps } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { MaterialDesignIcons } from '@react-native-vector-icons/material-design-icons';
 import { useArrangementLayout } from 'react-native-arrangement-view';
@@ -24,27 +24,14 @@ type IconName = ComponentProps<typeof MaterialDesignIcons>['name'];
 export interface DashboardProps {
   selected: Date;
   onSelect: (date: Date) => void;
-  onOpenCalendar: () => void;
-  /** Called when the calendar pane appears beside the dashboard. */
-  onCalendarShown: () => void;
 }
 
 /**
- * The day's activity. Beside the calendar pane it drops what the calendar
- * already shows, the calendar button and the week strip, for an hourly chart.
+ * The day's activity. Beside the calendar pane it swaps the week strip, which
+ * the calendar already covers, for an hourly chart.
  */
-export function Dashboard({
-  selected,
-  onSelect,
-  onOpenCalendar,
-  onCalendarShown,
-}: DashboardProps) {
-  const layout = useArrangementLayout((next) => {
-    if (next.secondaryVisible) onCalendarShown();
-  });
-  const [metric, setMetric] = useState<'steps' | 'calories' | 'insights'>(
-    'steps'
-  );
+export function Dashboard({ selected, onSelect }: DashboardProps) {
+  const layout = useArrangementLayout();
   const selectedDay = day(selected);
   const steps = selectedDay.steps ?? 0;
   const besideCalendar = layout?.secondaryVisible === true;
@@ -151,41 +138,6 @@ export function Dashboard({
             <WeekStrip selected={selected} onSelect={onSelect} />
           ))}
       </ScrollView>
-
-      <View style={styles.rail}>
-        <View style={styles.pill}>
-          {layout && !besideCalendar && (
-            <RailButton
-              icon="calendar-month-outline"
-              label="Calendar"
-              onPress={onOpenCalendar}
-            />
-          )}
-          <RailButton icon="cog-outline" label="Settings" />
-        </View>
-        <View style={styles.pill}>
-          <RailButton
-            icon="shoe-print"
-            label="Steps"
-            color="#ff9500"
-            selected={metric === 'steps'}
-            onPress={() => setMetric('steps')}
-          />
-          <RailButton
-            icon="fire"
-            label="Calories"
-            color="#ff3b30"
-            selected={metric === 'calories'}
-            onPress={() => setMetric('calories')}
-          />
-          <RailButton
-            icon="creation"
-            label="Insights"
-            selected={metric === 'insights'}
-            onPress={() => setMetric('insights')}
-          />
-        </View>
-      </View>
     </View>
   );
 }
@@ -276,32 +228,6 @@ function WeekStrip({
   );
 }
 
-function RailButton({
-  icon,
-  label,
-  color = colors.text,
-  selected = false,
-  onPress,
-}: {
-  icon: IconName;
-  label: string;
-  color?: string;
-  selected?: boolean;
-  onPress?: () => void;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityState={{ selected }}
-      onPress={onPress}
-      style={[styles.railButton, selected && styles.railButtonSelected]}
-    >
-      <MaterialDesignIcons name={icon} size={22} color={color} />
-    </Pressable>
-  );
-}
-
 const shadow = {
   shadowColor: '#000',
   shadowOpacity: 0.06,
@@ -311,11 +237,7 @@ const shadow = {
 };
 
 const styles = StyleSheet.create({
-  dashboard: {
-    flex: 1,
-    flexDirection: 'row',
-    backgroundColor: colors.background,
-  },
+  dashboard: { flex: 1, backgroundColor: colors.background },
   divided: {
     borderStartWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
@@ -323,7 +245,7 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   content: {
     paddingStart: 18,
-    paddingEnd: 8,
+    paddingEnd: 18,
     paddingTop: 8,
     paddingBottom: 24,
   },
@@ -419,27 +341,4 @@ const styles = StyleSheet.create({
   },
   weekDayName: { fontSize: 13, color: colors.secondary },
   weekDayDate: { fontSize: 16, fontWeight: '600', color: colors.secondary },
-  rail: {
-    justifyContent: 'space-between',
-    paddingTop: 12,
-    paddingBottom: 16,
-    paddingEnd: 12,
-  },
-  pill: {
-    gap: 6,
-    padding: 6,
-    borderRadius: 28,
-    backgroundColor: '#fbfbfc',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-    ...shadow,
-  },
-  railButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  railButtonSelected: { backgroundColor: colors.selected },
 });

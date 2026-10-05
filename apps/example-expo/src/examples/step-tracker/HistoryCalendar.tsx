@@ -21,17 +21,20 @@ export interface HistoryCalendarProps {
 /** Steps for every day, a month at a time, scrolled to the current month. */
 export function HistoryCalendar({ selected, onSelect }: HistoryCalendarProps) {
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
+  // A hidden pane isn't laid out, so scroll again once it has a size, a frame
+  // later, when the native scroll view knows its content's size too.
+  const scrollToToday = () =>
+    requestAnimationFrame(() =>
+      scroll.current?.scrollToEnd({ animated: false })
+    );
   return (
     <ScrollView
       ref={scroll}
       testID="history-calendar"
       style={styles.scroll}
       contentContainerStyle={styles.content}
-      // A hidden pane isn't laid out, so scroll again once it has a size.
-      onLayout={() => scroll.current?.scrollToEnd({ animated: false })}
-      onContentSizeChange={() =>
-        scroll.current?.scrollToEnd({ animated: false })
-      }
+      onLayout={scrollToToday}
+      onContentSizeChange={scrollToToday}
     >
       {months.map((days) => (
         <Month

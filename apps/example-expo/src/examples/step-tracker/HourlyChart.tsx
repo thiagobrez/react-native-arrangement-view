@@ -2,13 +2,25 @@ import { StyleSheet, Text, View } from 'react-native';
 import { colors, formatSteps } from './data';
 
 const SLOTS = 48;
+
+/** The smallest of 3, 6, 9 or 15 times a power of ten that fits `peak`, so the thirds are round. */
+function scale(peak: number) {
+  for (let power = 1; ; power *= 10)
+    for (const step of [3, 6, 9, 15])
+      if (step * power >= peak) return step * power;
+}
 const HEIGHT = 110;
 
-/** Steps per half hour across the day, with a scale on the trailing side. */
-export function HourlyChart({ values }: { values: number[] }) {
+/** A value per half hour across the day, with a scale on the trailing side. */
+export function HourlyChart({
+  values,
+  color = colors.green,
+}: {
+  values: number[];
+  color?: string;
+}) {
   const peak = Math.max(...values, 1);
-  // A multiple of 300, so the thirds are round numbers.
-  const max = Math.max(300, Math.ceil(peak / 300) * 300);
+  const max = scale(peak);
   const ticks = [max, (max * 2) / 3, max / 3, 0];
   return (
     <View testID="hourly-chart" style={styles.chart}>
@@ -27,6 +39,7 @@ export function HourlyChart({ values }: { values: number[] }) {
               style={[
                 styles.bar,
                 {
+                  backgroundColor: color,
                   left: `${(slot / SLOTS) * 100}%`,
                   height: Math.max(2, (value / max) * HEIGHT),
                 },
@@ -82,7 +95,6 @@ const styles = StyleSheet.create({
     width: `${(1 / SLOTS) * 100 * 0.7}%`,
     borderTopLeftRadius: 2,
     borderTopRightRadius: 2,
-    backgroundColor: colors.green,
   },
   hours: { flexDirection: 'row', marginTop: 6 },
   hour: { flex: 1, fontSize: 11, color: colors.secondary },
