@@ -16,10 +16,16 @@ import {
 export interface HistoryCalendarProps {
   selected: Date;
   onSelect: (date: Date) => void;
+  /** Drop the padding on the end side, where a half-open hinge already leaves room. */
+  besideHinge?: boolean;
 }
 
 /** Steps for every day, a month at a time, scrolled to the current month. */
-export function HistoryCalendar({ selected, onSelect }: HistoryCalendarProps) {
+export function HistoryCalendar({
+  selected,
+  onSelect,
+  besideHinge = false,
+}: HistoryCalendarProps) {
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   // A hidden pane isn't laid out, so scroll again once it has a size, a frame
   // later, when the native scroll view knows its content's size too.
@@ -32,7 +38,10 @@ export function HistoryCalendar({ selected, onSelect }: HistoryCalendarProps) {
       ref={scroll}
       testID="history-calendar"
       style={styles.scroll}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[
+        styles.content,
+        besideHinge && styles.besideHinge,
+      ]}
       onLayout={scrollToToday}
       onContentSizeChange={scrollToToday}
     >
@@ -167,6 +176,7 @@ function Hatching() {
 const styles = StyleSheet.create({
   scroll: { flex: 1, backgroundColor: colors.background },
   content: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 24 },
+  besideHinge: { paddingEnd: 4 },
   month: { marginBottom: 20 },
   monthHeader: {
     flexDirection: 'row',

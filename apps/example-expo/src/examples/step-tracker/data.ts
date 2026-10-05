@@ -131,3 +131,194 @@ export const colors = {
   orange: '#f08a3c',
   selected: '#e4e4e9',
 };
+
+export type WorkoutType =
+  | 'outdoorCycle'
+  | 'hiit'
+  | 'outdoorWalk'
+  | 'indoorWalk'
+  | 'indoorRun'
+  | 'outdoorRun'
+  | 'outdoorSwim';
+
+export interface Workout {
+  type: WorkoutType;
+  start: Date;
+  /** Kilometres; null for a workout measured in calories, such as HIIT. */
+  distance: number | null;
+  kcal: number;
+  minutes: number;
+}
+
+export const workoutKinds: Record<
+  WorkoutType,
+  {
+    name: string;
+    icon: 'bike' | 'run-fast' | 'walk' | 'run' | 'swim';
+    tint: string;
+    family: WorkoutFamily;
+  }
+> = {
+  outdoorCycle: {
+    name: 'Outdoor Cycle',
+    icon: 'bike',
+    tint: '#30b850',
+    family: 'cycle',
+  },
+  hiit: { name: 'HIIT', icon: 'run-fast', tint: '#ff3b30', family: 'hiit' },
+  outdoorWalk: {
+    name: 'Outdoor Walk',
+    icon: 'walk',
+    tint: '#1e88f5',
+    family: 'walk',
+  },
+  indoorWalk: {
+    name: 'Indoor Walk',
+    icon: 'walk',
+    tint: '#1e88f5',
+    family: 'walk',
+  },
+  indoorRun: {
+    name: 'Indoor Run',
+    icon: 'run',
+    tint: '#bf5af2',
+    family: 'run',
+  },
+  outdoorRun: {
+    name: 'Outdoor Run',
+    icon: 'run',
+    tint: '#bf5af2',
+    family: 'run',
+  },
+  outdoorSwim: {
+    name: 'Outdoor Swim',
+    icon: 'swim',
+    tint: '#32ade6',
+    family: 'swim',
+  },
+};
+
+export type WorkoutFamily = 'walk' | 'cycle' | 'run' | 'hiit' | 'swim';
+
+const at = (date: number, hours: number, minutes: number) =>
+  new Date(2026, 8, date, hours, minutes);
+
+/** September's workouts, newest first. */
+export const workouts: Workout[] = [
+  {
+    type: 'outdoorCycle',
+    start: at(25, 18, 43),
+    distance: 54.05,
+    kcal: 1220,
+    minutes: 116,
+  },
+  {
+    type: 'hiit',
+    start: at(22, 17, 11),
+    distance: null,
+    kcal: 462,
+    minutes: 41,
+  },
+  {
+    type: 'outdoorCycle',
+    start: at(21, 7, 47),
+    distance: 32.15,
+    kcal: 880,
+    minutes: 79,
+  },
+  {
+    type: 'outdoorWalk',
+    start: at(19, 9, 1),
+    distance: 8.06,
+    kcal: 410,
+    minutes: 70,
+  },
+  {
+    type: 'indoorRun',
+    start: at(17, 17, 30),
+    distance: 6.86,
+    kcal: 520,
+    minutes: 39,
+  },
+  {
+    type: 'hiit',
+    start: at(16, 18, 33),
+    distance: null,
+    kcal: 396,
+    minutes: 35,
+  },
+  {
+    type: 'indoorRun',
+    start: at(15, 7, 4),
+    distance: 6.32,
+    kcal: 480,
+    minutes: 36,
+  },
+  {
+    type: 'outdoorWalk',
+    start: at(14, 19, 1),
+    distance: 1.93,
+    kcal: 105,
+    minutes: 24,
+  },
+  {
+    type: 'outdoorCycle',
+    start: at(13, 8, 38),
+    distance: 34.68,
+    kcal: 910,
+    minutes: 86,
+  },
+  {
+    type: 'outdoorRun',
+    start: at(10, 7, 13),
+    distance: 6.92,
+    kcal: 530,
+    minutes: 38,
+  },
+  {
+    type: 'indoorWalk',
+    start: at(6, 8, 31),
+    distance: 4.12,
+    kcal: 230,
+    minutes: 52,
+  },
+  {
+    type: 'outdoorSwim',
+    start: at(5, 17, 32),
+    distance: 1.88,
+    kcal: 340,
+    minutes: 44,
+  },
+  {
+    type: 'indoorWalk',
+    start: at(3, 6, 48),
+    distance: 6.43,
+    kcal: 330,
+    minutes: 52,
+  },
+];
+
+export const families: WorkoutFamily[] = [
+  'walk',
+  'cycle',
+  'run',
+  'hiit',
+  'swim',
+];
+
+/** The month's totals, in the order the summary shows them. */
+export function totals(of: Workout[]) {
+  const minutes = of.reduce((sum, workout) => sum + workout.minutes, 0);
+  const kcal = of.reduce((sum, workout) => sum + workout.kcal, 0);
+  const km = of.reduce((sum, workout) => sum + (workout.distance ?? 0), 0);
+  const days = new Set(of.map((workout) => workout.start.getDate())).size;
+  return {
+    count: `${of.length} workouts over ${days} days`,
+    detail: `${Math.floor(minutes / 60)}h ${minutes % 60}m · ${kcal.toLocaleString('en-US')} kcal · ${km.toFixed(1)} km`,
+  };
+}
+
+export const time = (date: Date) =>
+  date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+export const monthYear = (date: Date) =>
+  date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });

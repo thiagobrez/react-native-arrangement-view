@@ -17,6 +17,7 @@ import {
   STREAK,
   week,
 } from './data';
+import { useBesideHinge } from './besideHinge';
 import { HourlyChart } from './HourlyChart';
 
 type IconName = ComponentProps<typeof MaterialDesignIcons>['name'];
@@ -32,6 +33,8 @@ export interface DashboardProps {
  */
 export function Dashboard({ selected, onSelect }: DashboardProps) {
   const layout = useArrangementLayout();
+  // The dashboard is the trailing pane: its start faces the hinge.
+  const besideHinge = useBesideHinge();
   const selectedDay = day(selected);
   const steps = selectedDay.steps ?? 0;
   const besideCalendar = layout?.secondaryVisible === true;
@@ -45,7 +48,10 @@ export function Dashboard({ selected, onSelect }: DashboardProps) {
     >
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          besideHinge && styles.besideHinge,
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.weatherRow}>
@@ -137,6 +143,10 @@ export function Dashboard({ selected, onSelect }: DashboardProps) {
           ) : (
             <WeekStrip selected={selected} onSelect={onSelect} />
           ))}
+
+        <Text style={styles.credit}>
+          Example copied from GetSteps.app, to showcase features of the library
+        </Text>
       </ScrollView>
     </View>
   );
@@ -243,6 +253,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   scroll: { flex: 1 },
+  besideHinge: { paddingStart: 4 },
   content: {
     paddingStart: 18,
     paddingEnd: 18,
@@ -338,6 +349,12 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
     backgroundColor: colors.green,
+  },
+  credit: {
+    fontSize: 11,
+    color: colors.tertiary,
+    textAlign: 'center',
+    marginTop: 28,
   },
   weekDayName: { fontSize: 13, color: colors.secondary },
   weekDayDate: { fontSize: 16, fontWeight: '600', color: colors.secondary },

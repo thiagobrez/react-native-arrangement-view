@@ -1,27 +1,10 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { calories, colors, day, halfHours, today } from './data';
-import { HourlyChart } from './HourlyChart';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { colors } from './data';
+import { headerBase } from './header';
 
-/** Today's calories, half hour by half hour. */
-export function CaloriesTab() {
-  const steps = day(today).steps ?? 0;
-  return (
-    <SafeAreaView style={styles.screen} edges={['left', 'right', 'bottom']}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.caption}>Today</Text>
-        <Text style={styles.value}>
-          {calories(steps)}
-          <Text style={styles.unit}> kcal</Text>
-        </Text>
-        <HourlyChart
-          values={halfHours(day(today)).map(calories)}
-          color="#ff3b30"
-        />
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
+const Stack = createNativeStackNavigator();
 
 const insights = [
   ['Most active hour', '6:00–7:00, with 2,430 steps'],
@@ -31,6 +14,18 @@ const insights = [
 
 /** A few observations from the step history. */
 export function InsightsTab() {
+  return (
+    <Stack.Navigator screenOptions={headerBase}>
+      <Stack.Screen
+        name="insights-home"
+        component={InsightsScreen}
+        options={{ title: 'Insights' }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+function InsightsScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['left', 'right', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -49,8 +44,6 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: 18, gap: 12 },
   caption: { fontSize: 15, color: colors.secondary },
-  value: { fontSize: 34, fontWeight: '700', color: colors.text },
-  unit: { fontSize: 17, fontWeight: '500', color: colors.secondary },
   card: {
     borderRadius: 18,
     backgroundColor: colors.card,
