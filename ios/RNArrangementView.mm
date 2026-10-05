@@ -42,7 +42,8 @@ using namespace facebook::react;
       if (strongSelf && [pane isKindOfClass:RNArrangementPane.class]) {
         // The host occupies our content frame, inset by padding and borders.
         CGRect frame = [strongSelf->_host convertRect:nativeFrame toView:strongSelf];
-        [(RNArrangementPane *)pane updateNativeFrame:frame];
+        // SwiftUI's layout pass, outside any mount: lay the content out now.
+        [(RNArrangementPane *)pane updateNativeFrame:frame immediate:YES];
       }
     };
   }
@@ -55,7 +56,7 @@ using namespace facebook::react;
   // its panes. Refresh their origins even if SwiftUI has no new layout to report.
   for (UIView *pane in _panes) {
     if ([pane isKindOfClass:RNArrangementPane.class] && [pane isDescendantOfView:_host]) {
-      [(RNArrangementPane *)pane updateNativeFrame:[pane convertRect:pane.bounds toView:self]];
+      [(RNArrangementPane *)pane updateNativeFrame:[pane convertRect:pane.bounds toView:self] immediate:NO];
     }
   }
 }

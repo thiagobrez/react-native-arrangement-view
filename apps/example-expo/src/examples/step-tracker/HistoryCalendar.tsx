@@ -1,4 +1,3 @@
-import { useRef, type ComponentRef } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { MaterialDesignIcons } from '@react-native-vector-icons/material-design-icons';
 import {
@@ -20,38 +19,32 @@ export interface HistoryCalendarProps {
   besideHinge?: boolean;
 }
 
-/** Steps for every day, a month at a time, scrolled to the current month. */
+/**
+ * Steps for every day, a month at a time, with the current month at the
+ * bottom. The scroll view is flipped, so its resting position is the bottom:
+ * the current month stays in place when the pane changes size, as it does
+ * when the device unfolds, with no scrolling after layout.
+ */
 export function HistoryCalendar({
   selected,
   onSelect,
   besideHinge = false,
 }: HistoryCalendarProps) {
-  const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
-  // A hidden pane isn't laid out, so scroll again once it has a size, a frame
-  // later, when the native scroll view knows its content's size too.
-  const scrollToToday = () =>
-    requestAnimationFrame(() =>
-      scroll.current?.scrollToEnd({ animated: false })
-    );
   return (
     <ScrollView
-      ref={scroll}
       testID="history-calendar"
-      style={styles.scroll}
+      style={[styles.scroll, styles.flipped]}
       contentContainerStyle={[
         styles.content,
         besideHinge && styles.besideHinge,
       ]}
-      onLayout={scrollToToday}
-      onContentSizeChange={scrollToToday}
+      // A flipped indicator would move against the scroll.
+      showsVerticalScrollIndicator={false}
     >
-      {months.map((days) => (
-        <Month
-          key={days[0]!.date.getMonth()}
-          days={days}
-          selected={selected}
-          onSelect={onSelect}
-        />
+      {[...months].reverse().map((days) => (
+        <View key={days[0]!.date.getMonth()} style={styles.flipped}>
+          <Month days={days} selected={selected} onSelect={onSelect} />
+        </View>
       ))}
     </ScrollView>
   );
@@ -175,7 +168,9 @@ function Hatching() {
 
 const styles = StyleSheet.create({
   scroll: { flex: 1, backgroundColor: colors.background },
-  content: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 24 },
+  flipped: { transform: [{ scaleY: -1 }] },
+  // Flipped: the top padding is at the bottom of the screen.
+  content: { paddingHorizontal: 16, paddingTop: 24, paddingBottom: 12 },
   besideHinge: { paddingEnd: 4 },
   month: { marginBottom: 20 },
   monthHeader: {
