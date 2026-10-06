@@ -1814,6 +1814,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@expo-google-fonts/material-symbols@npm:^0.4.1":
+  version: 0.4.49
+  resolution: "@expo-google-fonts/material-symbols@npm:0.4.49"
+  checksum: 10c0/96300faead9a190d963c3d44c6d0ded13dd188d4b4e1b7bd40052c4812919fc0556509a006fe57135bc0efc75bb766b974de4f9d2a56a3c5c26ca22bf5bb9349
+  languageName: node
+  linkType: hard
+
 "@expo/cli@npm:^57.0.26":
   version: 57.0.26
   resolution: "@expo/cli@npm:57.0.26"
@@ -5788,7 +5795,8 @@ __metadata:
     "@react-navigation/native-stack": "npm:^7.19.2"
     expo: "npm:~57.0.24"
     expo-build-properties: "npm:~57.0.21"
-    expo-status-bar: "npm:~57.0.1"
+    expo-symbols: "npm:~57.0.3"
+    expo-video: "npm:~57.0.5"
     react: "npm:19.2.3"
     react-dom: "npm:19.2.3"
     react-native: "npm:0.86.3"
@@ -5921,14 +5929,29 @@ __metadata:
   languageName: node
   linkType: hard
 
-"expo-status-bar@npm:~57.0.1":
-  version: 57.0.1
-  resolution: "expo-status-bar@npm:57.0.1"
+"expo-symbols@npm:~57.0.3":
+  version: 57.0.3
+  resolution: "expo-symbols@npm:57.0.3"
+  dependencies:
+    "@expo-google-fonts/material-symbols": "npm:^0.4.1"
+    sf-symbols-typescript: "npm:^2.0.0"
+  peerDependencies:
+    expo: "*"
+    expo-font: "*"
+    react: "*"
+    react-native: "*"
+  checksum: 10c0/9be0bec9bb14a9914945aa072d5a14355f6c65d12909dc4351814b5d15c2818af064c5f63e35592f32a08a0c43efc4c42c87247a05e6011ee58360a4551d723e
+  languageName: node
+  linkType: hard
+
+"expo-video@npm:~57.0.5":
+  version: 57.0.5
+  resolution: "expo-video@npm:57.0.5"
   peerDependencies:
     expo: "*"
     react: "*"
     react-native: "*"
-  checksum: 10c0/c909e6b4d93591f47fd32f33c893df69639a5bc7538777c13407d34f9e0db3a3095b8710c284d5cefde6df482e49e402bcb3a489fd3bfe864de2cde891d71c97
+  checksum: 10c0/89562cf6fd0e5a1a724eb027d3ad56587db1f42e83eb0cfd7626aaa02555d11334954812b1d9960e3c7d95cc584341849439200b054a71ab7946ee3135dec129
   languageName: node
   linkType: hard
 
@@ -10795,7 +10818,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sf-symbols-typescript@npm:^2.1.0":
+"sf-symbols-typescript@npm:^2.0.0, sf-symbols-typescript@npm:^2.1.0":
   version: 2.2.0
   resolution: "sf-symbols-typescript@npm:2.2.0"
   checksum: 10c0/3f3bbf33aaad19e619d6f169899b39e9fe9c5fd21f0d6d511100e36887606ad349109ddc6ff82933f2b8cbf437dd7105c2ae6b0059b291dc47f143b30c2074cc
