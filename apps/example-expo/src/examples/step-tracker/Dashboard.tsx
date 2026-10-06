@@ -131,16 +131,21 @@ export function Dashboard({ selected, onSelect }: DashboardProps) {
         </Text>
 
         {/* Unknown until the panes are laid out: show neither, rather than flash one. */}
-        {layout &&
-          (besideCalendar ? (
-            <HourlyChart values={halfHours(selectedDay)} />
-          ) : (
-            <WeekStrip selected={selected} onSelect={onSelect} />
-          ))}
+        {layout && besideCalendar && (
+          <HourlyChart values={halfHours(selectedDay)} />
+        )}
+
+        {/* Pushes what follows to the bottom of the screen. */}
+        <View style={styles.spacer} />
 
         <Text style={styles.credit}>
-          Example copied from GetSteps.app, to showcase features of the library
+          Example copied from{' '}
+          <Text style={styles.creditLink}>GetSteps.app</Text>, to showcase
+          features of the library
         </Text>
+        {layout && !besideCalendar && (
+          <WeekStrip selected={selected} onSelect={onSelect} />
+        )}
       </ScrollView>
     </View>
   );
@@ -247,12 +252,15 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   scroll: { flex: 1 },
+  // Grows to the screen's height, so the spacer can push the strip down.
   content: {
+    flexGrow: 1,
     paddingStart: 18,
     paddingEnd: 18,
     paddingTop: 8,
-    paddingBottom: 24,
+    paddingBottom: 16,
   },
+  spacer: { flexGrow: 1, minHeight: 16 },
   weatherRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   weatherCondition: {
     fontSize: 21,
@@ -347,7 +355,12 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.tertiary,
     textAlign: 'center',
-    marginTop: 28,
+    marginBottom: 14,
+  },
+  creditLink: {
+    color: colors.secondary,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
   weekDayName: { fontSize: 13, color: colors.secondary },
   weekDayDate: { fontSize: 16, fontWeight: '600', color: colors.secondary },
