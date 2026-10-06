@@ -1,0 +1,20 @@
+/* The logo's purple and teal panes. */
+:root {
+  --rp-c-brand: #7c6cf2;
+  --rp-c-brand-light: #9a8df5;
+  --rp-c-brand-lighter: #d9d4fb;
+  --rp-c-brand-dark: #5a4bd1;
+  --rp-c-brand-darker: #4638b0;
+  --rp-c-brand-tint: #7c6cf229;
+  --rp-home-hero-secondary-color: #2dc2b4;
+}
+
+/* Keep the home page feature cards flat: drop the theme's hover tilt and glare. */
+.rp-home-feature__item,
+.rp-home-feature__item-wrapper {
+  transform: none !important;
+}
+
+.rp-home-feature__item__shine {
+  display: none;
+}
