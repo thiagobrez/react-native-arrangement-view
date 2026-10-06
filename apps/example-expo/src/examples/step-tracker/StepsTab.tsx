@@ -10,8 +10,7 @@ import {
 import { Dashboard } from './Dashboard';
 import { colors, today } from './data';
 import { headerBase, headerButtons, type HeaderButton } from './header';
-import { useBesideHinge } from './besideHinge';
-import { HistoryCalendar, type HistoryCalendarProps } from './HistoryCalendar';
+import { HistoryCalendar } from './HistoryCalendar';
 
 const Stack = createNativeStackNavigator();
 
@@ -76,7 +75,7 @@ function StepsScreen() {
           <Dashboard selected={selected} onSelect={setSelected} />
         </ArrangementView.Primary>
         <ArrangementView.Secondary>
-          <CalendarPane selected={selected} onSelect={setSelected} />
+          <HistoryCalendar selected={selected} onSelect={setSelected} />
         </ArrangementView.Secondary>
       </ArrangementView>
       <Modal
@@ -110,11 +109,6 @@ function StepsScreen() {
       </Modal>
     </SafeAreaView>
   );
-}
-
-/** The history beside the dashboard, its end facing the hinge. */
-function CalendarPane(props: HistoryCalendarProps) {
-  return <HistoryCalendar {...props} besideHinge={useBesideHinge()} />;
 }
 
 const styles = StyleSheet.create({

@@ -1,12 +1,15 @@
-import { Fragment, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Fragment } from 'react';
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { MaterialDesignIcons } from '@react-native-vector-icons/material-design-icons';
-import {
-  ArrangementView,
-  useArrangementLayout,
-} from 'react-native-arrangement-view';
 import {
   colors,
   families,
@@ -21,12 +24,11 @@ import {
   type Workout,
   type WorkoutFamily,
 } from './data';
-import { useBesideHinge } from './besideHinge';
 import { headerBase, headerButtons } from './header';
 
 const Stack = createNativeStackNavigator();
 
-/** Every workout this month: a list, and the month at a glance once unfolded. */
+/** Every workout this month: a list, and the month at a glance where there's room. */
 export function ActivitiesTab() {
   return (
     <Stack.Navigator screenOptions={headerBase}>
@@ -51,21 +53,35 @@ export function ActivitiesTab() {
   );
 }
 
+// Room for the month beside a two-column list: a phone in landscape is wide
+// but too short, as the library's own pane rules have it.
+const WIDE = 640;
+const TALL = 480;
+
+/**
+ * Unlike the steps tab, this one never splits into panes: a wide window shows
+ * a narrow month column beside the list, which may run across a flat hinge,
+ * as in the original. A plain responsive layout does that; it needs no
+ * ArrangementView.
+ */
 function ActivitiesScreen() {
+  const window = useWindowDimensions();
+  const wide = window.width >= WIDE && window.height >= TALL;
   return (
     <SafeAreaView style={styles.screen} edges={['left', 'right', 'bottom']}>
-      <ArrangementView
-        style={styles.screen}
-        axes="horizontal"
-        primaryEdge="trailing"
-      >
-        <ArrangementView.Primary>
-          <WorkoutList />
-        </ArrangementView.Primary>
-        <ArrangementView.Secondary>
-          <MonthPane />
-        </ArrangementView.Secondary>
-      </ArrangementView>
+      {wide ? (
+        <View style={styles.columns}>
+          <ScrollView
+            style={styles.sidebar}
+            contentContainerStyle={styles.sidebarContent}
+          >
+            <MonthGrid />
+          </ScrollView>
+          <WorkoutList columns={2} />
+        </View>
+      ) : (
+        <WorkoutList columns={1} summary />
+      )}
     </SafeAreaView>
   );
 }
@@ -79,27 +95,24 @@ const familyIcons: Record<WorkoutFamily, keyof typeof workoutKinds> = {
 };
 
 /**
- * The workouts, newest first. On its own it opens with the month's summary;
- * beside the month pane, which shows it, the list starts with the workouts.
+ * The workouts, newest first: one column of wide cards opening with the
+ * month's summary, or two columns of compact cards beside the month column.
  */
-function WorkoutList() {
-  const layout = useArrangementLayout();
-  // The list is the trailing pane: its start faces the hinge.
-  const besideHinge = useBesideHinge();
-  const [width, setWidth] = useState(0);
-  // Two columns of compact cards where there's room for them.
-  const columns = width >= 560 ? 2 : 1;
+function WorkoutList({
+  columns,
+  summary = false,
+}: {
+  columns: 1 | 2;
+  summary?: boolean;
+}) {
   const { count, detail } = totals(workouts);
   return (
     <ScrollView
       testID="workout-list"
-      contentContainerStyle={[
-        styles.list,
-        besideHinge && styles.startBesideHinge,
-      ]}
-      onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
+      style={styles.list}
+      contentContainerStyle={styles.listContent}
     >
-      {layout && !layout.secondaryVisible && (
+      {summary && (
         <View style={styles.listHeader}>
           <Text style={styles.month}>{monthYear(today)}</Text>
           <View style={styles.counts}>
@@ -206,21 +219,6 @@ function WorkoutCard({
   );
 }
 
-/** The month at a glance beside the list, its end facing the hinge. */
-function MonthPane() {
-  const besideHinge = useBesideHinge();
-  return (
-    <ScrollView
-      contentContainerStyle={[
-        styles.summaryPane,
-        besideHinge && styles.endBesideHinge,
-      ]}
-    >
-      <MonthGrid />
-    </ScrollView>
-  );
-}
-
 /** The month as dots, with each workout day marked by its activity. */
 function MonthGrid() {
   const days = month(today.getFullYear(), today.getMonth());
@@ -274,7 +272,13 @@ const shadow = {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  list: { paddingHorizontal: 18, paddingTop: 4, paddingBottom: 24 },
+  columns: { flex: 1, flexDirection: 'row' },
+  // About a third of the width, as the original gives the month. ScrollView's
+  // own style sets flexGrow, which would win over the `flex` shorthand.
+  sidebar: { flexGrow: 3, flexBasis: 0 },
+  sidebarContent: { paddingHorizontal: 18, paddingTop: 4, paddingBottom: 24 },
+  list: { flexGrow: 7, flexBasis: 0 },
+  listContent: { paddingHorizontal: 18, paddingTop: 4, paddingBottom: 24 },
   listHeader: { marginBottom: 14, gap: 8 },
   month: { fontSize: 24, fontWeight: '700', color: colors.text },
   counts: { flexDirection: 'row', alignItems: 'center', gap: 5 },
@@ -317,9 +321,6 @@ const styles = StyleSheet.create({
   value: { fontSize: 23, fontWeight: '700', color: colors.text },
   unit: { fontSize: 13, fontWeight: '500', color: colors.secondary },
   meta: { fontSize: 12, color: colors.secondary },
-  startBesideHinge: { paddingStart: 4 },
-  endBesideHinge: { paddingEnd: 4 },
-  summaryPane: { paddingHorizontal: 18, paddingTop: 4, paddingBottom: 24 },
   grid: { marginTop: 18, marginBottom: 18, gap: 10 },
   gridRow: { flexDirection: 'row' },
   gridCell: {

@@ -15,8 +15,6 @@ import {
 export interface HistoryCalendarProps {
   selected: Date;
   onSelect: (date: Date) => void;
-  /** Drop the padding on the end side, where a half-open hinge already leaves room. */
-  besideHinge?: boolean;
 }
 
 /**
@@ -25,19 +23,12 @@ export interface HistoryCalendarProps {
  * the current month stays in place when the pane changes size, as it does
  * when the device unfolds, with no scrolling after layout.
  */
-export function HistoryCalendar({
-  selected,
-  onSelect,
-  besideHinge = false,
-}: HistoryCalendarProps) {
+export function HistoryCalendar({ selected, onSelect }: HistoryCalendarProps) {
   return (
     <ScrollView
       testID="history-calendar"
       style={[styles.scroll, styles.flipped]}
-      contentContainerStyle={[
-        styles.content,
-        besideHinge && styles.besideHinge,
-      ]}
+      contentContainerStyle={styles.content}
       // A flipped indicator would move against the scroll.
       showsVerticalScrollIndicator={false}
     >
@@ -171,7 +162,6 @@ const styles = StyleSheet.create({
   flipped: { transform: [{ scaleY: -1 }] },
   // Flipped: the top padding is at the bottom of the screen.
   content: { paddingHorizontal: 16, paddingTop: 24, paddingBottom: 12 },
-  besideHinge: { paddingEnd: 4 },
   month: { marginBottom: 20 },
   monthHeader: {
     flexDirection: 'row',
