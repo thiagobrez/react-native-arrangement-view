@@ -25,7 +25,8 @@
             "enableSceneSupport": true
           }
         }
-      ]
+      ],
+      "./plugins/with-screens-gamma"
     ]
   }
 }
