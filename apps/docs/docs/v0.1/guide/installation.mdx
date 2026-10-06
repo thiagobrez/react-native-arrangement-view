@@ -1,0 +1,50 @@
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+# Installation
+
+<PackageManagerTabs command="install react-native-arrangement-view@0.1" />
+
+Then install the iOS pods:
+
+```sh
+cd ios && pod install
+```
+
+:::warning
+Use a native build in Expo (`npx expo run:ios` or a development build). Expo Go does not include this library.
+:::
+
+iOS 27 also requires the host app to adopt the scene lifecycle. The example enables `ios.enableSceneSupport` through `expo-build-properties` on Expo SDK 57. See [Expo’s scene migration guide](https://github.com/expo/fyi/blob/main/ios-scene-lifecycle.md) for host-app configuration.
+
+## Requirements
+
+| Requirement                                   | Support                                                                                           |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| React Native                                  | New Architecture; development and validation on 0.86.3 / React 19.2.3                             |
+| Native adaptive arrangements and hinge events | iOS 27.1+, built with Xcode 27.1 / iOS 27.1 SDK or newer                                          |
+| Older iOS, down to 16.4                       | Deterministic SwiftUI [fallback](./how-panes-are-arranged#fallback)                               |
+| Older Xcode SDK                               | Compiles the fallback; rebuild and rerun CocoaPods with the new SDK to enable native arrangements |
+| Android / web                                 | Not implemented; rendering the component throws an explicit unsupported-platform error            |
+
+These Apple APIs are from a beta SDK and may change.
+
+## Usage
+
+```tsx
+import { ArrangementView } from 'react-native-arrangement-view';
+
+export function PlayerScreen() {
+  return (
+    <ArrangementView style={{ flex: 1 }} arrangement="split" axes="both">
+      <ArrangementView.Primary>
+        <Player />
+      </ArrangementView.Primary>
+      <ArrangementView.Secondary>
+        <Transcript />
+      </ArrangementView.Secondary>
+    </ArrangementView>
+  );
+}
+```
+
+See [`ArrangementView`](../api/arrangement-view) for its props.

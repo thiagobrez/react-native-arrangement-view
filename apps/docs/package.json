@@ -1,0 +1,16 @@
+{
+  "name": "docs",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "rspress dev",
+    "build": "rspress build",
+    "preview": "rspress preview"
+  },
+  "dependencies": {
+    "@rspress/core": "patch:@rspress/core@npm%3A2.0.23#~/.yarn/patches/@rspress-core-npm-2.0.23-128feeb699.patch",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  }
+}
