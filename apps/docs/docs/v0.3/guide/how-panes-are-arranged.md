@@ -19,6 +19,18 @@ Each platform follows its own conventions. iOS delegates arrangement to SwiftUI'
 - `overlay` puts both panes at full size, primary in front. An avoided hinge separates them, as on iOS.
 - Right-to-left layouts put the primary pane on the right, and `primaryEdge` sides are mirrored with them.
 
+## The primary pane's side
+
+Without `primaryEdge`, a split's primary pane is on the leading side and an overlay's goes after the hinge, on the trailing side. `primaryEdge` names the side instead, whenever the panes are side by side:
+
+```tsx
+<ArrangementView style={{ flex: 1 }} primaryEdge="trailing">
+```
+
+`primaryEdge="trailing"` suits a book-style foldable in a left-to-right app: closed, its cover display sits over the right half of the inner one, so the content on the cover stays in place as the device unfolds, and the secondary pane opens beside it. Leading and trailing follow the layout direction, and stacked panes, such as in tabletop posture, are unaffected.
+
+Screen readers go through the panes in reading order, whichever is primary: with the primary pane on the trailing side, the secondary pane is read first.
+
 ## Where the platforms differ
 
 | Situation                                     | iOS                                                  | Android                                                                                   |

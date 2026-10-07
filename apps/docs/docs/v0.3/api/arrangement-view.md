@@ -19,34 +19,22 @@ export function PlayerScreen() {
 
 ## Props
 
-| Prop                        | Default             | Meaning                                                                                                                                    |
-| --------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| children                    | required            | One `ArrangementView.Primary` and one `ArrangementView.Secondary`; see [below](#arrangementviewprimary--arrangementviewsecondary)          |
-| `arrangement`               | `"split"`           | `"split"` or `"overlay"`                                                                                                                   |
-| `axes`                      | `"both"`            | `"both"`, `"horizontal"`, or `"vertical"`; applies to either arrangement                                                                   |
-| `primaryEdge`               | none                | `"leading"` or `"trailing"`: the side the primary pane takes when the panes are side by side; see [below](#the-primary-panes-side)         |
-| `onArrangementLayoutChange` | none                | Called with the [`ArrangementLayout`](./use-arrangement-layout#arrangementlayout) when it changes                                          |
-| `observeHinge`              | `true`              | Enables observation for hooks inside this arrangement; disabling it does not disable adaptive layout                                       |
-| `hingePolicy`               | `"avoidSeparating"` | Android only. The hinges the panes keep clear of: `"avoidSeparating"` a half-open one, `"alwaysAvoid"` a flat one too, `"neverAvoid"` none |
-| `hingeGap`                  | `24`                | Android only. The space in dp between the panes around an avoided hinge, never narrower than the hinge itself                              |
+| Prop                        | Default             | Meaning                                                                                                                                                                             |
+| --------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| children                    | required            | One `ArrangementView.Primary` and one `ArrangementView.Secondary`; see [below](#arrangementviewprimary--arrangementviewsecondary)                                                   |
+| `arrangement`               | `"split"`           | `"split"` or `"overlay"`                                                                                                                                                            |
+| `axes`                      | `"both"`            | `"both"`, `"horizontal"`, or `"vertical"`; applies to either arrangement                                                                                                            |
+| `primaryEdge`               | none                | `"leading"` or `"trailing"`: the side the primary pane takes when the panes are side by side; see [The primary pane's side](../guide/how-panes-are-arranged#the-primary-panes-side) |
+| `onArrangementLayoutChange` | none                | Called with the [`ArrangementLayout`](./use-arrangement-layout#arrangementlayout) when it changes                                                                                   |
+| `observeHinge`              | `true`              | Enables observation for hooks inside this arrangement; disabling it does not disable adaptive layout                                                                                |
+| `hingePolicy`               | `"avoidSeparating"` | Android only. The hinges the panes keep clear of: `"avoidSeparating"` a half-open one, `"alwaysAvoid"` a flat one too, `"neverAvoid"` none                                          |
+| `hingeGap`                  | `24`                | Android only. The space in dp between the panes around an avoided hinge, never narrower than the hinge itself                                                                       |
 
 Give the arrangement a bounded size, usually `flex: 1`. The platform determines whether a split is appropriate; an axis restriction does not force two panes to stay visible.
 
 The component adds no safe-area padding. Place it within the safe area supplied by your screen/navigation container, or handle insets in your content.
 
 To adapt a pane's content to what the arrangement shows, such as whether the secondary pane is on screen, use [`useArrangementLayout`](./use-arrangement-layout) inside a pane, or `onArrangementLayoutChange` outside the panes.
-
-## The primary pane's side
-
-Without `primaryEdge`, a split's primary pane is on the leading side and an overlay's goes after the hinge, on the trailing side. `primaryEdge` names the side instead, whenever the panes are side by side:
-
-```tsx
-<ArrangementView style={{ flex: 1 }} primaryEdge="trailing">
-```
-
-`primaryEdge="trailing"` suits a book-style foldable in a left-to-right app: closed, its cover display sits over the right half of the inner one, so the content on the cover stays in place as the device unfolds, and the secondary pane opens beside it. Leading and trailing follow the layout direction, and stacked panes, such as in tabletop posture, are unaffected.
-
-Screen readers go through the panes in reading order, whichever is primary: with the primary pane on the trailing side, the secondary pane is read first.
 
 ## ArrangementView.Primary / ArrangementView.Secondary
 
