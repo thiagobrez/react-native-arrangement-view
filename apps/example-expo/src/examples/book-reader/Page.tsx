@@ -1,5 +1,4 @@
 import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useArrangementLayout } from 'react-native-arrangement-view';
 import { chapter, pages, sectionBreak } from './book';
 
 export const colors = {
@@ -9,12 +8,14 @@ export const colors = {
   gutter: '#2a2e3f',
 };
 
-/**
- * One page of the book, with its number at the foot. In a spread, a line
- * along its inner edge marks the gutter.
- */
-export function Page({ index }: { index: number }) {
-  const layout = useArrangementLayout();
+export interface PageProps {
+  index: number;
+  /** Draw a line along the page's inner edge, as one side of a spread. */
+  gutter?: boolean;
+}
+
+/** One page of the book, with its number at the foot. */
+export function Page({ index, gutter = false }: PageProps) {
   const paragraphs = pages[index] ?? [];
   const isLeft = index % 2 === 0;
   return (
@@ -51,7 +52,7 @@ export function Page({ index }: { index: number }) {
           </Text>
         )}
       </ScrollView>
-      {layout?.secondaryVisible && (
+      {gutter && (
         <View
           pointerEvents="none"
           style={[

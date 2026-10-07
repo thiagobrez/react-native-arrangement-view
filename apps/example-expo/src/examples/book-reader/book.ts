@@ -12,6 +12,8 @@ export interface Paragraph {
 /** A paragraph that marks a break in the text. */
 export const sectionBreak = '* * *';
 
+export const book = { title: 'Alice’s Adventures in Wonderland' };
+
 export const chapter = { number: 'Chapter I', title: 'Down the Rabbit-Hole' };
 
 export const pages: Paragraph[][] = [
