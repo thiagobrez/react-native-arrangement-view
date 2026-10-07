@@ -32,11 +32,9 @@ export interface ArrangementViewProps extends ViewProps {
   arrangement?: Arrangement;
   axes?: ArrangementAxes;
   /**
-   * The side the primary pane takes when the panes are side by side: leading
-   * is left in a left-to-right layout. In a left-to-right app, `trailing` keeps
-   * the content that was on a book-style foldable's cover display in place as
-   * the device unfolds. Stacked panes, such as in tabletop posture, are
-   * unaffected. By default a split's primary pane is on the leading side, and
+   * The side the primary pane takes when the panes are side by side: in a left-to-right layout,
+   * leading is left, and trailing is right. Stacked panes are unaffected.
+   * By default a split's primary pane is on the leading side, and
    * an overlay's is after the hinge, on the trailing side.
    *
    * Screen readers go through the panes in reading order, so with the primary
