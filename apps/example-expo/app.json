@@ -25,7 +25,8 @@
             "enableSceneSupport": true
           }
         }
-      ]
+      ],
+      "react-native-bottom-tabs"
     ]
   }
 }

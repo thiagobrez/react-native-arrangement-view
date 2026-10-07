@@ -32,7 +32,7 @@ yarn docs build
 
 The docs are versioned per minor release; patch releases share their minor's docs. Each version has a folder in `apps/docs/docs/`, such as `v0.2/`, with its own `_nav.json` and `_meta.json` for the navbar and sidebar. The default version in `multiVersion` in `apps/docs/rspress.config.ts` is served at the site root, and the others under their version, such as `/v0.1/`. Document a change in the folder of the version that ships it.
 
-When releasing a new minor version, copy the latest folder to the new version's name, add the version to the front of `multiVersion.versions`, and make it the default. Pages that keep the same path in every version let the version menu switch between them directly.
+To document a minor version before it ships, copy the latest folder to the new version's name and add the version to the front of `multiVersion.versions`, but keep the released version as the default; its pages then say they aren't released yet. When the version ships, make it the default. Pages that keep the same path in every version let the version menu switch between them directly.
 
 `.yarn/patches/` fixes the version menu's link to the default version from its own pages in `@rspress/core` 2.0.23. Drop it when upgrading to a release that fixes `replaceVersion`.
 

@@ -35,7 +35,7 @@ export default function App() {
               key={example.name}
               name={example.name}
               component={example.component}
-              options={{ title: example.title }}
+              options={{ title: example.title, ...example.options }}
             />
           ))}
         </Stack.Navigator>

@@ -16,8 +16,9 @@ export default defineConfig({
   logoText: 'react-native-arrangement-view',
   globalStyles: path.join(import.meta.dirname, 'styles/index.css'),
   multiVersion: {
+    // v0.3 documents the next release; make it the default when it ships.
     default: 'v0.2',
-    versions: ['v0.2', 'v0.1'],
+    versions: ['v0.3', 'v0.2', 'v0.1'],
   },
   builderConfig: {
     server: {
