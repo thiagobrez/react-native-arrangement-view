@@ -1,4 +1,5 @@
 [
   { "type": "dir", "name": "guide", "label": "Guide" },
-  { "type": "dir", "name": "api", "label": "API" }
+  { "type": "dir", "name": "api", "label": "API" },
+  { "type": "dir", "name": "examples", "label": "Examples" }
 ]
