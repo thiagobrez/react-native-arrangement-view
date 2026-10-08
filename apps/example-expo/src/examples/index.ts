@@ -34,6 +34,8 @@ export const examples: Example[] = [
     options: {
       headerShown: false,
       statusBarHidden: true,
+      // Swiping back would take over drags on the seek bar.
+      gestureEnabled: false,
       autoHideHomeIndicator: true,
     },
   },
