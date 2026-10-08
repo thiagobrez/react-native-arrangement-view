@@ -1,32 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   Animated,
+  I18nManager,
   Pressable,
   StyleSheet,
   Text,
   View,
-  useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useEvent } from 'expo';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import type { VideoPlayer } from 'expo-video';
+import { useArrangementLayout } from 'react-native-arrangement-view';
 import { Scrubber } from './Scrubber';
-
-export interface Frame {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
 
 export interface ControlsProps {
   player: VideoPlayer;
-  /** This pane's frame in the window. */
-  frame: Frame;
-  /** Whether a hinge gives this pane its own region beside the video. */
-  separated: boolean;
 }
 
 const HIDE_AFTER_MS = 3000;
@@ -38,7 +28,7 @@ const RATES = [1, 1.25, 1.5, 2, 0.5];
  * Given its own region by a half-open hinge, it becomes a full-screen remote
  * that stays visible.
  */
-export function Controls({ player, frame, separated }: ControlsProps) {
+export function Controls({ player }: ControlsProps) {
   const navigation = useNavigation();
   const { isPlaying } = useEvent(player, 'playingChange', {
     isPlaying: player.playing,
@@ -54,17 +44,21 @@ export function Controls({ player, frame, separated }: ControlsProps) {
     playbackRate: player.playbackRate,
   });
 
+  // Overlapping panes have no axis. A hinge that separates them gives the
+  // primary pane its own region after the hinge: below it in tabletop, on the
+  // trailing side held like a book.
+  const axis = useArrangementLayout()?.axis ?? null;
+  const separated = axis !== null;
+
   // The video ignores the safe area to stay centred on the display; the
-  // controls keep clear of it, but only on the edges this pane reaches.
+  // controls keep clear of it, but not on the hinge side, away from the edge.
   const insets = useSafeAreaInsets();
-  const window = useWindowDimensions();
+  const leadingHinge = axis === 'horizontal';
   const padding = (base: number) => ({
-    paddingTop: base + (frame.y < 1 ? insets.top : 0),
-    paddingBottom:
-      base + (frame.y + frame.height > window.height - 1 ? insets.bottom : 0),
-    paddingLeft: base + (frame.x < 1 ? insets.left : 0),
-    paddingRight:
-      base + (frame.x + frame.width > window.width - 1 ? insets.right : 0),
+    paddingTop: base + (axis === 'vertical' ? 0 : insets.top),
+    paddingBottom: base + insets.bottom,
+    paddingLeft: base + (leadingHinge && !I18nManager.isRTL ? 0 : insets.left),
+    paddingRight: base + (leadingHinge && I18nManager.isRTL ? 0 : insets.right),
   });
 
   const [shown, setShown] = useState(true);
