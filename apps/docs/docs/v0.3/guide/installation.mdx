@@ -1,0 +1,56 @@
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+# Installation
+
+<PackageManagerTabs command="install react-native-arrangement-view" />
+
+Then install the iOS pods:
+
+```sh
+cd ios && pod install
+```
+
+:::warning
+Expo Go is not supported. Use a development build (`npx expo run:ios`, `npx expo run:android`).
+:::
+
+## Requirements
+
+- React 19 or later
+- React Native 0.83 or later
+- On iOS, the native arrangement needs iOS 27.1 and the iOS 27.1 SDK. Older versions use the [fallback](./how-panes-are-arranged#fallback).
+
+## Usage
+
+```tsx
+import { Text } from 'react-native';
+import { ArrangementView, useHingeChange } from 'react-native-arrangement-view';
+
+export function PlayerScreen() {
+  return (
+    <ArrangementView style={{ flex: 1 }} arrangement="split" axes="both">
+      <ArrangementView.Primary>
+        <Player />
+      </ArrangementView.Primary>
+      <ArrangementView.Secondary>
+        {/* Add your secondary view here */}
+      </ArrangementView.Secondary>
+    </ArrangementView>
+  );
+}
+
+function Player() {
+  // Called inside a pane, the hook observes the nearest ArrangementView.
+  const hinge = useHingeChange();
+
+  return (
+    <Text>
+      {hinge.angle === null
+        ? 'No hinge'
+        : `${Math.round((hinge.angle * 180) / Math.PI)}° ${hinge.status}`}
+    </Text>
+  );
+}
+```
+
+See [`ArrangementView`](../api/arrangement-view) for its props, [`useHingeChange`](../api/use-hinge-change) for the hinge state, and [How panes are arranged](./how-panes-are-arranged) for what each platform does with them.

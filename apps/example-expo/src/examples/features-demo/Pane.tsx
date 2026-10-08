@@ -7,8 +7,10 @@ import {
   type LayoutChangeEvent,
 } from 'react-native';
 import {
+  useArrangementLayout,
   useHingeChange,
   type Arrangement,
+  type ArrangementLayout,
 } from 'react-native-arrangement-view';
 
 export interface PaneProps {
@@ -23,6 +25,7 @@ export interface PaneProps {
 export function Pane({ primary, arrangement }: PaneProps) {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const hinge = useHingeChange();
+  const arrangementLayout = useArrangementLayout();
   const [taps, setTaps] = useState(0);
   const name = primary ? 'Primary' : 'Secondary';
   const id = name.toLowerCase();
@@ -59,6 +62,9 @@ export function Pane({ primary, arrangement }: PaneProps) {
             {hinge.status}
           </Text>
         </View>
+        <Text testID={`${id}-layout`} style={styles.dimensions}>
+          {describe(arrangementLayout)}
+        </Text>
         <Pressable
           testID={`${id}-tap`}
           accessibilityRole="button"
@@ -70,6 +76,13 @@ export function Pane({ primary, arrangement }: PaneProps) {
       </View>
     </View>
   );
+}
+
+function describe(layout: ArrangementLayout | null) {
+  if (!layout) return 'Layout unknown';
+  if (!layout.secondaryVisible) return 'Primary only';
+  if (!layout.axis) return 'Overlapping';
+  return layout.axis === 'horizontal' ? 'Side by side' : 'Stacked';
 }
 
 const styles = StyleSheet.create({

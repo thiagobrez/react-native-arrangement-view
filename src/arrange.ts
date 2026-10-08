@@ -1,4 +1,9 @@
-import type { Arrangement, ArrangementAxes, HingePolicy } from './types';
+import type {
+  Arrangement,
+  ArrangementAxes,
+  HingePolicy,
+  PrimaryEdge,
+} from './types';
 
 /** A fold within the arrangement, as Jetpack WindowManager reports it. */
 export interface Fold {
@@ -29,6 +34,7 @@ export interface ArrangeOptions {
   axes: ArrangementAxes;
   hingePolicy?: HingePolicy;
   hingeGap?: number;
+  primaryEdge?: PrimaryEdge;
   rtl?: boolean;
 }
 
@@ -65,7 +71,8 @@ const EXPANDED_HEIGHT = 900;
  * A hinge the policy avoids decides the axis and separates the panes by
  * `hingeGap` around it. A separating hinge always splits, whatever the window
  * size, as it does on iOS. A split that doesn't fit, or that `axes` excludes,
- * shows only the primary pane.
+ * shows only the primary pane. `primaryEdge` puts the primary pane on the
+ * leading or trailing side of panes placed side by side.
  */
 export function arrange(
   { width, height, window, fold }: Geometry,
@@ -74,6 +81,7 @@ export function arrange(
     axes,
     hingePolicy = 'avoidSeparating',
     hingeGap = 24,
+    primaryEdge,
     rtl = false,
   }: ArrangeOptions
 ): PaneFrames {
@@ -88,7 +96,8 @@ export function arrange(
     allows(axis) && (axis === 'horizontal' ? twoColumns : twoRows);
 
   // Panes before and after the span [start, end] along the axis. The primary
-  // pane goes first, on the leading side, unless `primaryAfter`.
+  // pane goes first, on the leading side, unless `primaryAfter`, or on the side
+  // `primaryEdge` names.
   const split = (
     axis: Axis,
     start: number,
@@ -105,8 +114,11 @@ export function arrange(
             { ...full, height: start },
             { ...full, top: end, height: height - end },
           ];
-    const leadingIsAfter = rtl && axis === 'horizontal';
-    return leadingIsAfter !== primaryAfter
+    const primaryIsAfter =
+      axis === 'horizontal' && primaryEdge
+        ? (primaryEdge === 'trailing') !== rtl
+        : (rtl && axis === 'horizontal') !== primaryAfter;
+    return primaryIsAfter
       ? { primary: after, secondary: before }
       : { primary: before, secondary: after };
   };
@@ -134,7 +146,7 @@ export function arrange(
       if (fold.separating ? allows(axis) : fits(axis))
         return split(axis, before, after, arrangement === 'overlay');
       if (arrangement === 'overlay') return { primary: full, secondary: full };
-      // A single pane stays clear of the hinge, on its leading side.
+      // A single pane stays clear of the hinge, on the side it would split to.
       return { primary: split(axis, before, after).primary, secondary: null };
     }
   }

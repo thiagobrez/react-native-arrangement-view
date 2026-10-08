@@ -1,8 +1,9 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useLayoutEffect, useState } from 'react';
 import { I18nManager, StyleSheet, View } from 'react-native';
 import NativeArrangementView from './ArrangementViewNativeComponent';
 import { arrange, type Frame, type Geometry } from './arrange';
 import { HingeContext, useHingeStore } from './hinge';
+import { describeLayout, LayoutContext, useLayoutStore } from './layout';
 import {
   ArrangementPrimary,
   ArrangementSecondary,
@@ -16,7 +17,9 @@ export function ArrangementView({
   children,
   arrangement = 'split',
   axes = 'both',
+  primaryEdge,
   observeHinge = true,
+  onArrangementLayoutChange,
   hingePolicy,
   hingeGap,
   ...props
@@ -40,38 +43,44 @@ export function ArrangementView({
       axes,
       hingePolicy,
       hingeGap,
+      primaryEdge,
       rtl: I18nManager.isRTL,
     });
+  const layoutStore = useLayoutStore(onArrangementLayoutChange);
+  const layout = frames && describeLayout(frames);
+  useLayoutEffect(() => layoutStore.update(layout));
   const { primary, secondary, problems } = resolveSlots(children);
   warnOnce(problems);
   return (
     <HingeContext value={store}>
-      <NativeArrangementView
-        {...props}
-        observeHinge={observeHinge}
-        onHingeChange={onHingeChange}
-        onGeometryChange={onGeometryChange}
-      >
-        {/* Fills the content box, so pane frames are relative to it and not
+      <LayoutContext value={layoutStore}>
+        <NativeArrangementView
+          {...props}
+          observeHinge={observeHinge}
+          onHingeChange={onHingeChange}
+          onGeometryChange={onGeometryChange}
+        >
+          {/* Fills the content box, so pane frames are relative to it and not
             to the border edge where Yoga puts absolute children. */}
-        <View style={styles.content}>
-          {/* Primary renders last so that it is in front when the panes overlay. */}
-          <View
-            collapsable={false}
-            pointerEvents="box-none"
-            style={[styles.pane, paneStyle(frames?.secondary)]}
-          >
-            {secondary}
+          <View style={styles.content}>
+            {/* Primary renders last so that it is in front when the panes overlay. */}
+            <View
+              collapsable={false}
+              pointerEvents="box-none"
+              style={[styles.pane, paneStyle(frames?.secondary)]}
+            >
+              {secondary}
+            </View>
+            <View
+              collapsable={false}
+              pointerEvents="box-none"
+              style={[styles.pane, paneStyle(frames?.primary)]}
+            >
+              {primary}
+            </View>
           </View>
-          <View
-            collapsable={false}
-            pointerEvents="box-none"
-            style={[styles.pane, paneStyle(frames?.primary)]}
-          >
-            {primary}
-          </View>
-        </View>
-      </NativeArrangementView>
+        </NativeArrangementView>
+      </LayoutContext>
     </HingeContext>
   );
 }
