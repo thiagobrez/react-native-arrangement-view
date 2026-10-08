@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
+import { BedsideClock } from './bedside-clock/BedsideClock';
 import { FeaturesDemo } from './features-demo/FeaturesDemo';
 import { StepTracker } from './step-tracker/StepTracker';
 
@@ -25,5 +26,10 @@ export const examples: Example[] = [
     component: StepTracker,
     // Each of its tabs has its own header, as in the app it's copied from.
     options: { headerShown: false },
+  },
+  {
+    name: 'bedside-clock',
+    title: 'Bedside clock',
+    component: BedsideClock,
   },
 ];
