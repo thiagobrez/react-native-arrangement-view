@@ -5,7 +5,6 @@ import {
   View,
   type GestureResponderEvent,
 } from 'react-native';
-import { GestureExclusionView } from '../../../modules/gesture-exclusion';
 
 export interface ScrubberProps {
   currentTime: number;
@@ -31,9 +30,7 @@ export function Scrubber({
   const shown = scrub === null ? currentTime : scrub * duration;
 
   return (
-    // Android's back gesture would otherwise take drags that start near
-    // the screen edge.
-    <GestureExclusionView style={styles.scrubber}>
+    <View style={styles.scrubber}>
       <View
         testID="scrubber"
         accessibilityRole="adjustable"
@@ -79,7 +76,7 @@ export function Scrubber({
         </Text>
         <Text style={styles.time}>-{formatTime(duration - shown)}</Text>
       </View>
-    </GestureExclusionView>
+    </View>
   );
 }
 
