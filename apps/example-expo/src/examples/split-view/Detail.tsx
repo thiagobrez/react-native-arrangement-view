@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrangementView, useHingeChange } from 'react-native-arrangement-view';
+import {
+  ArrangementView,
+  useArrangementLayout,
+  useHingeChange,
+} from 'react-native-arrangement-view';
 import type { Trail } from './trails';
 
 /**
@@ -95,6 +99,7 @@ function Measured({
   children: React.ReactNode;
 }) {
   const [size, setSize] = useState({ width: 0, height: 0 });
+  const arrangementLayout = useArrangementLayout();
   const onLayout = ({ nativeEvent: { layout } }: LayoutChangeEvent) =>
     setSize({
       width: Math.round(layout.width),
@@ -108,10 +113,21 @@ function Measured({
     >
       {children}
       <Text testID={`${id}-dimensions`} style={styles.dimensions}>
-        {size.width} × {size.height} pt
+        {size.width} × {size.height} pt · {describe(arrangementLayout)}
       </Text>
     </View>
   );
+}
+
+/**
+ * How the column's ArrangementView placed the panes. Half-open, the split
+ * puts its sidebar's edge on the hinge, so the panes only go side by side
+ * once the sidebar is hidden and the column spans the hinge.
+ */
+function describe(layout: ReturnType<typeof useArrangementLayout>) {
+  if (!layout) return '…';
+  if (!layout.secondaryVisible) return 'overview only';
+  return layout.axis === 'horizontal' ? 'side by side' : 'stacked';
 }
 
 const styles = StyleSheet.create({
