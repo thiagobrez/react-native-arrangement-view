@@ -233,3 +233,46 @@ test('right-to-left mirrors which side is leading', () => {
   // Stacked panes are unaffected.
   assert.deepEqual(arrange(coverPortrait, rtl), arrange(coverPortrait, split));
 });
+
+test('primaryEdge puts the primary pane on the leading or trailing side', () => {
+  const left = { left: 0, top: 0, width: 425, height: 880 };
+  const right = { left: 425, top: 0, width: 425, height: 880 };
+  for (const rtl of [false, true]) {
+    const [leading, trailing] = rtl ? [right, left] : [left, right];
+    assert.deepEqual(
+      arrange(inner, { ...split, rtl, primaryEdge: 'trailing' }),
+      { primary: trailing, secondary: leading }
+    );
+    assert.deepEqual(
+      arrange(inner, { ...split, rtl, primaryEdge: 'leading' }),
+      arrange(inner, { ...split, rtl })
+    );
+    // Around a half-open hinge, for either arrangement.
+    const [beforeHinge, afterHinge] = [
+      { left: 0, top: 0, width: 413, height: 880 },
+      { left: 437, top: 0, width: 413, height: 880 },
+    ];
+    for (const options of [split, overlay]) {
+      assert.deepEqual(
+        arrange(book, { ...options, rtl, primaryEdge: 'trailing' }).primary,
+        rtl ? beforeHinge : afterHinge
+      );
+      assert.deepEqual(
+        arrange(book, { ...options, rtl, primaryEdge: 'leading' }).primary,
+        rtl ? afterHinge : beforeHinge
+      );
+    }
+  }
+  // One pane beside a hinge goes to that side too.
+  assert.deepEqual(
+    arrange(book, { ...split, axes: 'vertical', primaryEdge: 'trailing' }),
+    { primary: { left: 437, top: 0, width: 413, height: 880 }, secondary: null }
+  );
+  // Stacked panes are unaffected.
+  for (const geometry of [coverPortrait, tabletop]) {
+    assert.deepEqual(
+      arrange(geometry, { ...split, primaryEdge: 'trailing' }),
+      arrange(geometry, split)
+    );
+  }
+});

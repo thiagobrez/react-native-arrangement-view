@@ -6,6 +6,8 @@
 
 **Foldable devices adaptive arrangement views and hinge observation for React Native.**
 
+[Documentation](https://thiagobrez.github.io/react-native-arrangement-view/)
+
 </div>
 
 ## Install
@@ -63,7 +65,3 @@ function Player() {
 | iOS                                                                        | Android                                                                        |
 | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | <img src="docs/comparison/ios/half-landscape-right-split.jpg" width="400"> | <img src="docs/comparison/android/half-landscape-right-split.jpg" width="400"> |
-
-## Documentation
-
-The API reference, how each platform arranges the panes, and screenshots of every posture and orientation are on the [documentation site](https://thiagobrez.github.io/react-native-arrangement-view/).
