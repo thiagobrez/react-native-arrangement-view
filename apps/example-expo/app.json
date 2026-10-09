@@ -30,7 +30,8 @@
         }
       ],
       "react-native-bottom-tabs",
-      "expo-video"
+      "expo-video",
+      "./plugins/with-screens-gamma"
     ]
   }
 }

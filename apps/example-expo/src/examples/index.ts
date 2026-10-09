@@ -1,8 +1,10 @@
 import type { ComponentType } from 'react';
+import { Platform } from 'react-native';
 import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import { FeaturesDemo } from './features-demo/FeaturesDemo';
 import { StepTracker } from './step-tracker/StepTracker';
 import { VideoPlayer } from './video-player/VideoPlayer';
+import { SplitViewExample } from './split-view/SplitViewExample';
 
 export interface Example {
   /** Route name; also used for testIDs. */
@@ -39,4 +41,15 @@ export const examples: Example[] = [
       autoHideHomeIndicator: true,
     },
   },
+  // react-native-screens' Split is a UISplitViewController, so iOS only.
+  ...(Platform.OS === 'ios'
+    ? [
+        {
+          name: 'split-view',
+          title: 'Split view',
+          component: SplitViewExample,
+          options: { headerTransparent: true, headerTitle: '' },
+        },
+      ]
+    : []),
 ];
