@@ -64,8 +64,26 @@ jobs:
           xcrun simctl bootstatus "$UDID" -b
           xcrun simctl install "$UDID" apps/example-expo/ios/build/Build/Products/Release-iphonesimulator/ArrangementViewExample.app
 
+      - name: Cache agent-device
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ~/.agent-device
+          key: ${{ runner.os }}-agent-device-xcode-27.1-${{ hashFiles('yarn.lock') }}
+
+      # Builds and starts the XCTest runner agent-device drives the simulator
+      # with, which can outlast e2e's launch budget on a cold runner.
+      - name: Prepare the iOS runner
+        working-directory: apps/example-expo
+        run: |
+          npx agent-device prepare ios-runner --platform ios --device "iPhone Duo" --timeout 900000
+          npx agent-device daemon stop
+
       - name: Run e2e tests
         run: yarn example test:e2e:ios --reporter list,junit
+
+      - name: Shut down the simulator
+        if: ${{ !cancelled() }}
+        run: xcrun simctl shutdown all
 
       - name: Upload results
         if: ${{ !cancelled() }}
