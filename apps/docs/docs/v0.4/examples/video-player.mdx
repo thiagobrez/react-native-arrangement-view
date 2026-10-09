@@ -4,7 +4,7 @@ import { PostureShots } from '../../../components/PostureShots';
 
 A full-screen video player. In tabletop posture, media sits at the top, while tappable controls live on a stable base at the bottom. The full example is in the [example app](https://github.com/thiagobrez/react-native-arrangement-view/tree/main/apps/example-expo/src/examples/video-player).
 
-## The arrangement
+## Arrangement
 
 Use `arrangement="overlay"`, with the controls as the primary pane. Overlay keeps both panes at full size, the primary in front, until a half-open hinge separates them. It then puts the primary after the hinge: below it in tabletop, or on the trailing side.
 
@@ -43,9 +43,9 @@ const styles = StyleSheet.create({
 
 Moving between postures doesn't unmount either pane, so the video keeps playing.
 
-## The controls
+## Controls
 
-Inside the controls, [`useArrangementLayout`](../api/use-arrangement-layout) tells the two layouts apart: `isOverlapping` is true while the controls are in front of the video. Over the video, the controls hide a few seconds after the last touch while it plays. In their own region they stay visible.
+Inside the controls, [`useArrangementLayout`](../api/use-arrangement-layout) tells the two layouts apart: `isOverlapping` is true while the controls are in front of the video. When overlapping, the controls hide a few seconds after the last touch while it plays. When in their own region, they stay always visible.
 
 ```tsx
 import { useArrangementLayout } from 'react-native-arrangement-view';
@@ -70,8 +70,6 @@ function Controls({ player }: { player: VideoPlayer }) {
   );
 }
 ```
-
-The example also restarts the timer on every interaction, and doesn't hide the controls while the video is paused or the seek bar is being dragged.
 
 ## Full screen
 
@@ -106,5 +104,6 @@ The example's screen hides the stack header and the status bar, and turns off th
     { file: 'closed', label: 'Closed' },
     { file: 'open', label: 'Open' },
     { file: 'tabletop', label: 'Tabletop' },
+    { file: 'book', label: 'Book' },
   ]}
 />
