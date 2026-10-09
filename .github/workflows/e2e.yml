@@ -15,85 +15,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ios:
-    # The native ArrangementView and the iPhone Duo need Xcode 27.1.
-    runs-on: xcode-27
-    timeout-minutes: 90
-
-    env:
-      RCT_USE_RN_DEP: 1
-      RCT_USE_PREBUILT_RNCORE: 1
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-
-      - name: Setup
-        uses: ./.github/actions/setup
-
-      - name: Use Xcode 27.1
-        uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1.6.0
-        with:
-          xcode-version: '27.1'
-
-      - name: Prebuild expo app for iOS
-        run: yarn example expo prebuild --platform ios
-
-      # A Release build bundles the JavaScript, so no Metro server is needed.
-      - name: Build example for the simulator
-        working-directory: apps/example-expo
-        run: |
-          xcodebuild -workspace ios/ArrangementViewExample.xcworkspace -scheme ArrangementViewExample \
-            -configuration Release -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath ios/build -quiet > "$RUNNER_TEMP/xcodebuild.log" 2>&1 \
-            || { tail -100 "$RUNNER_TEMP/xcodebuild.log"; exit 1; }
-
-      # Only the iOS 27.1 runtime has the iPhone Duo, and the runner may not have it.
-      - name: Install the iOS simulator runtime
-        run: |
-          if ! xcrun simctl list runtimes -j | jq -e '.runtimes[] | select(.isAvailable and any(.supportedDeviceTypes[]?; .name == "iPhone Duo"))' > /dev/null; then
-            xcodebuild -downloadPlatform iOS
-          fi
-
-      - name: Boot an iPhone Duo and install the app
-        run: |
-          UDID=$(xcrun simctl list devices available -j | jq -r '[.devices[][] | select(.name == "iPhone Duo")][0].udid // empty')
-          if [[ -z $UDID ]]; then
-            UDID=$(xcrun simctl create "iPhone Duo" com.apple.CoreSimulator.SimDeviceType.iPhone-Duo)
-          fi
-          xcrun simctl bootstatus "$UDID" -b
-          xcrun simctl install "$UDID" apps/example-expo/ios/build/Build/Products/Release-iphonesimulator/ArrangementViewExample.app
-
-      # Builds and starts the XCTest runner agent-device drives the simulator
-      # with, which can outlast e2e's launch budget on a cold runner.
-      - name: Prepare the iOS runner
-        timeout-minutes: 20
-        working-directory: apps/example-expo
-        run: |
-          npx agent-device prepare ios-runner --platform ios --device "iPhone Duo" --timeout 900000 --debug
-          npx agent-device daemon stop
-
-      - name: Show agent-device logs
-        if: ${{ failure() }}
-        run: find ~/.agent-device -name '*.log' -print -exec tail -n 100 {} \;
-
-      - name: Run e2e tests
-        run: yarn example test:e2e:ios --reporter list,junit
-
-      - name: Shut down the simulator
-        if: ${{ !cancelled() }}
-        run: xcrun simctl shutdown all
-
-      - name: Upload results
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: e2e-ios
-          path: apps/example-expo/.e2e
-          include-hidden-files: true
-          if-no-files-found: warn
-          retention-days: 7
-
+  # iOS runs locally only: the hosted Mac runners can't run the iPhone Duo
+  # simulator yet. See https://github.com/thiagobrez/react-native-arrangement-view/issues/23
   android:
     runs-on: ubuntu-latest
     timeout-minutes: 60
