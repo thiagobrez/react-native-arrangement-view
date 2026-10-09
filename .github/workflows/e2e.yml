@@ -47,6 +47,13 @@ jobs:
             -configuration Release -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath ios/build -quiet
 
+      # Only the iOS 27.1 runtime has the iPhone Duo, and the runner may not have it.
+      - name: Install the iOS simulator runtime
+        run: |
+          if ! xcrun simctl list runtimes -j | jq -e '.runtimes[] | select(.isAvailable and any(.supportedDeviceTypes[]?; .name == "iPhone Duo"))' > /dev/null; then
+            xcodebuild -downloadPlatform iOS
+          fi
+
       - name: Boot an iPhone Duo and install the app
         run: |
           UDID=$(xcrun simctl list devices available -j | jq -r '[.devices[][] | select(.name == "iPhone Duo")][0].udid // empty')
@@ -89,6 +96,14 @@ jobs:
       - name: Finalize Android SDK
         run: |
           /bin/bash -c "yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null"
+
+      # The runner's avdmanager predates the Pixel 10 Pro Fold profile.
+      - name: Update Android command-line tools
+        run: |
+          curl -sSfL -o "$RUNNER_TEMP/cmdline-tools.zip" https://dl.google.com/android/repository/commandlinetools-linux-16111833_latest.zip
+          rm -rf "$ANDROID_HOME/cmdline-tools/latest"
+          unzip -q "$RUNNER_TEMP/cmdline-tools.zip" -d "$RUNNER_TEMP"
+          mv "$RUNNER_TEMP/cmdline-tools" "$ANDROID_HOME/cmdline-tools/latest"
 
       - name: Enable KVM
         run: |
