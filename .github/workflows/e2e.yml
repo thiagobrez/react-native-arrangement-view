@@ -18,7 +18,8 @@ jobs:
   # iOS runs locally only: the hosted Mac runners can't run the iPhone Duo
   # simulator yet. See https://github.com/thiagobrez/react-native-arrangement-view/issues/23
   android:
-    runs-on: ubuntu-latest
+    # Ubuntu 26.04 has Android command-line tools that know the Pixel 9 Pro Fold.
+    runs-on: ubuntu-26.04
     timeout-minutes: 60
 
     steps:
@@ -33,15 +34,6 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '17'
-
-      # The runner's command-line tools (12.0) predate the Pixel 10 Pro Fold
-      # profile, and the emulator action only installs its own when none exist.
-      - name: Update Android command-line tools
-        run: |
-          curl -sSfL -o "$RUNNER_TEMP/cmdline-tools.zip" https://dl.google.com/android/repository/commandlinetools-linux-16111833_latest.zip
-          rm -rf "$ANDROID_HOME/cmdline-tools/latest"
-          unzip -q "$RUNNER_TEMP/cmdline-tools.zip" -d "$RUNNER_TEMP"
-          mv "$RUNNER_TEMP/cmdline-tools" "$ANDROID_HOME/cmdline-tools/latest"
 
       - name: Enable KVM
         run: |
@@ -60,13 +52,13 @@ jobs:
         run: ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 --no-daemon --console=plain
 
       # The emulator stops when this step ends, so install and test in it.
-      - name: Run e2e tests on a Pixel 10 Pro Fold emulator
+      - name: Run e2e tests on a Pixel 9 Pro Fold emulator
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
           api-level: 36
           arch: x86_64
           target: google_apis
-          profile: pixel_10_pro_fold
+          profile: pixel_9_pro_fold
           cores: 4
           ram-size: 4096M
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
