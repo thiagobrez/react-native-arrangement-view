@@ -21,6 +21,8 @@ export type ArrangementLayout = Readonly<{
   secondaryVisible: boolean;
   /** How the two panes are placed; null when only the primary shows or they overlap. */
   axis: 'horizontal' | 'vertical' | null;
+  /** Whether the panes, when arranged in "overlay", are overlapping. Usually when the device is closed or fully open. */
+  isOverlapping: boolean;
 }>;
 export type ArrangementLayoutHandler = (layout: ArrangementLayout) => void;
 export interface ArrangementViewProps extends ViewProps {

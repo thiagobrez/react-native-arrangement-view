@@ -1,6 +1,5 @@
 import { StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { DarkTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ExamplesList } from './ExamplesList';
@@ -22,9 +21,13 @@ const theme = {
 export default function App() {
   return (
     <SafeAreaProvider style={styles.root}>
-      <StatusBar style="light" />
       <NavigationContainer theme={theme}>
-        <Stack.Navigator screenOptions={{ headerShadowVisible: false }}>
+        <Stack.Navigator
+          screenOptions={{
+            headerShadowVisible: false,
+            statusBarStyle: 'light',
+          }}
+        >
           <Stack.Screen
             name="examples"
             component={ExamplesList}
