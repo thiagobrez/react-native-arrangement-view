@@ -12,7 +12,7 @@ index 59cc68712b604b9b42996bf780c6b40923430f5c..49194649bb9db2630e5694fa5e274080
       */
      fold(pose: FoldPose): Promise<void>;
 diff --git a/dist/surface.js b/dist/surface.js
-index 4c260edcf8ac31e4041d520098d02159d9561968..103e554826ed9c09e32be41e1df17ac9f821836f 100644
+index 4c260edcf8ac31e4041d520098d02159d9561968..8c3a1a9f88a7f4d5118ce4f03b875e8ed9015c2b 100644
 --- a/dist/surface.js
 +++ b/dist/surface.js
 @@ -11,9 +11,12 @@
@@ -38,7 +38,7 @@ index 4c260edcf8ac31e4041d520098d02159d9561968..103e554826ed9c09e32be41e1df17ac9
          this.sessionApp = binding?.sessionApp === undefined ? undefined : await this.resumedSessionApp(session, binding.sessionApp, info.signal);
          // Nothing is installed here: a device provider that installed the build
          // from `appPath` says so on the binding, and otherwise the suite installs
-@@ -1155,10 +1159,47 @@ export class AgentDeviceSurface {
+@@ -1155,10 +1159,53 @@ export class AgentDeviceSurface {
       */
      async fold(pose, signal) {
          if (this.options.platform !== 'ios') {
@@ -63,10 +63,16 @@ index 4c260edcf8ac31e4041d520098d02159d9561968..103e554826ed9c09e32be41e1df17ac9
 +        }
 +        const { angle, state } = EMULATOR_POSES[pose];
 +        const adb = (...args) => execFileAsync(adbPath(), ['-s', serial, ...args], { signal });
++        // Device profiles number their postures differently, so find the id by name.
++        const { stdout: states } = await adb('shell', 'cmd', 'device_state', 'print-states');
++        const id = new RegExp(`identifier=(\\d+), name='${state}'`).exec(states)?.[1];
++        if (id === undefined) {
++            throw unsupported(`device.fold needs a ${state} device state; ${serial} reports none`);
++        }
 +        await adb('emu', 'sensor', 'set', 'hinge-angle0', String(angle));
 +        for (;;) {
 +            const { stdout } = await adb('shell', 'cmd', 'device_state', 'print-state');
-+            if (Number(/\d+/.exec(stdout)?.[0]) === state)
++            if (/\d+/.exec(stdout)?.[0] === id)
 +                break;
 +            await delay(250, undefined, { signal });
 +        }
@@ -87,17 +93,17 @@ index 4c260edcf8ac31e4041d520098d02159d9561968..103e554826ed9c09e32be41e1df17ac9
      /**
       * Resets the simulator's keychain through agent-device. simctl resets the
       * whole simulator's, not one app's, and only a simulator has one to reset:
-@@ -1289,3 +1330,17 @@ function redactSecure(data, projected, viewport) {
+@@ -1289,3 +1336,17 @@ function redactSecure(data, projected, viewport) {
          return undefined;
      }
  }
 +
 +const execFileAsync = promisify(execFile);
-+/** Hinge angle per pose, and the device state Android's foldable emulators report for it. */
++/** Hinge angle per pose, and the name of the device state Android's foldable emulators report for it. */
 +const EMULATOR_POSES = {
-+    closed: { angle: 0, state: 0 },
-+    'half-open': { angle: 90, state: 1 },
-+    open: { angle: 180, state: 2 },
++    closed: { angle: 0, state: 'CLOSED' },
++    'half-open': { angle: 90, state: 'HALF_OPENED' },
++    open: { angle: 180, state: 'OPENED' },
 +};
 +/** The SDK's adb, else the one on PATH. */
 +function adbPath() {

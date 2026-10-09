@@ -34,11 +34,8 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Finalize Android SDK
-        run: |
-          /bin/bash -c "yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null"
-
-      # The runner's avdmanager predates the Pixel 10 Pro Fold profile.
+      # The runner's command-line tools (12.0) predate the Pixel 10 Pro Fold
+      # profile, and the emulator action only installs its own when none exist.
       - name: Update Android command-line tools
         run: |
           curl -sSfL -o "$RUNNER_TEMP/cmdline-tools.zip" https://dl.google.com/android/repository/commandlinetools-linux-16111833_latest.zip

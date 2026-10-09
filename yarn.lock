@@ -1739,7 +1739,7 @@ __metadata:
 
 "@e2e-dev/mobile@patch:@e2e-dev/mobile@npm%3A0.10.0#~/.yarn/patches/@e2e-dev-mobile-npm-0.10.0-fef61f6f0f.patch":
   version: 0.10.0
-  resolution: "@e2e-dev/mobile@patch:@e2e-dev/mobile@npm%3A0.10.0#~/.yarn/patches/@e2e-dev-mobile-npm-0.10.0-fef61f6f0f.patch::version=0.10.0&hash=ac7898"
+  resolution: "@e2e-dev/mobile@patch:@e2e-dev/mobile@npm%3A0.10.0#~/.yarn/patches/@e2e-dev-mobile-npm-0.10.0-fef61f6f0f.patch::version=0.10.0&hash=5a9c81"
   dependencies:
     agent-device: "npm:0.21.22"
     pngjs: "npm:7.0.0"
@@ -1750,7 +1750,7 @@ __metadata:
   peerDependenciesMeta:
     ai:
       optional: true
-  checksum: 10c0/5dc858a8e4b8317c98fe68c23eda79d32ba19755b3389e4df829ebd9bbd42235e632432be8cbfec72bbf9f61809c6514fc7b1d299ffd34b6d9cb624f30403bcd
+  checksum: 10c0/c8b890f762edf1625f94c1de448e3faeee97871e9110a297250cfb734b94b2eb019f7f08b9da1ae7f1f7848d828470c97942eb70c9bd61ce80dcefdec9799025
   languageName: node
   linkType: hard
 
