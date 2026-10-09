@@ -1,0 +1,165 @@
+import { PostureShots } from '../../../components/PostureShots';
+
+# Split view
+
+A list of trails in a sidebar, with the selected trail's details in a second column. The columns come from react-native-screens' experimental `Split`, which is a `UISplitViewController`, so the example runs on iOS only. The details column holds an `ArrangementView`. The full example is in the [example app](https://github.com/thiagobrez/react-native-arrangement-view/tree/main/apps/example-expo/src/examples/split-view).
+
+Expo Router offers the same component as `expo-router/unstable-split-view`, but only as the root layout. The example app uses React Navigation, so it renders `Split.Host` inside a stack screen.
+
+## Arrangement
+
+The details column holds an `ArrangementView` with the trail's overview as the primary pane and its notes as the secondary pane:
+
+```tsx
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ArrangementView } from 'react-native-arrangement-view';
+
+function Detail({ trail }: { trail: Trail }) {
+  return (
+    <SafeAreaView
+      style={{ flex: 1 }}
+      edges={['top', 'left', 'right', 'bottom']}
+    >
+      <ArrangementView style={{ flex: 1 }} arrangement="split">
+        <ArrangementView.Primary>
+          <Overview trail={trail} />
+        </ArrangementView.Primary>
+        <ArrangementView.Secondary>
+          <Notes trail={trail} />
+        </ArrangementView.Secondary>
+      </ArrangementView>
+    </SafeAreaView>
+  );
+}
+```
+
+The `ArrangementView` arranges the panes within its column, not the window. Whether it splits them depends on where the column sits relative to the hinge:
+
+- **Half-open, sidebar shown:** on iOS 27, `UISplitViewController` is fold-aware. It widens the sidebar so the edge between the columns lies on the hinge. No hinge runs through the details column, so the panes stay stacked.
+- **Half-open, sidebar hidden:** the details column spans the hinge, and the panes split on either side of it, as they do full screen.
+
+## Panes
+
+Each pane shows how the panes are placed, using [`useArrangementLayout`](../api/use-arrangement-layout):
+
+```tsx
+import {
+  useArrangementLayout,
+  type ArrangementLayout,
+} from 'react-native-arrangement-view';
+
+function describe(layout: ArrangementLayout | null) {
+  if (!layout) return '…';
+  if (!layout.secondaryVisible) return 'overview only';
+  return layout.axis === 'horizontal' ? 'side by side' : 'stacked';
+}
+
+function Notes({ trail }: { trail: Trail }) {
+  const layout = useArrangementLayout();
+  return (
+    <View style={{ flex: 1 }}>
+      <NotesList notes={trail.notes} />
+      <Text>{describe(layout)}</Text>
+    </View>
+  );
+}
+```
+
+The layout describes where the panes are, not why. With the sidebar shown, a half-open device reports `stacked` panes and a [`useHingeChange`](../api/use-hinge-change) status of `partiallyOpen`, although the hinge doesn't run through the column. A device in tabletop posture, where the hinge does run between the panes, reports the same combination.
+
+## Hosting the split in a stack
+
+`Split.Host` inside a stack screen needs a few adjustments, which apply to react-native-screens 4.26:
+
+```tsx
+import {
+  Split,
+  type SplitHostCommands,
+} from 'react-native-screens/experimental';
+
+export function SplitViewExample() {
+  const navigation = useNavigation();
+  const split = useRef<SplitHostCommands>(null);
+  const [collapsed, setCollapsed] = useState(false);
+  const [detailVisible, setDetailVisible] = useState(false);
+
+  const [pushed, setPushed] = useState(false);
+  useEffect(
+    () => navigation.addListener('transitionEnd', () => setPushed(true)),
+    [navigation]
+  );
+
+  useEffect(() => {
+    navigation.setOptions({ headerBackVisible: !(collapsed && detailVisible) });
+  }, [navigation, collapsed, detailVisible]);
+
+  if (!pushed) return <View style={{ flex: 1 }} />;
+
+  return (
+    <Split.Host
+      key={collapsed ? 'collapsed' : 'expanded'}
+      ref={split}
+      preferredDisplayMode="oneBesideSecondary"
+      preferredSplitBehavior="tile"
+      topColumnForCollapsing="primary"
+      onCollapse={() => {
+        setCollapsed(true);
+        setDetailVisible(false);
+      }}
+      onExpand={() => setCollapsed(false)}
+    >
+      <Split.Column>
+        <Sidebar
+          onSelect={(id) => {
+            setSelectedId(id);
+            split.current?.show('secondary');
+          }}
+        />
+      </Split.Column>
+      <Split.Column
+        onWillAppear={() => setDetailVisible(true)}
+        onWillDisappear={() => setDetailVisible(false)}
+      >
+        <Detail trail={trail} />
+      </Split.Column>
+    </Split.Host>
+  );
+}
+```
+
+- **Build flag:** `Split` compiles only when `RNS_GAMMA_ENABLED` is set during `pod install`. Expo Router's config plugin sets it. Without Expo Router, add a config plugin that prepends `ENV['RNS_GAMMA_ENABLED'] ||= '1'` to the Podfile, like the example app's [`plugins/with-screens-gamma.js`](https://github.com/thiagobrez/react-native-arrangement-view/blob/main/apps/example-expo/plugins/with-screens-gamma.js).
+- **Mount after the push:** `Split.Host` creates its `UISplitViewController` once it is in a window, and ignores columns mounted before then. A pushed screen enters the window after React mounts it, so the example renders the split on the stack's `transitionEnd`.
+- **Remount when it collapses or expands:** after unfolding and folding again, the collapsed split shows the details column at its expanded size. Keying the host by `collapsed` starts a new split each time.
+- **One back button:** the folded split pushes the details column with its own back button, in the same place as the stack's. The example hides the stack's back button while the split shows its own.
+- **Picking a trail:** `show('secondary')` pushes the details column when the split is collapsed. With both columns on screen, the details column is already visible.
+
+The example's screen uses a transparent stack header without a title, so the split fills the screen and the stack's back button stays available:
+
+```tsx
+<Stack.Screen
+  name="split-view"
+  component={SplitViewExample}
+  options={{ headerTransparent: true, headerTitle: '' }}
+/>
+```
+
+## Screenshots
+
+| Posture                   | Layout                                                                                   |
+| ------------------------- | ---------------------------------------------------------------------------------------- |
+| Closed                    | The trails list. Picking a trail pushes its details, with the panes stacked              |
+| Open flat                 | A 320 pt sidebar beside the details, with the panes stacked                              |
+| Half-open, sidebar shown  | The sidebar widens to end at the hinge. The details are on the other half, panes stacked |
+| Half-open, sidebar hidden | The details span the hinge. The overview and the notes are on either side of it          |
+
+<PostureShots
+  dir="examples/split-view"
+  platforms={['ios']}
+  postures={[
+    { file: 'closed', label: 'Closed' },
+    { file: 'closed-detail', label: 'Closed, trail details' },
+    { file: 'open', label: 'Open flat' },
+    { file: 'book', label: 'Half-open, sidebar shown' },
+    { file: 'book-sidebar-hidden', label: 'Half-open, sidebar hidden' },
+  ]}
+/>
