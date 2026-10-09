@@ -2,9 +2,7 @@ import { PostureShots } from '../../../components/PostureShots';
 
 # Split view
 
-A list of trails in a sidebar, with the selected trail's details in a second column. The columns come from react-native-screens' experimental `Split`, which is a `UISplitViewController`, so the example runs on iOS only. The details column holds an `ArrangementView`. The full example is in the [example app](https://github.com/thiagobrez/react-native-arrangement-view/tree/main/apps/example-expo/src/examples/split-view).
-
-Expo Router offers the same component as `expo-router/unstable-split-view`, but only as the root layout. The example app uses React Navigation, so it renders `Split.Host` inside a stack screen.
+Example integration with React Native Screens' Experimental Split View. ArrangementView is rendered in the Split main panel, and arranges the panes according to the available space, reacting to the sidebar expanded/collapsed state. The full example is in the [example app](https://github.com/thiagobrez/react-native-arrangement-view/tree/main/apps/example-expo/src/examples/split-view).
 
 ## Arrangement
 
@@ -64,8 +62,6 @@ function Notes({ trail }: { trail: Trail }) {
   );
 }
 ```
-
-The layout describes where the panes are, not why. With the sidebar shown, a half-open device reports `stacked` panes and a [`useHingeChange`](../api/use-hinge-change) status of `partiallyOpen`, although the hinge doesn't run through the column. A device in tabletop posture, where the hinge does run between the panes, reports the same combination.
 
 ## Hosting the split in a stack
 
@@ -127,11 +123,8 @@ export function SplitViewExample() {
 }
 ```
 
-- **Build flag:** `Split` compiles only when `RNS_GAMMA_ENABLED` is set during `pod install`. Expo Router's config plugin sets it. Without Expo Router, add a config plugin that prepends `ENV['RNS_GAMMA_ENABLED'] ||= '1'` to the Podfile, like the example app's [`plugins/with-screens-gamma.js`](https://github.com/thiagobrez/react-native-arrangement-view/blob/main/apps/example-expo/plugins/with-screens-gamma.js).
 - **Mount after the push:** `Split.Host` creates its `UISplitViewController` once it is in a window, and ignores columns mounted before then. A pushed screen enters the window after React mounts it, so the example renders the split on the stack's `transitionEnd`.
 - **Remount when it collapses or expands:** after unfolding and folding again, the collapsed split shows the details column at its expanded size. Keying the host by `collapsed` starts a new split each time.
-- **One back button:** the folded split pushes the details column with its own back button, in the same place as the stack's. The example hides the stack's back button while the split shows its own.
-- **Picking a trail:** `show('secondary')` pushes the details column when the split is collapsed. With both columns on screen, the details column is already visible.
 
 The example's screen uses a transparent stack header without a title, so the split fills the screen and the stack's back button stays available:
 
