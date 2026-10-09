@@ -44,11 +44,11 @@ export function Controls({ player }: ControlsProps) {
     playbackRate: player.playbackRate,
   });
 
-  // Overlapping panes have no axis. A hinge that separates them gives the
-  // primary pane its own region after the hinge: below it in tabletop, on the
-  // trailing side held like a book.
-  const axis = useArrangementLayout()?.axis ?? null;
-  const separated = axis !== null;
+  // A hinge that separates the panes gives the primary its own region after
+  // the hinge: below it in tabletop, on the trailing side held like a book.
+  const layout = useArrangementLayout();
+  const separated = layout !== null && !layout.isOverlapping;
+  const axis = layout?.axis ?? null;
 
   // The video ignores the safe area to stay centred on the display; the
   // controls keep clear of it, but not on the hinge side, away from the edge.

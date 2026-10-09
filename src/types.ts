@@ -21,6 +21,8 @@ export type ArrangementLayout = Readonly<{
   secondaryVisible: boolean;
   /** How the two panes are placed; null when only the primary shows or they overlap. */
   axis: 'horizontal' | 'vertical' | null;
+  /** Both panes are on screen, the primary in front, as in overlay when no hinge separates them. */
+  isOverlapping: boolean;
 }>;
 export type ArrangementLayoutHandler = (layout: ArrangementLayout) => void;
 export interface ArrangementViewProps extends ViewProps {
