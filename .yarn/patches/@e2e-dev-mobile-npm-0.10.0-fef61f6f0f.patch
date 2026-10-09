@@ -12,7 +12,7 @@ index 59cc68712b604b9b42996bf780c6b40923430f5c..49194649bb9db2630e5694fa5e274080
       */
      fold(pose: FoldPose): Promise<void>;
 diff --git a/dist/surface.js b/dist/surface.js
-index 4c260edcf8ac31e4041d520098d02159d9561968..58357d8c2d0d660398d4afcfd4b7546cbbe05ec6 100644
+index 4c260edcf8ac31e4041d520098d02159d9561968..a85548bea1d2e60a2efe93318820c5d8b059c128 100644
 --- a/dist/surface.js
 +++ b/dist/surface.js
 @@ -11,9 +11,12 @@
@@ -38,7 +38,7 @@ index 4c260edcf8ac31e4041d520098d02159d9561968..58357d8c2d0d660398d4afcfd4b7546c
          this.sessionApp = binding?.sessionApp === undefined ? undefined : await this.resumedSessionApp(session, binding.sessionApp, info.signal);
          // Nothing is installed here: a device provider that installed the build
          // from `appPath` says so on the binding, and otherwise the suite installs
-@@ -1155,10 +1159,31 @@ export class AgentDeviceSurface {
+@@ -1155,10 +1159,38 @@ export class AgentDeviceSurface {
       */
      async fold(pose, signal) {
          if (this.options.platform !== 'ios') {
@@ -51,7 +51,10 @@ index 4c260edcf8ac31e4041d520098d02159d9561968..58357d8c2d0d660398d4afcfd4b7546c
 +    /**
 +     * Sets a foldable Android emulator's hinge sensor through the emulator
 +     * console, then waits for the device state Android derives from it, so
-+     * the app has the new posture when this resolves.
++     * the app has the new posture when this resolves. Folding to the cover
++     * display shows "Swipe up to continue" unless apps are set to continue on
++     * fold, a setting emulator images ignore, so it is dismissed as that swipe
++     * would.
 +     */
 +    async foldEmulator(pose, signal) {
 +        const serial = this.bootedId;
@@ -64,14 +67,18 @@ index 4c260edcf8ac31e4041d520098d02159d9561968..58357d8c2d0d660398d4afcfd4b7546c
 +        for (;;) {
 +            const { stdout } = await adb('shell', 'cmd', 'device_state', 'print-state');
 +            if (Number(/\d+/.exec(stdout)?.[0]) === state)
-+                return;
++                break;
++            await delay(250, undefined, { signal });
++        }
++        await adb('shell', 'wm', 'dismiss-keyguard');
++        while ((await adb('shell', 'dumpsys', 'window')).stdout.includes('isKeyguardShowing=true')) {
 +            await delay(250, undefined, { signal });
 +        }
 +    }
      /**
       * Resets the simulator's keychain through agent-device. simctl resets the
       * whole simulator's, not one app's, and only a simulator has one to reset:
-@@ -1289,3 +1314,17 @@ function redactSecure(data, projected, viewport) {
+@@ -1289,3 +1321,17 @@ function redactSecure(data, projected, viewport) {
          return undefined;
      }
  }

@@ -18,7 +18,7 @@ jobs:
   ios:
     # The native ArrangementView and the iPhone Duo need Xcode 27.1.
     runs-on: xcode-27
-    timeout-minutes: 60
+    timeout-minutes: 90
 
     env:
       RCT_USE_RN_DEP: 1
@@ -45,7 +45,8 @@ jobs:
         run: |
           xcodebuild -workspace ios/ArrangementViewExample.xcworkspace -scheme ArrangementViewExample \
             -configuration Release -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath ios/build -quiet
+            -derivedDataPath ios/build -quiet > "$RUNNER_TEMP/xcodebuild.log" 2>&1 \
+            || { tail -100 "$RUNNER_TEMP/xcodebuild.log"; exit 1; }
 
       # Only the iOS 27.1 runtime has the iPhone Duo, and the runner may not have it.
       - name: Install the iOS simulator runtime
