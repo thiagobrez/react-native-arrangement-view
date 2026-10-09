@@ -12,7 +12,7 @@ index 59cc68712b604b9b42996bf780c6b40923430f5c..49194649bb9db2630e5694fa5e274080
       */
      fold(pose: FoldPose): Promise<void>;
 diff --git a/dist/surface.js b/dist/surface.js
-index 4c260edcf8ac31e4041d520098d02159d9561968..a85548bea1d2e60a2efe93318820c5d8b059c128 100644
+index 4c260edcf8ac31e4041d520098d02159d9561968..103e554826ed9c09e32be41e1df17ac9f821836f 100644
 --- a/dist/surface.js
 +++ b/dist/surface.js
 @@ -11,9 +11,12 @@
@@ -38,7 +38,7 @@ index 4c260edcf8ac31e4041d520098d02159d9561968..a85548bea1d2e60a2efe93318820c5d8
          this.sessionApp = binding?.sessionApp === undefined ? undefined : await this.resumedSessionApp(session, binding.sessionApp, info.signal);
          // Nothing is installed here: a device provider that installed the build
          // from `appPath` says so on the binding, and otherwise the suite installs
-@@ -1155,10 +1159,38 @@ export class AgentDeviceSurface {
+@@ -1155,10 +1159,47 @@ export class AgentDeviceSurface {
       */
      async fold(pose, signal) {
          if (this.options.platform !== 'ios') {
@@ -70,15 +70,24 @@ index 4c260edcf8ac31e4041d520098d02159d9561968..a85548bea1d2e60a2efe93318820c5d8
 +                break;
 +            await delay(250, undefined, { signal });
 +        }
-+        await adb('shell', 'wm', 'dismiss-keyguard');
-+        while ((await adb('shell', 'dumpsys', 'window')).stdout.includes('isKeyguardShowing=true')) {
++        // The keyguard can arrive after the state and miss a dismissal, so it
++        // must stay gone for two reads in a row.
++        for (let clear = 0; clear < 2;) {
 +            await delay(250, undefined, { signal });
++            const { stdout } = await adb('shell', 'dumpsys', 'window');
++            if (stdout.includes('isKeyguardShowing=true')) {
++                clear = 0;
++                await adb('shell', 'wm', 'dismiss-keyguard');
++            }
++            else {
++                clear += 1;
++            }
 +        }
 +    }
      /**
       * Resets the simulator's keychain through agent-device. simctl resets the
       * whole simulator's, not one app's, and only a simulator has one to reset:
-@@ -1289,3 +1321,17 @@ function redactSecure(data, projected, viewport) {
+@@ -1289,3 +1330,17 @@ function redactSecure(data, projected, viewport) {
          return undefined;
      }
  }

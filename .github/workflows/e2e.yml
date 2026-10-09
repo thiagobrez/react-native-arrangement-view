@@ -151,6 +151,7 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           disable-animations: true
           script: |
+            adb shell svc power stayon true
             adb install -r apps/example-expo/android/app/build/outputs/apk/release/app-release.apk
             yarn example test:e2e:android --reporter list,junit
 
