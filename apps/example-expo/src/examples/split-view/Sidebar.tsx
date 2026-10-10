@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useHingeChange } from 'react-native-arrangement-view';
 import { trails } from './trails';
 
 export interface SidebarProps {
@@ -10,7 +11,10 @@ export interface SidebarProps {
   onSelect: (id: string) => void;
 }
 
-/** The split's primary column: a list of trails and the split's state. */
+/**
+ * The split's primary column: a list of trails, the split's state, and the
+ * hinge, which the app's HingeObserver reports outside an ArrangementView.
+ */
 export function Sidebar({
   selectedId,
   collapsed,
@@ -20,6 +24,9 @@ export function Sidebar({
   const [width, setWidth] = useState(0);
   // Collapsed on the iPhone Duo, the column runs under the navigation items.
   const insets = useSafeAreaInsets();
+  const hinge = useHingeChange();
+  const degrees =
+    hinge.angle === null ? null : Math.round((hinge.angle * 180) / Math.PI);
   return (
     <ScrollView
       testID="split-sidebar"
@@ -68,6 +75,11 @@ export function Sidebar({
         </Text>
         <Text testID="sidebar-width" style={styles.stateText}>
           Sidebar {width} pt wide
+        </Text>
+        <Text testID="sidebar-hinge" style={styles.stateText}>
+          {degrees === null
+            ? 'No hinge'
+            : `Hinge ${degrees}° · ${hinge.status}`}
         </Text>
       </View>
     </ScrollView>

@@ -35,7 +35,9 @@ export function TentPosture() {
   const [alarm, setAlarm] = useState(() => new Date(2026, 0, 1, 6, 30));
   const [wake, setWake] = useState<'asleep' | 'waking' | 'ringing'>('asleep');
   const glow = useAnimatedValue(0);
-  const [tent, setTent] = useState(false);
+  // The app's HingeObserver lets the screen itself read the hinge, not just
+  // its panes.
+  const tent = isTent(useHingeChange(), useWindowDimensions().height);
 
   const stop = () => {
     glow.stopAnimation();
@@ -70,11 +72,11 @@ export function TentPosture() {
     >
       <ArrangementView style={styles.screen}>
         <ArrangementView.Primary>
-          <Clock
+          <ClockFace
             alarm={alarm}
             glow={glow}
             ringing={wake === 'ringing'}
-            onTentChange={setTent}
+            standBy={tent}
             onStop={stop}
           />
         </ArrangementView.Primary>
@@ -100,19 +102,6 @@ export function TentPosture() {
  */
 function isTent(hinge: HingeState, windowHeight: number) {
   return (hinge.angle ?? 0) > 0.5 && windowHeight < 480; // radians, about 30°
-}
-
-/** The clock face, which finds out from the hinge whether it's on a nightstand. */
-function Clock({
-  onTentChange,
-  ...props
-}: Omit<Parameters<typeof ClockFace>[0], 'standBy'> & {
-  onTentChange: (tent: boolean) => void;
-}) {
-  const tent = isTent(useHingeChange(), useWindowDimensions().height);
-  // The hook only works inside a pane, so the pane tells the screen.
-  useEffect(() => onTentChange(tent), [tent, onTentChange]);
-  return <ClockFace {...props} standBy={tent} />;
 }
 
 const styles = StyleSheet.create({

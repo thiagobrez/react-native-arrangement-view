@@ -3,12 +3,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { examples } from './examples';
-import { HingeReadout } from './HingeReadout';
 
-/**
- * Home screen: every example, in order. Pressing one opens it. It has no
- * ArrangementView, so its hinge readout comes from the app's HingeObserver.
- */
+/** Home screen: every example, in order. Pressing one opens it. */
 export function ExamplesList() {
   const navigation =
     useNavigation<NativeStackNavigationProp<Record<string, undefined>>>();
@@ -27,8 +23,6 @@ export function ExamplesList() {
       ]}
       data={examples}
       keyExtractor={(example) => example.name}
-      ListHeaderComponent={<HingeReadout id="home" />}
-      ListHeaderComponentStyle={styles.header}
       ItemSeparatorComponent={Separator}
       renderItem={({ item }) => (
         <Pressable
@@ -53,7 +47,6 @@ function Separator() {
 const styles = StyleSheet.create({
   list: { flex: 1, backgroundColor: '#10121a' },
   content: { padding: 16 },
-  header: { paddingHorizontal: 18, paddingBottom: 14 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

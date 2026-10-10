@@ -27,9 +27,13 @@ Android has no tent posture either. A Pixel foldable hands over to its inner dis
 
 Usually in Tent posture, we want a fullscreen without distractions. Use the tent state to hide the navigation header, auto-hide the home indicator, and remove safe areas.
 
+The header and the safe area belong to the screen, which is outside the panes. Mount a [`HingeObserver`](../api/hinge-observer) above your navigator, and the screen can read the hinge itself:
+
 ```tsx
 function Screen() {
-  const [tent, setTent] = useState(false);
+  const hinge = useHingeChange();
+  const { height } = useWindowDimensions();
+  const tent = (hinge.angle ?? 0) > 0.5 && height < 480;
 
   const navigation = useNavigation();
   useLayoutEffect(() => {
@@ -43,7 +47,7 @@ function Screen() {
     >
       <ArrangementView style={styles.screen}>
         <ArrangementView.Primary>
-          <Primary onTentChange={setTent} />
+          {tent ? <TentView /> : <NormalPrimary />}
         </ArrangementView.Primary>
         <ArrangementView.Secondary>
           <Secondary />
