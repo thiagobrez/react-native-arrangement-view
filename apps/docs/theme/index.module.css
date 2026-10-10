@@ -1,0 +1,14 @@
+.banner {
+  margin-bottom: 24px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--rp-c-brand);
+  background: var(--rp-c-brand-tint);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.banner a {
+  color: var(--rp-c-brand);
+  text-decoration: underline;
+}

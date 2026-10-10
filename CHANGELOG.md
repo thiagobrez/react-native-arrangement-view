@@ -1,5 +1,17 @@
 # react-native-arrangement-view
 
+## 0.3.0
+
+### Minor Changes
+
+- [#10](https://github.com/thiagobrez/react-native-arrangement-view/pull/10) [`e9b6bb5`](https://github.com/thiagobrez/react-native-arrangement-view/commit/e9b6bb5dbb9c37c0a8f97a342119855330e2f3c5) Thanks [@thiagobrez](https://github.com/thiagobrez)! - Add `useArrangementLayout` and `onArrangementLayoutChange` to tell whether the secondary pane is on screen, and how the panes are placed.
+
+- [#10](https://github.com/thiagobrez/react-native-arrangement-view/pull/10) [`53a8873`](https://github.com/thiagobrez/react-native-arrangement-view/commit/53a887311485b6e5575c0c62da3ff7ac2ba6ef81) Thanks [@thiagobrez](https://github.com/thiagobrez)! - Add `primaryEdge` to put the primary pane on the leading or trailing side when the panes are side by side.
+
+### Patch Changes
+
+- [#10](https://github.com/thiagobrez/react-native-arrangement-view/pull/10) [`cde6c68`](https://github.com/thiagobrez/react-native-arrangement-view/commit/cde6c680ae1a2b8aff43f3b496a2100d5962d292) Thanks [@thiagobrez](https://github.com/thiagobrez)! - On iOS, lay out a pane's content in the same pass SwiftUI resizes the pane, so unfolding no longer shows the content at its old size first.
+
 ## 0.2.0
 
 ### Minor Changes

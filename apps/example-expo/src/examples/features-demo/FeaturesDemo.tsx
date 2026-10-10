@@ -1,28 +1,22 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
   ArrangementView,
   type Arrangement,
   type ArrangementAxes,
+  type PrimaryEdge,
 } from 'react-native-arrangement-view';
 import { Chip } from './Chip';
-import { HingeReadout } from './HingeReadout';
 import { Pane } from './Pane';
-import type { Screens } from './App';
 
-export function ArrangementScreen({
-  navigation,
-}: NativeStackScreenProps<Screens, 'Arrangement'>) {
+export function FeaturesDemo() {
   const [arrangement, setArrangement] = useState<Arrangement>('split');
   const [axes, setAxes] = useState<ArrangementAxes>('both');
+  const [primaryEdge, setPrimaryEdge] = useState<PrimaryEdge>();
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={['left', 'right', 'bottom']}>
       <View style={styles.header}>
-        <Text style={styles.brand}>REACT NATIVE ARRANGEMENT VIEW</Text>
-        {/* Outside the ArrangementView: this reads the app's HingeObserver. */}
-        <HingeReadout id="header" />
         <View style={styles.controls}>
           <Chip
             label="Split"
@@ -44,18 +38,24 @@ export function ArrangementScreen({
             />
           ))}
           <View style={styles.separator} />
-          <Chip
-            label="Hinge screen"
-            selected={false}
-            onPress={() => navigation.navigate('Hinge')}
-          />
+          {([undefined, 'leading', 'trailing'] as const).map((edge) => (
+            <Chip
+              key={edge ?? 'default'}
+              label={edge ? `Primary ${edge}` : 'Default edge'}
+              selected={edge === primaryEdge}
+              onPress={() => setPrimaryEdge(edge)}
+            />
+          ))}
         </View>
       </View>
+
+      {/*<View style={{flex: 1, backgroundColor: 'red'}} />*/}
 
       <ArrangementView
         style={styles.arrangement}
         arrangement={arrangement}
         axes={axes}
+        primaryEdge={primaryEdge}
       >
         <ArrangementView.Primary>
           <Pane primary arrangement={arrangement} />
@@ -70,13 +70,7 @@ export function ArrangementScreen({
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#10121a' },
-  header: { paddingHorizontal: 22, paddingTop: 14, paddingBottom: 16, gap: 12 },
-  brand: {
-    color: '#a8b3d0',
-    letterSpacing: 2.5,
-    fontSize: 10,
-    fontWeight: '700',
-  },
+  header: { paddingHorizontal: 22, paddingTop: 14, paddingBottom: 16 },
   controls: {
     flexDirection: 'row',
     gap: 6,

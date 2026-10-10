@@ -1,0 +1,13 @@
+diff --git a/dist/theme/components/Nav/hooks.js b/dist/theme/components/Nav/hooks.js
+index 056af6c932f569759c2fcf98fdada125dc71b80d..35861089b7907f01da61bfd789f21ade2d00caaf 100644
+--- a/dist/theme/components/Nav/hooks.js
++++ b/dist/theme/components/Nav/hooks.js
+@@ -61,7 +61,7 @@ function replaceVersion(rawUrl, version, cleanUrls, isPageNotFound) {
+     if (version.target !== version.default) {
+         versionPart = version.target;
+         if (version.current !== version.default) parts.shift();
+-    } else parts.shift();
++    } else if (version.current !== version.default) parts.shift();
+     let restPart = parts.join('/') || '';
+     if (versionPart && !restPart) restPart = cleanUrls ? 'index' : 'index.html';
+     return addLeadingSlash([

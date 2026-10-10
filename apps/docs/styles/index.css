@@ -1,0 +1,65 @@
+/* The logo's purple and teal panes. */
+:root {
+  --rp-c-brand: #7c6cf2;
+  --rp-c-brand-light: #9a8df5;
+  --rp-c-brand-lighter: #d9d4fb;
+  --rp-c-brand-dark: #5a4bd1;
+  --rp-c-brand-darker: #4638b0;
+  --rp-c-brand-tint: #7c6cf229;
+}
+
+/* A minimal home page: the logo above a centered, plain title on a flat background. */
+:root {
+  --rp-home-background-bg: var(--rp-c-bg);
+  /* The theme paints the brand button with the title's gradient; make it solid. */
+  --rp-home-hero-title-bg: var(--rp-c-brand);
+  --rp-home-hero-title-color: var(--rp-c-text-1);
+}
+
+div.rp-home-hero {
+  flex-direction: column-reverse;
+  align-items: center;
+  max-width: 48rem;
+  margin: 6rem auto;
+  gap: 40px;
+}
+
+.rp-home-hero .rp-home-hero__container {
+  align-items: center;
+  gap: 24px;
+  text-align: center;
+}
+
+.rp-home-hero .rp-home-hero__image {
+  max-width: 160px;
+}
+
+.rp-home-hero .rp-home-hero__image-img {
+  width: 100%;
+  height: auto;
+}
+
+.rp-home-hero .rp-home-hero__title {
+  font-size: 2.75rem;
+  letter-spacing: -0.02em;
+}
+
+.rp-home-hero .rp-home-hero__title-brand {
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  width: auto;
+}
+
+.rp-home-hero .rp-home-hero__tagline {
+  text-wrap: balance;
+}
+
+@media (width <= 600px) {
+  div.rp-home-hero {
+    margin: 3rem auto;
+  }
+
+  .rp-home-hero .rp-home-hero__content .rp-home-hero__title {
+    font-size: 1.75rem;
+  }
+}

@@ -1,36 +1,56 @@
+import { StyleSheet } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { DarkTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { HingeObserver } from 'react-native-arrangement-view';
-import { ArrangementScreen } from './ArrangementScreen';
-import { HingeScreen } from './HingeScreen';
+import { ExamplesList } from './ExamplesList';
+import { examples } from './examples';
 
-export type Screens = { Arrangement: undefined; Hinge: undefined };
+const Stack = createNativeStackNavigator();
 
-const Stack = createNativeStackNavigator<Screens>();
 const theme = {
   ...DarkTheme,
-  colors: { ...DarkTheme.colors, background: '#10121a', card: '#10121a' },
+  colors: {
+    ...DarkTheme.colors,
+    background: '#10121a',
+    card: '#10121a',
+    border: '#222637',
+    primary: '#e0e7ff',
+  },
 };
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <StatusBar style="light" />
+    <SafeAreaProvider style={styles.root}>
       {/* Above the navigator, so screens under a pushed one keep observing. */}
       <HingeObserver>
         <NavigationContainer theme={theme}>
-          <Stack.Navigator>
+          <Stack.Navigator
+            screenOptions={{
+              headerShadowVisible: false,
+              statusBarStyle: 'light',
+            }}
+          >
             <Stack.Screen
-              name="Arrangement"
-              component={ArrangementScreen}
-              options={{ headerShown: false }}
+              name="examples"
+              component={ExamplesList}
+              options={{ title: 'Arrangement View' }}
             />
-            <Stack.Screen name="Hinge" component={HingeScreen} />
+            {examples.map((example) => (
+              <Stack.Screen
+                key={example.name}
+                name={example.name}
+                component={example.component}
+                options={{ title: example.title, ...example.options }}
+              />
+            ))}
           </Stack.Navigator>
         </NavigationContainer>
       </HingeObserver>
     </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { backgroundColor: theme.colors.background },
+});
