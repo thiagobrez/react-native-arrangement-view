@@ -12,6 +12,13 @@
   margin: 0;
 }
 
+.single {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin: 0;
+}
+
 .caption {
   grid-column: 1 / -1;
   font-weight: 600;

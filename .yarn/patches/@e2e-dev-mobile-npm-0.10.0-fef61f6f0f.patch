@@ -1,0 +1,113 @@
+diff --git a/dist/device.d.ts b/dist/device.d.ts
+index 59cc68712b604b9b42996bf780c6b40923430f5c..49194649bb9db2630e5694fa5e27408080a841d5 100644
+--- a/dist/device.d.ts
++++ b/dist/device.d.ts
+@@ -50,6 +50,8 @@ export interface Device {
+      * typically 10 to 16 seconds later. `closed` lights the outer display;
+      * `half-open` (a 130° book) and `open` light the inner one, whose app
+      * window has a different size, so the next observation reads a new screen.
++     * On Android it sets a foldable emulator's hinge sensor and resolves once
++     * Android reports the matching device state; `half-open` is 90° there.
+      * Any device without a hinge is `UNSUPPORTED_CAPABILITY`.
+      */
+     fold(pose: FoldPose): Promise<void>;
+diff --git a/dist/surface.js b/dist/surface.js
+index 4c260edcf8ac31e4041d520098d02159d9561968..8c3a1a9f88a7f4d5118ce4f03b875e8ed9015c2b 100644
+--- a/dist/surface.js
++++ b/dist/surface.js
+@@ -11,9 +11,12 @@
+  * wrapping the device's top-level elements; a `swipe` performed on that root
+  * scrolls the whole screen.
+  */
++import { execFile } from 'node:child_process';
+ import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+ import { tmpdir } from 'node:os';
+ import path from 'node:path';
++import { setTimeout as delay } from 'node:timers/promises';
++import { promisify } from 'node:util';
+ import { EngineError, KEY_NAMES, parseKey, raceAbort, rejectUnknownKeys, stopProviderRecording, withinCleanupBudget, ConfigurationError, TestError, } from 'e2e/engine';
+ import { isNoSessionApp, isSnapshotPresentationFailure, runCommand, staleOr } from './errors.js';
+ import { pointerInteraction, DEFAULT_LONG_PRESS_MS } from './actions.js';
+@@ -308,7 +311,8 @@ export class AgentDeviceSurface {
+             provider === undefined || lease === undefined
+                 ? undefined
+                 : { provider, lease, runId: info.runId, targetName: info.targetName, env: info.env };
+-        await this.command('boot', (client) => client.devices.boot(this.selection()), info.signal);
++        const booted = await this.command('boot', (client) => client.devices.boot(this.selection()), info.signal);
++        this.bootedId = booted?.id;
+         this.sessionApp = binding?.sessionApp === undefined ? undefined : await this.resumedSessionApp(session, binding.sessionApp, info.signal);
+         // Nothing is installed here: a device provider that installed the build
+         // from `appPath` says so on the binding, and otherwise the suite installs
+@@ -1155,10 +1159,53 @@ export class AgentDeviceSurface {
+      */
+     async fold(pose, signal) {
+         if (this.options.platform !== 'ios') {
+-            throw unsupported('device.fold drives a foldable iOS simulator (iPhone Duo) through agent-device; it has no Android driver');
++            await this.screenCommand('device.fold', () => this.foldEmulator(pose, signal), signal);
++            return;
+         }
+         await this.screenCommand('device.fold', (client) => client.command.fold({ pose }), signal);
+     }
++    /**
++     * Sets a foldable Android emulator's hinge sensor through the emulator
++     * console, then waits for the device state Android derives from it, so
++     * the app has the new posture when this resolves. Folding to the cover
++     * display shows "Swipe up to continue" unless apps are set to continue on
++     * fold, a setting emulator images ignore, so it is dismissed as that swipe
++     * would.
++     */
++    async foldEmulator(pose, signal) {
++        const serial = this.bootedId;
++        if (serial === undefined || !/^emulator-\d+$/.test(serial)) {
++            throw unsupported(`device.fold on Android sets an emulator's hinge sensor; ${serial ?? 'this device'} is not an emulator`);
++        }
++        const { angle, state } = EMULATOR_POSES[pose];
++        const adb = (...args) => execFileAsync(adbPath(), ['-s', serial, ...args], { signal });
++        // Device profiles number their postures differently, so find the id by name.
++        const { stdout: states } = await adb('shell', 'cmd', 'device_state', 'print-states');
++        const id = new RegExp(`identifier=(\\d+), name='${state}'`).exec(states)?.[1];
++        if (id === undefined) {
++            throw unsupported(`device.fold needs a ${state} device state; ${serial} reports none`);
++        }
++        await adb('emu', 'sensor', 'set', 'hinge-angle0', String(angle));
++        for (;;) {
++            const { stdout } = await adb('shell', 'cmd', 'device_state', 'print-state');
++            if (/\d+/.exec(stdout)?.[0] === id)
++                break;
++            await delay(250, undefined, { signal });
++        }
++        // The keyguard can arrive after the state and miss a dismissal, so it
++        // must stay gone for two reads in a row.
++        for (let clear = 0; clear < 2;) {
++            await delay(250, undefined, { signal });
++            const { stdout } = await adb('shell', 'dumpsys', 'window');
++            if (stdout.includes('isKeyguardShowing=true')) {
++                clear = 0;
++                await adb('shell', 'wm', 'dismiss-keyguard');
++            }
++            else {
++                clear += 1;
++            }
++        }
++    }
+     /**
+      * Resets the simulator's keychain through agent-device. simctl resets the
+      * whole simulator's, not one app's, and only a simulator has one to reset:
+@@ -1289,3 +1336,17 @@ function redactSecure(data, projected, viewport) {
+         return undefined;
+     }
+ }
++
++const execFileAsync = promisify(execFile);
++/** Hinge angle per pose, and the name of the device state Android's foldable emulators report for it. */
++const EMULATOR_POSES = {
++    closed: { angle: 0, state: 'CLOSED' },
++    'half-open': { angle: 90, state: 'HALF_OPENED' },
++    open: { angle: 180, state: 'OPENED' },
++};
++/** The SDK's adb, else the one on PATH. */
++function adbPath() {
++    const sdk = process.env['ANDROID_HOME'] ?? process.env['ANDROID_SDK_ROOT'];
++    const adb = sdk === undefined ? undefined : path.join(sdk, 'platform-tools', 'adb');
++    return adb !== undefined && existsSync(adb) ? adb : 'adb';
++}

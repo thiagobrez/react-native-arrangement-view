@@ -1,0 +1,109 @@
+import { PostureShots } from '../../../components/PostureShots';
+
+# Video player
+
+A full-screen video player. In tabletop posture, media sits at the top, while tappable controls live on a stable base at the bottom. The full example is in the [example app](https://github.com/thiagobrez/react-native-arrangement-view/tree/main/apps/example-expo/src/examples/video-player).
+
+## Arrangement
+
+Use `arrangement="overlay"`, with the controls as the primary pane. Overlay keeps both panes at full size, the primary in front, until a half-open hinge separates them. It then puts the primary after the hinge: below it in tabletop, or on the trailing side.
+
+```tsx
+import { StyleSheet, View } from 'react-native';
+import { VideoView, useVideoPlayer } from 'expo-video';
+import { ArrangementView } from 'react-native-arrangement-view';
+
+export function VideoPlayer() {
+  const player = useVideoPlayer(source, (player) => player.play());
+
+  return (
+    <View style={styles.screen}>
+      <ArrangementView style={styles.fill} arrangement="overlay">
+        <ArrangementView.Primary>
+          <Controls player={player} />
+        </ArrangementView.Primary>
+        <ArrangementView.Secondary>
+          <VideoView
+            style={styles.fill}
+            player={player}
+            nativeControls={false}
+            contentFit="contain"
+          />
+        </ArrangementView.Secondary>
+      </ArrangementView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: 'black' },
+  fill: { flex: 1 },
+});
+```
+
+Moving between postures doesn't unmount either pane, so the video keeps playing.
+
+## Controls
+
+Inside the controls, [`useArrangementLayout`](../api/use-arrangement-layout) tells the two layouts apart: `isOverlapping` is true while the controls are in front of the video. When overlapping, the controls hide a few seconds after the last touch while it plays. When in their own region, they stay always visible.
+
+```tsx
+import { useArrangementLayout } from 'react-native-arrangement-view';
+
+function Controls({ player }: { player: VideoPlayer }) {
+  const layout = useArrangementLayout();
+  const separated = layout !== null && !layout.isOverlapping;
+
+  const [shown, setShown] = useState(true);
+  const visible = separated || shown;
+  useEffect(() => {
+    if (!visible || separated) return;
+    const timer = setTimeout(() => setShown(false), 3000);
+    return () => clearTimeout(timer);
+  }, [visible, separated]);
+
+  if (separated) return <Remote player={player} />;
+  return (
+    <Pressable style={{ flex: 1 }} onPress={() => setShown(!shown)}>
+      {visible && <OverlayControls player={player} />}
+    </Pressable>
+  );
+}
+```
+
+## Full screen
+
+The example's screen hides the stack header and the status bar, and turns off the back gesture, which on iOS 26 and later works anywhere on the screen and would take over drags on the seek bar:
+
+```tsx
+<Stack.Screen
+  name="video-player"
+  component={VideoPlayer}
+  options={{
+    headerShown: false,
+    statusBarHidden: true,
+    gestureEnabled: false,
+    autoHideHomeIndicator: true,
+  }}
+/>
+```
+
+`statusBarHidden` needs `UIViewControllerBasedStatusBarAppearance` set to `true` in `Info.plist`.
+
+## Screenshots
+
+| Posture                     | Layout                                                                              |
+| --------------------------- | ----------------------------------------------------------------------------------- |
+| Closed, or open flat        | Full-screen video, with controls over it that hide while it plays and return on tap |
+| Half-open, tabletop         | The video on the upright half, and controls filling the half on the table           |
+| Half-open, held like a book | The video on the leading half, and controls on the trailing half                    |
+
+<PostureShots
+  dir="examples/video-player"
+  postures={[
+    { file: 'closed', label: 'Closed' },
+    { file: 'open', label: 'Open' },
+    { file: 'tabletop', label: 'Tabletop' },
+    { file: 'book', label: 'Book' },
+  ]}
+/>

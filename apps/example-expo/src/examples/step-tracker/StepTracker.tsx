@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Platform, type ImageSourcePropType } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import {
   createNativeBottomTabNavigator,
   type NativeBottomTabNavigationOptions,
@@ -25,46 +24,43 @@ const Tab = createNativeBottomTabNavigator();
 export function StepTracker() {
   const icons = useTabIcons();
   return (
-    <>
-      <StatusBar style="dark" />
-      <Tab.Navigator
-        labeled={false}
-        tabBarActiveTintColor="#ff9500"
-        // Material's defaults on Android; iOS keeps the system's material.
-        tabBarStyle={Platform.select({
-          android: { backgroundColor: colors.background },
-        })}
-        activeIndicatorColor={colors.selected}
-      >
-        <Tab.Screen
-          name="steps"
-          component={StepsTab}
-          options={{
-            title: 'Steps',
-            tabBarIcon: icons.steps,
-            tabBarButtonTestID: 'tab-steps',
-          }}
-        />
-        <Tab.Screen
-          name="activities"
-          component={ActivitiesTab}
-          options={{
-            title: 'Activities',
-            tabBarIcon: icons.activities,
-            tabBarButtonTestID: 'tab-activities',
-          }}
-        />
-        <Tab.Screen
-          name="insights"
-          component={InsightsTab}
-          options={{
-            title: 'Insights',
-            tabBarIcon: icons.insights,
-            tabBarButtonTestID: 'tab-insights',
-          }}
-        />
-      </Tab.Navigator>
-    </>
+    <Tab.Navigator
+      labeled={false}
+      tabBarActiveTintColor="#ff9500"
+      // Material's defaults on Android; iOS keeps the system's material.
+      tabBarStyle={Platform.select({
+        android: { backgroundColor: colors.background },
+      })}
+      activeIndicatorColor={colors.selected}
+    >
+      <Tab.Screen
+        name="steps"
+        component={StepsTab}
+        options={{
+          title: 'Steps',
+          tabBarIcon: icons.steps,
+          tabBarButtonTestID: 'tab-steps',
+        }}
+      />
+      <Tab.Screen
+        name="activities"
+        component={ActivitiesTab}
+        options={{
+          title: 'Activities',
+          tabBarIcon: icons.activities,
+          tabBarButtonTestID: 'tab-activities',
+        }}
+      />
+      <Tab.Screen
+        name="insights"
+        component={InsightsTab}
+        options={{
+          title: 'Insights',
+          tabBarIcon: icons.insights,
+          tabBarButtonTestID: 'tab-insights',
+        }}
+      />
+    </Tab.Navigator>
   );
 }
 

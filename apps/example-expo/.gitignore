@@ -1,3 +1,6 @@
 # These folders are generated with prebuild (CNG)
 android/
 ios/
+
+# e2e results
+.e2e/

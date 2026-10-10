@@ -11,13 +11,14 @@ import type { ArrangementLayout, ArrangementLayoutHandler } from './types';
 
 /**
  * What the panes' frames show. Panes that overlap, as in overlay, have no
- * axis. A hidden secondary pane has no frame.
+ * axis but are overlapping. A hidden secondary pane has no frame.
  */
 export function describeLayout({
   primary,
   secondary,
 }: PaneFrames): ArrangementLayout {
-  if (!secondary) return { secondaryVisible: false, axis: null };
+  if (!secondary)
+    return { secondaryVisible: false, axis: null, isOverlapping: false };
   const overlap = (
     start: number,
     size: number,
@@ -36,8 +37,13 @@ export function describeLayout({
     secondary.top,
     secondary.height
   );
-  if (columns && rows) return { secondaryVisible: true, axis: null };
-  return { secondaryVisible: true, axis: columns ? 'vertical' : 'horizontal' };
+  if (columns && rows)
+    return { secondaryVisible: true, axis: null, isOverlapping: true };
+  return {
+    secondaryVisible: true,
+    axis: columns ? 'vertical' : 'horizontal',
+    isOverlapping: false,
+  };
 }
 
 /** One arrangement's layout: null until its panes are first laid out. */
@@ -55,7 +61,8 @@ export function createLayoutStore() {
     update(next: ArrangementLayout | null) {
       if (
         next?.secondaryVisible === current?.secondaryVisible &&
-        next?.axis === current?.axis
+        next?.axis === current?.axis &&
+        next?.isOverlapping === current?.isOverlapping
       )
         return;
       current = next;

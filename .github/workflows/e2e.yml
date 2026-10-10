@@ -1,0 +1,83 @@
+name: E2E
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  merge_group:
+    types:
+      - checks_requested
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # iOS runs locally only: the hosted Mac runners can't run the iPhone Duo
+  # simulator yet. See https://github.com/thiagobrez/react-native-arrangement-view/issues/23
+  android:
+    # Ubuntu 26.04 has Android command-line tools that know the Pixel 9 Pro Fold,
+    # but none know the Pixel 10 Pro Fold yet; see
+    # https://github.com/thiagobrez/react-native-arrangement-view/issues/24
+    runs-on: ubuntu-26.04
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Install JDK
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Prebuild expo app for Android
+        run: yarn example expo prebuild --platform android
+
+      # A Release build bundles the JavaScript, so no Metro server is needed.
+      - name: Build example for the emulator
+        working-directory: apps/example-expo/android
+        env:
+          JAVA_OPTS: '-XX:MaxHeapSize=6g'
+        run: ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 --no-daemon --console=plain
+
+      # The emulator stops when this step ends, so install and test in it.
+      - name: Run e2e tests on a Pixel 9 Pro Fold emulator
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 36
+          arch: x86_64
+          target: google_apis
+          profile: pixel_9_pro_fold
+          cores: 4
+          ram-size: 4096M
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          disable-animations: true
+          # A slow emulator can show "System UI isn't responding" over the app.
+          script: |
+            adb shell settings put global hide_error_dialogs 1
+            adb shell svc power stayon true
+            adb install -r apps/example-expo/android/app/build/outputs/apk/release/app-release.apk
+            yarn example test:e2e:android --reporter list,junit
+
+      - name: Upload results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: e2e-android
+          path: apps/example-expo/.e2e
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 7
