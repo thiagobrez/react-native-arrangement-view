@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useHingeChange } from 'react-native-arrangement-view';
 import {
   Split,
   type SplitHostCommands,
@@ -10,6 +11,8 @@ import {
 import { Detail } from './Detail';
 import { Sidebar } from './Sidebar';
 import { trails } from './trails';
+
+const NEARLY_FLAT = (135 * Math.PI) / 180;
 
 /**
  * react-native-screens' Split (UISplitViewController, iOS only) with an
@@ -26,6 +29,16 @@ export function SplitViewExample() {
   const [detailVisible, setDetailVisible] = useState(false);
   const [displayMode, setDisplayMode] = useState<string | null>(null);
   const trail = trails.find((item) => item.id === selectedId)!;
+
+  // Half-open, the split ends its sidebar on the hinge, which leaves the
+  // details on one half. Without the sidebar they span the hinge, and their
+  // panes split around it. The screen reads the hinge from the app's
+  // HingeObserver, as it is outside the details' ArrangementView.
+  const hinge = useHingeChange();
+  // An unfolding device still reads half-open when its inner display lights,
+  // just short of flat, and hiding the sidebar then would flash.
+  const halfOpen =
+    hinge.status === 'partiallyOpen' && (hinge.angle ?? 0) < NEARLY_FLAT;
 
   // Split builds its UISplitViewController when it enters a window and only
   // attaches columns mounted after that, so wait for the push to finish.
@@ -51,7 +64,7 @@ export function SplitViewExample() {
       key={collapsed ? 'collapsed' : 'expanded'}
       ref={split}
       colorScheme="dark"
-      preferredDisplayMode="oneBesideSecondary"
+      preferredDisplayMode={halfOpen ? 'secondaryOnly' : 'oneBesideSecondary'}
       preferredSplitBehavior="tile"
       topColumnForCollapsing="primary"
       onCollapse={() => {

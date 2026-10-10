@@ -1,1 +1,6 @@
-["arrangement-view", "use-hinge-change", "use-arrangement-layout"]
+[
+  "arrangement-view",
+  "hinge-observer",
+  "use-hinge-change",
+  "use-arrangement-layout"
+]

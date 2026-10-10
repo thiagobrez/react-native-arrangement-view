@@ -36,6 +36,33 @@ The `ArrangementView` arranges the panes within its column, not the window. Whet
 - **Half-open, sidebar shown:** on iOS 27, `UISplitViewController` is fold-aware. It widens the sidebar so the edge between the columns lies on the hinge. No hinge runs through the details column, so the panes stay stacked.
 - **Half-open, sidebar hidden:** the details column spans the hinge, and the panes split on either side of it, as they do full screen.
 
+## Hiding the sidebar when half-open
+
+The example hides the sidebar while the device is half-open, so the details split around the hinge. The split's host and its sidebar are outside the details' `ArrangementView`, so they read the hinge from a [`HingeObserver`](../api/hinge-observer) mounted above the app's navigator:
+
+```tsx
+import { useHingeChange } from 'react-native-arrangement-view';
+
+const NEARLY_FLAT = (135 * Math.PI) / 180;
+
+export function SplitViewExample() {
+  const hinge = useHingeChange();
+  const halfOpen =
+    hinge.status === 'partiallyOpen' && (hinge.angle ?? 0) < NEARLY_FLAT;
+
+  return (
+    <Split.Host
+      preferredDisplayMode={halfOpen ? 'secondaryOnly' : 'oneBesideSecondary'}
+      preferredSplitBehavior="tile"
+    >
+      {/* The sidebar and details columns */}
+    </Split.Host>
+  );
+}
+```
+
+An unfolding device still reports `partiallyOpen` when its inner display lights up, just short of flat. Hiding the sidebar on the status alone shows the half-open layout for a moment before the flat one, so the example also checks that the angle is under 135°. The sidebar's button still shows it again while half-open.
+
 ## Panes
 
 Each pane shows how the panes are placed, using [`useArrangementLayout`](../api/use-arrangement-layout):
@@ -138,12 +165,12 @@ The example's screen uses a transparent stack header without a title, so the spl
 
 ## Screenshots
 
-| Posture                   | Layout                                                                                   |
-| ------------------------- | ---------------------------------------------------------------------------------------- |
-| Closed                    | The trails list. Picking a trail pushes its details, with the panes stacked              |
-| Open flat                 | A 320 pt sidebar beside the details, with the panes stacked                              |
-| Half-open, sidebar shown  | The sidebar widens to end at the hinge. The details are on the other half, panes stacked |
-| Half-open, sidebar hidden | The details span the hinge. The overview and the notes are on either side of it          |
+| Posture                        | Layout                                                                                              |
+| ------------------------------ | --------------------------------------------------------------------------------------------------- |
+| Closed                         | The trails list. Picking a trail pushes its details, with the panes stacked                         |
+| Open flat                      | A 320 pt sidebar beside the details, with the panes stacked                                         |
+| Half-open                      | The sidebar hides. The details span the hinge, with the overview and the notes on either side of it |
+| Half-open, sidebar shown again | The sidebar widens to end at the hinge. The details are on the other half, panes stacked            |
 
 <PostureShots
   dir="examples/split-view"
@@ -152,7 +179,7 @@ The example's screen uses a transparent stack header without a title, so the spl
     { file: 'closed', label: 'Closed' },
     { file: 'closed-detail', label: 'Closed, trail details' },
     { file: 'open', label: 'Open flat' },
-    { file: 'book', label: 'Half-open, sidebar shown' },
-    { file: 'book-sidebar-hidden', label: 'Half-open, sidebar hidden' },
+    { file: 'book-sidebar-hidden', label: 'Half-open' },
+    { file: 'book', label: 'Half-open, sidebar shown again' },
   ]}
 />

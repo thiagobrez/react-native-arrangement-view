@@ -2,6 +2,7 @@ import { StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { DarkTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { HingeObserver } from 'react-native-arrangement-view';
 import { ExamplesList } from './ExamplesList';
 import { examples } from './examples';
 
@@ -21,28 +22,31 @@ const theme = {
 export default function App() {
   return (
     <SafeAreaProvider style={styles.root}>
-      <NavigationContainer theme={theme}>
-        <Stack.Navigator
-          screenOptions={{
-            headerShadowVisible: false,
-            statusBarStyle: 'light',
-          }}
-        >
-          <Stack.Screen
-            name="examples"
-            component={ExamplesList}
-            options={{ title: 'Arrangement View' }}
-          />
-          {examples.map((example) => (
+      {/* Above the navigator, so screens under a pushed one keep observing. */}
+      <HingeObserver>
+        <NavigationContainer theme={theme}>
+          <Stack.Navigator
+            screenOptions={{
+              headerShadowVisible: false,
+              statusBarStyle: 'light',
+            }}
+          >
             <Stack.Screen
-              key={example.name}
-              name={example.name}
-              component={example.component}
-              options={{ title: example.title, ...example.options }}
+              name="examples"
+              component={ExamplesList}
+              options={{ title: 'Arrangement View' }}
             />
-          ))}
-        </Stack.Navigator>
-      </NavigationContainer>
+            {examples.map((example) => (
+              <Stack.Screen
+                key={example.name}
+                name={example.name}
+                component={example.component}
+                options={{ title: example.title, ...example.options }}
+              />
+            ))}
+          </Stack.Navigator>
+        </NavigationContainer>
+      </HingeObserver>
     </SafeAreaProvider>
   );
 }
