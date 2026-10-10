@@ -14,3 +14,5 @@ function Primary() {
 ```
 
 The 0.5 rad threshold is a heuristic. Apple does not guarantee the precision or update rate of `angle`, so check the behavior on hardware.
+
+The [bedside clock](./bedside-clock) example builds this out.

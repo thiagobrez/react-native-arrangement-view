@@ -1,0 +1,92 @@
+import { PostureShots } from '../../../components/PostureShots';
+
+# Bedside clock
+
+A bedside clock after the one Apple showed with iPhone Duo. Stood up as a tent on a nightstand, the outer display becomes a clock that glows before the alarm. The full example is in the [example app](https://github.com/thiagobrez/react-native-arrangement-view/tree/main/apps/example-expo/src/examples/bedside-clock).
+
+## Arrangement
+
+The clock is the primary pane, so it's what shows where only one pane fits. The alarm's settings are the secondary pane. A split puts them beside the clock once unfolded, and below it in tabletop, on the half resting on the table.
+
+```tsx
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ArrangementView } from 'react-native-arrangement-view';
+
+export function BedsideClock() {
+  const [tent, setTent] = useState(false);
+
+  return (
+    <SafeAreaView
+      style={styles.screen}
+      edges={tent ? [] : ['left', 'right', 'bottom']}
+    >
+      <ArrangementView style={styles.screen}>
+        <ArrangementView.Primary>
+          <Clock onTentChange={setTent} />
+        </ArrangementView.Primary>
+        <ArrangementView.Secondary>
+          <AlarmSettings />
+        </ArrangementView.Secondary>
+      </ArrangementView>
+    </SafeAreaView>
+  );
+}
+```
+
+## Tent
+
+The clock detects the [tent posture](./tent-posture) with [`useHingeChange`](../api/use-hinge-change), and turns red, like StandBy at night. The hook only works inside a pane, so the clock also reports the posture to the screen through the hook's callback:
+
+```tsx
+import { useHingeChange, type HingeState } from 'react-native-arrangement-view';
+
+function isTent(hinge: HingeState) {
+  return hinge.status === 'closed' && (hinge.angle ?? 0) > 0.5; // radians, about 30°
+}
+
+function Clock({ onTentChange }: { onTentChange: (tent: boolean) => void }) {
+  const tent = isTent(useHingeChange((hinge) => onTentChange(isTent(hinge))));
+  return <ClockFace standBy={tent} />;
+}
+```
+
+In a tent, the screen hides the stack header and lets the clock reach every edge of the display:
+
+```tsx
+const navigation = useNavigation();
+useLayoutEffect(() => {
+  navigation.setOptions({ headerShown: !tent, autoHideHomeIndicator: tent });
+}, [navigation, tent]);
+```
+
+A tent is in landscape, where iPhone Duo's outer display fits one pane, so only the clock shows. Android has no tent posture: the example's clock stands upright in tabletop instead.
+
+## Screenshots
+
+| Posture             | Layout                                                                                           |
+| ------------------- | ------------------------------------------------------------------------------------------------ |
+| Closed              | The clock. iPhone Duo's outer display is tall enough to stack the settings below it              |
+| Half-open, tabletop | The clock on the upright half, and the settings on the half on the table                         |
+| Half-open, book     | The clock on the leading half, and the settings on the trailing half                             |
+| Open flat           | The clock and the settings side by side                                                          |
+| Tent                | The clock alone, in red, on the outer display. It warms as the glow rises, until the alarm rings |
+
+<PostureShots
+  dir="examples/bedside-clock"
+  postures={[
+    { file: 'closed', label: 'Closed' },
+    { file: 'tabletop', label: 'Tabletop' },
+    { file: 'book', label: 'Book' },
+    { file: 'open', label: 'Open' },
+  ]}
+/>
+
+<PostureShots
+  dir="examples/bedside-clock"
+  platforms={['ios']}
+  postures={[
+    { file: 'tent', label: 'Tent' },
+    { file: 'tent-glow', label: 'Tent, the glow rising' },
+    { file: 'tent-ringing', label: 'Tent, the alarm ringing' },
+  ]}
+/>
