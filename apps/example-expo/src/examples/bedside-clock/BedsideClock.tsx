@@ -1,117 +1,60 @@
-import { useCallback, useLayoutEffect, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { useEffect, useLayoutEffect, useState } from 'react';
+import { Animated, StyleSheet, useAnimatedValue } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { useKeepAwake } from 'expo-keep-awake';
 import {
   ArrangementView,
   useHingeChange,
   type HingeState,
 } from 'react-native-arrangement-view';
-import { headerButtons } from '../step-tracker/header';
 import { AlarmSettings } from './AlarmSettings';
 import { ClockFace } from './ClockFace';
-import {
-  previewWake,
-  SNOOZE_MINUTES,
-  snoozePreview,
-  useNow,
-  wake,
-  type Alarm,
-  type Preview,
-  type Response,
-} from './wake';
 
-const noResponse: Response = { stoppedAt: null, snoozedUntil: null };
+// A preview waits a little, which leaves time to stand the phone up, and
+// then lets the glow rise over a few seconds instead of the minutes before a
+// real alarm.
+const PREVIEW_LEAD_SECONDS = 8;
+const PREVIEW_GLOW_SECONDS = 15;
 
 /**
  * A bedside clock after the one Apple showed with iPhone Duo: stood up as a
  * tent on a nightstand, the outer display becomes a clock that glows before
- * the alarm.
+ * the alarm. Only the layout is real: nothing rings, and the glow is a preview.
  *
  * The clock is the primary pane, so it's what shows where only one fits. The
  * alarm's settings are the secondary pane, beside the clock once unfolded and
  * below it, on the half resting on the table, when half-open like a laptop.
  */
 export function BedsideClock() {
-  const [alarm, setAlarm] = useState<Alarm>({
-    hour: 6,
-    minute: 30,
-    glow: true,
-    glowMinutes: 20,
-  });
-  const [response, setResponse] = useState(noResponse);
-  // A preview runs on its own clock and doesn't touch the real alarm.
-  const [preview, setPreview] = useState<{
-    clock: Preview;
-    response: Response;
-  } | null>(null);
+  const [alarm, setAlarm] = useState(() => new Date(2026, 0, 1, 6, 30));
+  const [wake, setWake] = useState<'asleep' | 'waking' | 'ringing'>('asleep');
+  const glow = useAnimatedValue(0);
   const [tent, setTent] = useState(false);
-  const [settingsVisible, setSettingsVisible] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const now = useNow(preview?.clock ?? null);
-  const current = wake(now, alarm, preview?.response ?? response);
-  const snooze = () => {
-    const snoozed = {
-      stoppedAt: null,
-      snoozedUntil: now + SNOOZE_MINUTES * 60_000,
-    };
-    if (!preview) return setResponse(snoozed);
-    setPreview({
-      clock: snoozePreview(preview.clock, now, snoozed.snoozedUntil),
-      response: snoozed,
+  const stop = () => {
+    glow.stopAnimation();
+    glow.setValue(0);
+    setWake('asleep');
+  };
+  const preview = () => {
+    setWake('waking');
+    Animated.timing(glow, {
+      toValue: 1,
+      delay: PREVIEW_LEAD_SECONDS * 1000,
+      duration: PREVIEW_GLOW_SECONDS * 1000,
+      // The digits' color follows the glow, which the native driver can't animate.
+      useNativeDriver: false,
+    }).start(({ finished }) => {
+      if (finished) setWake('ringing');
     });
   };
-  // Stopping the alarm ends a preview.
-  const stop = () =>
-    preview
-      ? setPreview(null)
-      : setResponse({ stoppedAt: now, snoozedUntil: null });
+  useEffect(() => () => glow.stopAnimation(), [glow]);
 
-  const changeAlarm = (next: Alarm) => {
-    setAlarm(next);
-    setResponse(noResponse);
-  };
-  const togglePreview = () => {
-    setPreview(
-      preview ? null : { clock: previewWake(alarm), response: noResponse }
-    );
-    setSettingsOpen(false);
-  };
-
-  // Stood up as a tent, the clock is all there is: no header, and the
-  // display stays on.
+  // Stood up as a tent, the clock is all there is.
   const navigation = useNavigation();
-  const openSettings = useCallback(() => setSettingsOpen(true), []);
   useLayoutEffect(() => {
-    navigation.setOptions({
-      headerShown: !tent,
-      autoHideHomeIndicator: tent,
-      ...headerButtons(
-        settingsVisible
-          ? []
-          : [
-              {
-                label: 'Alarm',
-                symbol: 'alarm',
-                icon: 'alarm',
-                tint: 'white',
-                onPress: openSettings,
-              },
-            ]
-      ),
-    });
-  }, [navigation, tent, settingsVisible, openSettings]);
-
-  const settings = (
-    <AlarmSettings
-      alarm={alarm}
-      onChange={changeAlarm}
-      previewing={preview !== null}
-      onPreview={togglePreview}
-    />
-  );
+    navigation.setOptions({ headerShown: !tent, autoHideHomeIndicator: tent });
+  }, [navigation, tent]);
 
   return (
     <SafeAreaView
@@ -119,48 +62,25 @@ export function BedsideClock() {
       // In a tent the clock reaches every edge and keeps clear of them itself.
       edges={tent ? [] : ['left', 'right', 'bottom']}
     >
-      {tent && <KeepAwake />}
-      <ArrangementView
-        style={styles.screen}
-        onArrangementLayoutChange={({ secondaryVisible }) => {
-          setSettingsVisible(secondaryVisible);
-          if (secondaryVisible) setSettingsOpen(false);
-        }}
-      >
+      <ArrangementView style={styles.screen}>
         <ArrangementView.Primary>
           <Clock
-            now={now}
-            wake={current}
+            alarm={alarm}
+            glow={glow}
+            ringing={wake === 'ringing'}
             onTentChange={setTent}
-            onSnooze={snooze}
             onStop={stop}
           />
         </ArrangementView.Primary>
-        <ArrangementView.Secondary>{settings}</ArrangementView.Secondary>
+        <ArrangementView.Secondary>
+          <AlarmSettings
+            alarm={alarm}
+            onChange={setAlarm}
+            previewing={wake !== 'asleep'}
+            onPreview={wake === 'asleep' ? preview : stop}
+          />
+        </ArrangementView.Secondary>
       </ArrangementView>
-      <Modal
-        visible={settingsOpen && !tent}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setSettingsOpen(false)}
-      >
-        {/* A modal is a separate window, with insets of its own. */}
-        <SafeAreaProvider>
-          <SafeAreaView style={styles.sheet}>
-            <View style={styles.sheetHeader}>
-              <Text style={styles.sheetTitle}>Alarm</Text>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => setSettingsOpen(false)}
-                hitSlop={12}
-              >
-                <Text style={styles.done}>Done</Text>
-              </Pressable>
-            </View>
-            {settings}
-          </SafeAreaView>
-        </SafeAreaProvider>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -185,22 +105,6 @@ function Clock({
   return <ClockFace {...props} standBy={tent} />;
 }
 
-function KeepAwake() {
-  useKeepAwake();
-  return null;
-}
-
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: 'black' },
-  sheet: { flex: 1, backgroundColor: '#10121a' },
-  sheetHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 18,
-    paddingTop: 18,
-    paddingBottom: 6,
-  },
-  sheetTitle: { fontSize: 20, fontWeight: '700', color: 'white' },
-  done: { fontSize: 17, fontWeight: '600', color: '#ff9f0a' },
 });

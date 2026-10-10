@@ -3,35 +3,29 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   View,
 } from 'react-native';
-import type { Alarm } from './wake';
+import { formatTime } from './ClockFace';
 
 interface Props {
-  alarm: Alarm;
-  onChange: (alarm: Alarm) => void;
+  alarm: Date;
+  onChange: (alarm: Date) => void;
   previewing: boolean;
   onPreview: () => void;
 }
 
 const STEP_MINUTES = 15;
-const GLOW_LENGTHS = [10, 20, 30];
 
-/** The alarm's time and its glow, with a sped-up preview of the wake-up. */
+/** The alarm's time, and a preview of the glow that comes before it. */
 export function AlarmSettings({
   alarm,
   onChange,
   previewing,
   onPreview,
 }: Props) {
-  const step = (minutes: number) => {
-    const total =
-      (alarm.hour * 60 + alarm.minute + minutes + 24 * 60) % (24 * 60);
-    onChange({ ...alarm, hour: Math.floor(total / 60), minute: total % 60 });
-  };
-  const time = new Date(2026, 0, 1, alarm.hour, alarm.minute);
+  const step = (minutes: number) =>
+    onChange(new Date(alarm.getTime() + minutes * 60_000));
 
   return (
     <ScrollView
@@ -40,72 +34,21 @@ export function AlarmSettings({
       contentContainerStyle={styles.content}
     >
       <Text style={styles.heading}>Wake up at</Text>
-      <View style={styles.card}>
-        <View style={styles.stepper}>
-          <StepButton
-            label="−"
-            accessibilityLabel="Earlier"
-            onPress={() => step(-STEP_MINUTES)}
-          />
-          <Text testID="alarm-time" style={styles.time}>
-            {time.toLocaleTimeString([], {
-              hour: 'numeric',
-              minute: '2-digit',
-            })}
-          </Text>
-          <StepButton
-            label="+"
-            accessibilityLabel="Later"
-            onPress={() => step(STEP_MINUTES)}
-          />
-        </View>
+      <View style={styles.stepper}>
+        <StepButton
+          label="−"
+          accessibilityLabel="Earlier"
+          onPress={() => step(-STEP_MINUTES)}
+        />
+        <Text testID="alarm-time" style={styles.time}>
+          {formatTime(alarm)}
+        </Text>
+        <StepButton
+          label="+"
+          accessibilityLabel="Later"
+          onPress={() => step(STEP_MINUTES)}
+        />
       </View>
-
-      <Text style={styles.heading}>Gentle glow</Text>
-      <View style={styles.card}>
-        <View style={styles.row}>
-          <View style={styles.rowText}>
-            <Text style={styles.label}>Glow before the alarm</Text>
-            <Text style={styles.detail}>
-              The clock brightens like a sunrise as your alarm gets close.
-            </Text>
-          </View>
-          <Switch
-            testID="alarm-glow"
-            value={alarm.glow}
-            onValueChange={(glow) => onChange({ ...alarm, glow })}
-            trackColor={{ true: '#ff9f0a' }}
-            thumbColor={Platform.select({ android: 'white' })}
-          />
-        </View>
-        <View style={styles.separator} />
-        <View style={[styles.lengths, !alarm.glow && styles.disabled]}>
-          {GLOW_LENGTHS.map((minutes) => {
-            const selected = alarm.glowMinutes === minutes;
-            return (
-              <Pressable
-                key={minutes}
-                testID={`glow-${minutes}`}
-                accessibilityRole="button"
-                accessibilityState={{ selected, disabled: !alarm.glow }}
-                disabled={!alarm.glow}
-                onPress={() => onChange({ ...alarm, glowMinutes: minutes })}
-                style={[styles.length, selected && styles.lengthSelected]}
-              >
-                <Text
-                  style={[
-                    styles.lengthLabel,
-                    selected && styles.lengthLabelSelected,
-                  ]}
-                >
-                  {minutes} min
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-      </View>
-
       <Pressable
         testID="alarm-preview"
         accessibilityRole="button"
@@ -159,11 +102,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     marginLeft: 16,
   },
-  card: { backgroundColor: '#1a1d2a', borderRadius: 18, padding: 16 },
   stepper: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 18,
+    backgroundColor: '#1a1d2a',
   },
   time: {
     color: 'white',
@@ -180,23 +125,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#2a2e40',
   },
   stepLabel: { color: 'white', fontSize: 26, fontWeight: '400' },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  rowText: { flex: 1, gap: 2 },
-  label: { color: 'white', fontSize: 17, fontWeight: '600' },
-  detail: { color: '#8e93a8', fontSize: 14 },
-  separator: { height: 1, backgroundColor: '#2a2e40', marginVertical: 14 },
-  lengths: { flexDirection: 'row', gap: 8 },
-  disabled: { opacity: 0.4 },
-  length: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: '#2a2e40',
-  },
-  lengthSelected: { backgroundColor: '#ff9f0a' },
-  lengthLabel: { color: 'white', fontSize: 15, fontWeight: '600' },
-  lengthLabelSelected: { color: 'black' },
   preview: {
     marginTop: 24,
     alignItems: 'center',

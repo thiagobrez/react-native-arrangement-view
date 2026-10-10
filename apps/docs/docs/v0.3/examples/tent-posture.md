@@ -15,4 +15,4 @@ function Primary() {
 
 The 0.5 rad threshold is a heuristic. Apple does not guarantee the precision or update rate of `angle`, so check the behavior on hardware.
 
-The example app's [bedside clock](https://github.com/thiagobrez/react-native-arrangement-view/tree/main/apps/example-expo/src/examples/bedside-clock) builds this out: in a tent it hides the header, keeps the display awake, and glows before the alarm.
+The example app's [bedside clock](https://github.com/thiagobrez/react-native-arrangement-view/tree/main/apps/example-expo/src/examples/bedside-clock) builds this out: in a tent it hides the header and turns the clock red for the night.

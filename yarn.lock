@@ -5881,7 +5881,6 @@ __metadata:
     "@react-navigation/native-stack": "npm:^7.19.2"
     expo: "npm:~57.0.24"
     expo-build-properties: "npm:~57.0.21"
-    expo-keep-awake: "npm:~57.0.2"
     expo-status-bar: "npm:~57.0.1"
     react: "npm:19.2.3"
     react-dom: "npm:19.2.3"
