@@ -25,11 +25,17 @@
     "start": "expo start --dev-client",
     "ios": "expo run:ios --device \"iPhone Duo\"",
     "android": "expo run:android --device Pixel_10_Pro_Fold",
+    "ios:release": "expo run:ios --device \"iPhone Duo\" --configuration Release --no-bundler",
+    "android:release": "expo run:android --device Pixel_10_Pro_Fold --variant release --no-bundler",
     "build:ios": "xcodebuild ONLY_ACTIVE_ARCH=YES -workspace ios/ArrangementViewExample.xcworkspace -UseNewBuildSystem=YES -scheme ArrangementViewExample -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build -quiet",
-    "build:android": "cd android && ./gradlew assembleDebug -PreactNativeArchitectures=arm64-v8a --no-daemon --console=plain"
+    "build:android": "cd android && ./gradlew assembleDebug -PreactNativeArchitectures=arm64-v8a --no-daemon --console=plain",
+    "test:e2e:ios": "e2e run --target ios",
+    "test:e2e:android": "e2e run --target android"
   },
   "private": true,
   "devDependencies": {
+    "@e2e-dev/mobile": "patch:@e2e-dev/mobile@npm%3A0.10.0#~/.yarn/patches/@e2e-dev-mobile-npm-0.10.0-fef61f6f0f.patch",
+    "e2e": "^0.18.0",
     "react-native-builder-bob": "^0.43.1",
     "react-native-monorepo-config": "^0.4.0"
   }
