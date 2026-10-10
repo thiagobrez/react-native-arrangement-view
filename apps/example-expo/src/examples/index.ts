@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import { FeaturesDemo } from './features-demo/FeaturesDemo';
 import { StepTracker } from './step-tracker/StepTracker';
+import { TentPosture } from './tent-posture/TentPosture';
 import { VideoPlayer } from './video-player/VideoPlayer';
 import { SplitViewExample } from './split-view/SplitViewExample';
 
@@ -52,4 +53,9 @@ export const examples: Example[] = [
         },
       ]
     : []),
+  {
+    name: 'tent-posture',
+    title: 'Tent posture',
+    component: TentPosture,
+  },
 ];
