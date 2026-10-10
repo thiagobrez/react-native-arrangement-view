@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react';
 import { Platform } from 'react-native';
 import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
+import { BookReader } from './book-reader/BookReader';
 import { FeaturesDemo } from './features-demo/FeaturesDemo';
 import { StepTracker } from './step-tracker/StepTracker';
 import { TentPosture } from './tent-posture/TentPosture';
@@ -57,5 +58,10 @@ export const examples: Example[] = [
     name: 'tent-posture',
     title: 'Tent posture',
     component: TentPosture,
+  },
+  {
+    name: 'book-reader',
+    title: 'Book reader',
+    component: BookReader,
   },
 ];
