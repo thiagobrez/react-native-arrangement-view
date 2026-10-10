@@ -44,7 +44,7 @@ export function ClockFace({ alarm, glow, ringing, standBy, onStop }: Props) {
 
   return (
     <View
-      testID="bedside-clock-face"
+      testID="clock-face"
       style={[
         styles.face,
         // The same on both sides, so the clock stays centred on the display.
@@ -71,7 +71,7 @@ export function ClockFace({ alarm, glow, ringing, standBy, onStop }: Props) {
               })}
             </Animated.Text>
             <Animated.Text
-              testID="bedside-clock-time"
+              testID="clock-time"
               style={[styles.time, { color: ink, fontSize }]}
               numberOfLines={1}
               adjustsFontSizeToFit

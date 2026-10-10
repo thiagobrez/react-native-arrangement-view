@@ -1,5 +1,10 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
-import { Animated, StyleSheet, useAnimatedValue } from 'react-native';
+import {
+  Animated,
+  StyleSheet,
+  useAnimatedValue,
+  useWindowDimensions,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import {
@@ -17,15 +22,16 @@ const PREVIEW_LEAD_SECONDS = 8;
 const PREVIEW_GLOW_SECONDS = 15;
 
 /**
- * A bedside clock after the one Apple showed with iPhone Duo: stood up as a
- * tent on a nightstand, the outer display becomes a clock that glows before
- * the alarm. Only the layout is real: nothing rings, and the glow is a preview.
+ * A view that takes over the display in the tent posture: a bedside clock,
+ * after the one Apple showed with iPhone Duo stood up on a nightstand, which
+ * glows before the alarm. Only the layout is real: nothing rings, and the
+ * glow is a preview.
  *
  * The clock is the primary pane, so it's what shows where only one fits. The
  * alarm's settings are the secondary pane, beside the clock once unfolded and
  * below it, on the half resting on the table, when half-open like a laptop.
  */
-export function BedsideClock() {
+export function TentPosture() {
   const [alarm, setAlarm] = useState(() => new Date(2026, 0, 1, 6, 30));
   const [wake, setWake] = useState<'asleep' | 'waking' | 'ringing'>('asleep');
   const glow = useAnimatedValue(0);
@@ -86,12 +92,14 @@ export function BedsideClock() {
 }
 
 /**
- * iOS has no tent posture. Stood up as a tent, iPhone Duo stays on its outer
- * display and reports the hinge closed, but at the angle it's open at. A
- * closed phone's angle is near 0.
+ * iOS has no tent posture, and the hinge's status can't tell one apart: it
+ * lags behind the angle, so a tent reads `closed` when reached from closed
+ * and `partiallyOpen` when reached from open. What a tent is, is the hinge
+ * open while the app is on the outer display, in landscape: a window with a
+ * compact height, under 480 pt. The inner display is never that short.
  */
-function isTent(hinge: HingeState) {
-  return hinge.status === 'closed' && (hinge.angle ?? 0) > 0.5; // radians, about 30°
+function isTent(hinge: HingeState, windowHeight: number) {
+  return (hinge.angle ?? 0) > 0.5 && windowHeight < 480; // radians, about 30°
 }
 
 /** The clock face, which finds out from the hinge whether it's on a nightstand. */
@@ -101,7 +109,9 @@ function Clock({
 }: Omit<Parameters<typeof ClockFace>[0], 'standBy'> & {
   onTentChange: (tent: boolean) => void;
 }) {
-  const tent = isTent(useHingeChange((hinge) => onTentChange(isTent(hinge))));
+  const tent = isTent(useHingeChange(), useWindowDimensions().height);
+  // The hook only works inside a pane, so the pane tells the screen.
+  useEffect(() => onTentChange(tent), [tent, onTentChange]);
   return <ClockFace {...props} standBy={tent} />;
 }
 
