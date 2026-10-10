@@ -1,5 +1,11 @@
 # react-native-arrangement-view
 
+## 0.4.0
+
+### Minor Changes
+
+- [#16](https://github.com/thiagobrez/react-native-arrangement-view/pull/16) [`8b20d02`](https://github.com/thiagobrez/react-native-arrangement-view/commit/8b20d02de7c9f264f93582a3115c4adcbcb99946) Thanks [@thiagobrez](https://github.com/thiagobrez)! - Add `isOverlapping` to `ArrangementLayout`, true while both panes are on screen with the primary in front, as in overlay when no hinge separates them.
+
 ## 0.3.0
 
 ### Minor Changes
