@@ -21,7 +21,7 @@ function Primary() {
 
 This follows Apple's guidance for iPhone Duo: there is no system pose, so infer one from the hinge angle, the orientation and the size class together, and keep the hinge for interactions and effects while the arrangement does the layout. Both thresholds are heuristics. Apple does not guarantee the precision or update rate of `angle`, so check the behavior on hardware.
 
-Android has no tent posture either. A Pixel Fold hands over to its inner display as soon as it is open a little way, about 30° on the emulator, and from there WindowManager reports a half-open fold, which `ArrangementView` splits across. So the check above is true on Android only for a moment, with the cover display outwards.
+Android has no tent posture either. A Pixel foldable hands over to its inner display as soon as it is open a little way, about 30° on the emulator, and from there WindowManager reports a half-open fold, which `ArrangementView` splits across. So the check above is true on Android only for a moment, with the cover display outwards.
 
 ## Hiding headers and indicators
 
@@ -58,13 +58,13 @@ function Screen() {
 
 The [example app](https://github.com/thiagobrez/react-native-arrangement-view/tree/main/apps/example-expo/src/examples/tent-posture) shows a bedside clock after the one Apple showed with iPhone Duo. The clock is the primary pane, so it's what shows where only one pane fits, and the alarm's settings are the secondary pane. In a tent, the clock fills the outer display in red, like StandBy at night. "Preview wake-up" plays the glow that comes before an alarm.
 
-| Posture             | Layout                                                                                           |
-| ------------------- | ------------------------------------------------------------------------------------------------ |
-| Closed              | The clock. iPhone Duo's outer display is tall enough to stack the settings below it              |
-| Half-open, tabletop | The clock on the upright half, and the settings on the half on the table                         |
-| Half-open, book     | The clock on the leading half, and the settings on the trailing half                             |
-| Open flat           | The clock and the settings side by side                                                          |
-| Tent                | The clock alone, in red, on the outer display. It warms as the glow rises, until the alarm rings |
+| Posture             | Layout                                                                                                                    |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Closed              | The clock, with the settings stacked below it. A shorter cover display, under 900 dp tall on Android, fits the clock only |
+| Half-open, tabletop | The clock on the upright half, and the settings on the half on the table                                                  |
+| Half-open, book     | The clock on the leading half, and the settings on the trailing half                                                      |
+| Open flat           | The clock and the settings side by side                                                                                   |
+| Tent                | The clock alone, in red, on the outer display. It warms as the glow rises, until the alarm rings                          |
 
 <PostureShots
   dir="examples/tent-posture"
