@@ -18,7 +18,9 @@ jobs:
   # iOS runs locally only: the hosted Mac runners can't run the iPhone Duo
   # simulator yet. See https://github.com/thiagobrez/react-native-arrangement-view/issues/23
   android:
-    # Ubuntu 26.04 has Android command-line tools that know the Pixel 9 Pro Fold.
+    # Ubuntu 26.04 has Android command-line tools that know the Pixel 9 Pro Fold,
+    # but none know the Pixel 10 Pro Fold yet; see
+    # https://github.com/thiagobrez/react-native-arrangement-view/issues/24
     runs-on: ubuntu-26.04
     timeout-minutes: 60
 
