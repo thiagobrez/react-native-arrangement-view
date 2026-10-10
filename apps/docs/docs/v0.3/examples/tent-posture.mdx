@@ -23,9 +23,9 @@ This follows Apple's guidance for iPhone Duo: there is no system pose, so infer 
 
 Android has no tent posture either. A Pixel Fold hands over to its inner display as soon as it is open a little way, about 30° on the emulator, and from there WindowManager reports a half-open fold, which `ArrangementView` splits across. So the check above is true on Android only for a moment, with the cover display outwards.
 
-## In a tent
+## Hiding headers and indicators
 
-The hook only works inside a pane, so the pane reports the posture to its screen. Chrome that has no place in a tent goes: the stack header, the home indicator, and the safe-area insets around the arrangement, which the tent view keeps clear of itself.
+Usually in Tent posture, we want a fullscreen without distractions. Use the tent state to hide the navigation header, auto-hide the home indicator, and remove safe areas.
 
 ```tsx
 function Screen() {
