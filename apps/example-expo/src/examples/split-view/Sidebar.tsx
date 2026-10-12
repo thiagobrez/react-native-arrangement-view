@@ -24,9 +24,6 @@ export function Sidebar({
   const [width, setWidth] = useState(0);
   // Collapsed on the iPhone Duo, the column runs under the navigation items.
   const insets = useSafeAreaInsets();
-  const hinge = useHingeChange();
-  const degrees =
-    hinge.angle === null ? null : Math.round((hinge.angle * 180) / Math.PI);
   return (
     <ScrollView
       testID="split-sidebar"
@@ -76,13 +73,21 @@ export function Sidebar({
         <Text testID="sidebar-width" style={styles.stateText}>
           Sidebar {width} pt wide
         </Text>
-        <Text testID="sidebar-hinge" style={styles.stateText}>
-          {degrees === null
-            ? 'No hinge'
-            : `Hinge ${degrees}° · ${hinge.status}`}
-        </Text>
+        <HingeReading />
       </View>
     </ScrollView>
+  );
+}
+
+/** Its own component, so only this line renders again as the angle changes. */
+function HingeReading() {
+  const hinge = useHingeChange();
+  const degrees =
+    hinge.angle === null ? null : Math.round((hinge.angle * 180) / Math.PI);
+  return (
+    <Text testID="sidebar-hinge" style={styles.stateText}>
+      {degrees === null ? 'No hinge' : `Hinge ${degrees}° · ${hinge.status}`}
+    </Text>
   );
 }
 

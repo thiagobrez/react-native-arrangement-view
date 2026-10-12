@@ -21,6 +21,8 @@ function Player() {
 
 The callback is optional; the hook also returns the current `HingeState` and subscribes the component to updates. It invokes the callback with the initial unavailable state and then changed values.
 
+The component renders again at every angle the hinge reports. Where only a decision depends on the hinge, such as whether it is half-open, use [`useHingeSelector`](./use-hinge-selector).
+
 ## HingeState
 
 ```ts

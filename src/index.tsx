@@ -1,6 +1,6 @@
 export { ArrangementView } from './ArrangementView';
 export { HingeObserver } from './HingeObserver';
-export { useHingeChange } from './hinge';
+export { useHingeChange, useHingeSelector } from './hinge';
 export { useArrangementLayout } from './layout';
 export type { ArrangementSlotProps } from './slots';
 export type {

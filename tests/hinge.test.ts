@@ -8,6 +8,7 @@ import {
   normalizeHinge,
   unavailableHinge,
   useHingeChange,
+  useHingeSelector,
   useHingeStore,
 } from '../src/hinge.ts';
 import type { HingeState } from '../src/types.ts';
@@ -154,4 +155,35 @@ test('the hook reads the nearest observer, and needs one', async () => {
   } finally {
     console.error = error;
   }
+});
+
+test('a selector renders again only when its value changes', async () => {
+  const store = createHingeStore();
+  let renders = 0;
+  function Probe() {
+    renders++;
+    const halfOpen = useHingeSelector(
+      (hinge) => hinge.status === 'partiallyOpen'
+    );
+    return createElement('div', null, String(halfOpen));
+  }
+  let root!: ReactTestRenderer;
+  await act(() => {
+    root = create(
+      createElement(HingeContext, { value: store }, createElement(Probe))
+    );
+  });
+  assert.equal(renders, 1);
+  for (const angle of [0.5, 1, 1.5]) {
+    await act(() => {
+      store.update({ available: true, angle, status: 'partiallyOpen' });
+    });
+  }
+  assert.equal(renders, 2);
+  assert.equal(root.root.findByType('div').children[0], 'true');
+  await act(() => {
+    store.update({ available: true, angle: Math.PI, status: 'fullyOpen' });
+  });
+  assert.equal(renders, 3);
+  assert.equal(root.root.findByType('div').children[0], 'false');
 });

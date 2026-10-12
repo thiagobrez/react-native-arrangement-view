@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { useHingeChange } from 'react-native-arrangement-view';
+import { useHingeSelector } from 'react-native-arrangement-view';
 import {
   Split,
   type SplitHostCommands,
@@ -34,11 +34,14 @@ export function SplitViewExample() {
   // details on one half. Without the sidebar they span the hinge, and their
   // panes split around it. The screen reads the hinge from the app's
   // HingeObserver, as it is outside the details' ArrangementView.
-  const hinge = useHingeChange();
+  //
   // An unfolding device still reads half-open when its inner display lights,
-  // just short of flat, and hiding the sidebar then would flash.
-  const halfOpen =
-    hinge.status === 'partiallyOpen' && (hinge.angle ?? 0) < NEARLY_FLAT;
+  // just short of flat, and hiding the sidebar then would flash. Selecting
+  // the one fact keeps the split from rendering again at every angle.
+  const halfOpen = useHingeSelector(
+    (hinge) =>
+      hinge.status === 'partiallyOpen' && (hinge.angle ?? 0) < NEARLY_FLAT
+  );
 
   // Split builds its UISplitViewController when it enters a window and only
   // attaches columns mounted after that, so wait for the push to finish.

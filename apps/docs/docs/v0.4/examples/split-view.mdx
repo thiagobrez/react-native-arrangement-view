@@ -41,14 +41,15 @@ The `ArrangementView` arranges the panes within its column, not the window. Whet
 The example hides the sidebar while the device is half-open, so the details split around the hinge. The split's host and its sidebar are outside the details' `ArrangementView`, so they read the hinge from a [`HingeObserver`](../api/hinge-observer) mounted above the app's navigator:
 
 ```tsx
-import { useHingeChange } from 'react-native-arrangement-view';
+import { useHingeSelector } from 'react-native-arrangement-view';
 
 const NEARLY_FLAT = (135 * Math.PI) / 180;
 
 export function SplitViewExample() {
-  const hinge = useHingeChange();
-  const halfOpen =
-    hinge.status === 'partiallyOpen' && (hinge.angle ?? 0) < NEARLY_FLAT;
+  const halfOpen = useHingeSelector(
+    (hinge) =>
+      hinge.status === 'partiallyOpen' && (hinge.angle ?? 0) < NEARLY_FLAT
+  );
 
   return (
     <Split.Host

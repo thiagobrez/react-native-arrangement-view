@@ -2,5 +2,6 @@
   "arrangement-view",
   "hinge-observer",
   "use-hinge-change",
+  "use-hinge-selector",
   "use-arrangement-layout"
 ]

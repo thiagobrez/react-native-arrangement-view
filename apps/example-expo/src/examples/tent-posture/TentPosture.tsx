@@ -9,8 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import {
   ArrangementView,
-  useHingeChange,
-  type HingeState,
+  useHingeSelector,
 } from 'react-native-arrangement-view';
 import { AlarmSettings } from './AlarmSettings';
 import { ClockFace } from './ClockFace';
@@ -35,9 +34,7 @@ export function TentPosture() {
   const [alarm, setAlarm] = useState(() => new Date(2026, 0, 1, 6, 30));
   const [wake, setWake] = useState<'asleep' | 'waking' | 'ringing'>('asleep');
   const glow = useAnimatedValue(0);
-  // The app's HingeObserver lets the screen itself read the hinge, not just
-  // its panes.
-  const tent = isTent(useHingeChange(), useWindowDimensions().height);
+  const tent = useTent();
 
   const stop = () => {
     glow.stopAnimation();
@@ -100,8 +97,12 @@ export function TentPosture() {
  * open while the app is on the outer display, in landscape: a window with a
  * compact height, under 480 pt. The inner display is never that short.
  */
-function isTent(hinge: HingeState, windowHeight: number) {
-  return (hinge.angle ?? 0) > 0.5 && windowHeight < 480; // radians, about 30°
+function useTent() {
+  // The app's HingeObserver lets the screen itself read the hinge, not just
+  // its panes. Selecting the one fact it needs keeps the screen from rendering
+  // again at every angle on the way.
+  const open = useHingeSelector((hinge) => (hinge.angle ?? 0) > 0.5); // radians, about 30°
+  return useWindowDimensions().height < 480 && open;
 }
 
 const styles = StyleSheet.create({

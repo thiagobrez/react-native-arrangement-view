@@ -72,16 +72,21 @@ export function useHingeStore(observeHinge: boolean) {
   return [store, onHingeChange] as const;
 }
 
+function useNearestHingeStore(hook: string) {
+  const store = useContext(HingeContext);
+  if (!store)
+    throw new Error(
+      `${hook} must be used inside a HingeObserver or an ArrangementView pane.`
+    );
+  return store;
+}
+
 /**
  * Observe the nearest HingeObserver, or the ArrangementView whose pane this is,
  * whichever is closer.
  */
 export function useHingeChange(onChange?: HingeChangeHandler): HingeState {
-  const store = useContext(HingeContext);
-  if (!store)
-    throw new Error(
-      'useHingeChange must be used inside a HingeObserver or an ArrangementView pane.'
-    );
+  const store = useNearestHingeStore('useHingeChange');
   const callback = useRef(onChange);
   useEffect(() => {
     callback.current = onChange;
@@ -95,4 +100,18 @@ export function useHingeChange(onChange?: HingeChangeHandler): HingeState {
     callback.current?.(hinge);
   }, [hinge]);
   return hinge;
+}
+
+/**
+ * Observe one value derived from the hinge, such as whether it is half-open.
+ * The component renders again only when that value changes, however often the
+ * angle does. The selector returns a primitive: an object built on each call
+ * would never compare equal to the last one.
+ */
+export function useHingeSelector<
+  T extends string | number | boolean | null | undefined,
+>(selector: (hinge: HingeState) => T): T {
+  const store = useNearestHingeStore('useHingeSelector');
+  const select = () => selector(store.getSnapshot());
+  return useSyncExternalStore(store.subscribe, select, select);
 }
