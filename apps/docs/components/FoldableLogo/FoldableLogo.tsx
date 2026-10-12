@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { describeDevice, initialPose, postures } from './device.ts';
+import {
+  describeDevice,
+  initialPose,
+  postures,
+  type Posture,
+} from './device.ts';
 import styles from './FoldableLogo.module.css';
 import type { FoldableScene } from './scene.ts';
 
@@ -22,6 +27,9 @@ export function FoldableLogo({ src, alt }: Props) {
   );
   const [angle, setAngle] = useState(initialPose.angle);
   const [device, setDevice] = useState(() => describeDevice(initialPose));
+  // A posture that was picked stays the current one while the device folds to
+  // it, through the postures on the way. Folding by hand goes by the fold.
+  const [picked, setPicked] = useState<Posture | null>(null);
 
   useEffect(() => {
     let unmounted = false;
@@ -48,7 +56,8 @@ export function FoldableLogo({ src, alt }: Props) {
   }
 
   const ready = model === 'ready';
-  const posture = postures.find(({ id }) => id === device.posture);
+  const current = picked ?? device.posture;
+  const posture = postures.find(({ id }) => id === current);
   return (
     <div className={styles.logo}>
       <div className={styles.stage}>
@@ -73,9 +82,12 @@ export function FoldableLogo({ src, alt }: Props) {
             key={id}
             type="button"
             className={styles.posture}
-            aria-pressed={device.posture === id}
+            aria-pressed={current === id}
             disabled={!ready}
-            onClick={() => scene.current?.pose(id)}
+            onClick={() => {
+              setPicked(id);
+              scene.current?.pose(id);
+            }}
           >
             {label}
           </button>
@@ -90,7 +102,10 @@ export function FoldableLogo({ src, alt }: Props) {
           value={angle}
           disabled={!ready}
           aria-valuetext={`${angle} degrees`}
-          onChange={(event) => scene.current?.fold(Number(event.target.value))}
+          onChange={(event) => {
+            setPicked(null);
+            scene.current?.fold(Number(event.target.value));
+          }}
         />
         <output className={styles.angle}>{angle}°</output>
       </label>
