@@ -8,7 +8,7 @@
   --rp-c-brand-tint: #7c6cf229;
 }
 
-/* A minimal home page: the logo above a centered, plain title on a flat background. */
+/* A minimal home page: the logo, a 3D model, above a centered, plain title on a flat background. */
 :root {
   --rp-home-background-bg: var(--rp-c-bg);
   /* The theme paints the brand button with the title's gradient; make it solid. */
@@ -20,7 +20,7 @@ div.rp-home-hero {
   flex-direction: column-reverse;
   align-items: center;
   max-width: 48rem;
-  margin: 6rem auto;
+  margin: 3rem auto;
   gap: 40px;
 }
 
@@ -31,12 +31,8 @@ div.rp-home-hero {
 }
 
 .rp-home-hero .rp-home-hero__image {
-  max-width: 160px;
-}
-
-.rp-home-hero .rp-home-hero__image-img {
   width: 100%;
-  height: auto;
+  max-width: none;
 }
 
 .rp-home-hero .rp-home-hero__title {
@@ -56,7 +52,7 @@ div.rp-home-hero {
 
 @media (width <= 600px) {
   div.rp-home-hero {
-    margin: 3rem auto;
+    margin: 1.5rem auto;
   }
 
   .rp-home-hero .rp-home-hero__content .rp-home-hero__title {
