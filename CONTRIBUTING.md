@@ -37,7 +37,7 @@ yarn example test:e2e:android
 
 Results are written to `apps/example-expo/.e2e/`. The E2E workflow runs the Android tests on CI. The iOS tests run locally only, because GitHub's Mac runners can't run the iPhone Duo simulator yet ([#23](https://github.com/thiagobrez/react-native-arrangement-view/issues/23)).
 
-e2e folds only the iPhone Duo, so `.yarn/patches/` adds `device.fold` for foldable Android emulators, through their hinge sensor. Drop it when `@e2e-dev/mobile` folds Android.
+`@e2e-dev/mobile` refuses `device.fold` on Android, although agent-device 0.21.25 folds foldable emulators ([callstack/agent-device#3361](https://github.com/callstack/agent-device/pull/3361)). `.yarn/patches/` lifts that refusal, and the root `resolutions` pins agent-device 0.21.25 in place of the 0.21.22 the package pins. Drop both when `@e2e-dev/mobile` ships the same change.
 
 ## Docs
 

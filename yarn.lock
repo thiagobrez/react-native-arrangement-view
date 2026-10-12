@@ -1720,9 +1720,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@e2e-dev/mobile@npm:0.10.0":
-  version: 0.10.0
-  resolution: "@e2e-dev/mobile@npm:0.10.0"
+"@e2e-dev/mobile@npm:0.11.0":
+  version: 0.11.0
+  resolution: "@e2e-dev/mobile@npm:0.11.0"
   dependencies:
     agent-device: "npm:0.21.22"
     pngjs: "npm:7.0.0"
@@ -1733,13 +1733,13 @@ __metadata:
   peerDependenciesMeta:
     ai:
       optional: true
-  checksum: 10c0/1f19c46acef35b7827f19850e5a37831830c5055c27d3d02ef560bf3231029908e87eb8b6e9a338f1f7825ece5aebed42fee022653595afaf5b29f5f8f0853d2
+  checksum: 10c0/944bd1db77cd39d379a312ba692cb79b058a2e7e39d7ff0b9b7a80d4280219a90e530863b400e26d50e9976d06da2e03ee4f394c42cb8359c40ea0941d26b2e0
   languageName: node
   linkType: hard
 
-"@e2e-dev/mobile@patch:@e2e-dev/mobile@npm%3A0.10.0#~/.yarn/patches/@e2e-dev-mobile-npm-0.10.0-fef61f6f0f.patch":
-  version: 0.10.0
-  resolution: "@e2e-dev/mobile@patch:@e2e-dev/mobile@npm%3A0.10.0#~/.yarn/patches/@e2e-dev-mobile-npm-0.10.0-fef61f6f0f.patch::version=0.10.0&hash=5a9c81"
+"@e2e-dev/mobile@patch:@e2e-dev/mobile@npm%3A0.11.0#~/.yarn/patches/@e2e-dev-mobile-npm-0.11.0-93972f2a48.patch":
+  version: 0.11.0
+  resolution: "@e2e-dev/mobile@patch:@e2e-dev/mobile@npm%3A0.11.0#~/.yarn/patches/@e2e-dev-mobile-npm-0.11.0-93972f2a48.patch::version=0.11.0&hash=cb67a0"
   dependencies:
     agent-device: "npm:0.21.22"
     pngjs: "npm:7.0.0"
@@ -1750,7 +1750,7 @@ __metadata:
   peerDependenciesMeta:
     ai:
       optional: true
-  checksum: 10c0/c8b890f762edf1625f94c1de448e3faeee97871e9110a297250cfb734b94b2eb019f7f08b9da1ae7f1f7848d828470c97942eb70c9bd61ce80dcefdec9799025
+  checksum: 10c0/caa7c567ca9513643f47191516a3dd9ebef269ba506233439e3e237a69a75cc40d1083412292a3d759b1b0fa2e746f159cab879356f8ba1abaff54054a5638a7
   languageName: node
   linkType: hard
 
@@ -4319,9 +4319,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"agent-device@npm:0.21.22":
-  version: 0.21.22
-  resolution: "agent-device@npm:0.21.22"
+"agent-device@npm:0.21.25":
+  version: 0.21.25
+  resolution: "agent-device@npm:0.21.25"
   peerDependencies:
     ai: ^6.0.0 || ^7.0.0
   peerDependenciesMeta:
@@ -4329,7 +4329,7 @@ __metadata:
       optional: true
   bin:
     agent-device: bin/agent-device.mjs
-  checksum: 10c0/b18094fcde5b74fd005103465a85a0bf2047d78b8ff73b4765ad03a536c17c6f53bdf0bd4eddb04e66c78c97dad6fc84e19adba5a41bf689a90b632d13551d6b
+  checksum: 10c0/c7562f8146ea174ac0aa5f45e218a6e10a0a51d55ac88f46f8a26d61f3a59d1cc603289c4fcbb83f6f5becdda3667eba754c717450ad018f45b8d1c70d74bda1
   languageName: node
   linkType: hard
 
@@ -6389,7 +6389,7 @@ __metadata:
   resolution: "example-expo@workspace:apps/example-expo"
   dependencies:
     "@bottom-tabs/react-navigation": "npm:^1.4.0"
-    "@e2e-dev/mobile": "patch:@e2e-dev/mobile@npm%3A0.10.0#~/.yarn/patches/@e2e-dev-mobile-npm-0.10.0-fef61f6f0f.patch"
+    "@e2e-dev/mobile": "patch:@e2e-dev/mobile@npm%3A0.11.0#~/.yarn/patches/@e2e-dev-mobile-npm-0.11.0-93972f2a48.patch"
     "@expo/metro-runtime": "npm:~57.0.16"
     "@react-native-vector-icons/material-design-icons": "npm:^13.1.4"
     "@react-navigation/native": "npm:^7.4.1"

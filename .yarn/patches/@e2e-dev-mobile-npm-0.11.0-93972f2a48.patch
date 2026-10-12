@@ -1,0 +1,50 @@
+diff --git a/dist/device.d.ts b/dist/device.d.ts
+index 59cc68712b604b9b42996bf780c6b40923430f5c..0729ec20da565ced84b3040d7889f7f6ac59ef80 100644
+--- a/dist/device.d.ts
++++ b/dist/device.d.ts
+@@ -50,6 +50,10 @@ export interface Device {
+      * typically 10 to 16 seconds later. `closed` lights the outer display;
+      * `half-open` (a 130° book) and `open` light the inner one, whose app
+      * window has a different size, so the next observation reads a new screen.
++     * On a foldable Android emulator it sets the emulator console posture and
++     * resolves once the guest commits the matching device state, dismissing the
++     * lock screen a fold to the cover display raises; `half-open` is the
++     * profile's own angle there (90° on the Pixel folds).
+      * Any device without a hinge is `UNSUPPORTED_CAPABILITY`.
+      */
+     fold(pose: FoldPose): Promise<void>;
+diff --git a/dist/surface.js b/dist/surface.js
+index 6cdcdcf30af353cd17517b846ea783b9fd59a7d4..0983ef2d0aeedfe9ea75f6b733d3de9d1c23b87d 100644
+--- a/dist/surface.js
++++ b/dist/surface.js
+@@ -1183,14 +1183,12 @@ export class AgentDeviceSurface {
+         await this.openApp(app, { relaunch: true }, operation.signal);
+     }
+     /**
+-     * Sends a foldable iOS simulator's hinge to a pose; agent-device confirms
+-     * the angle through CoreDevice before it answers. The pose moves the app to
++     * Sends a foldable simulator's or emulator's hinge to a pose; agent-device
++     * confirms it before it answers (the hinge angle through CoreDevice on iOS,
++     * the committed device state on Android). The pose moves the app to
+      * another panel, so it counts as an action like a rotation.
+      */
+     async fold(pose, signal) {
+-        if (this.options.platform !== 'ios') {
+-            throw unsupported('device.fold drives a foldable iOS simulator (iPhone Duo) through agent-device; it has no Android driver');
+-        }
+         await this.screenCommand('device.fold', (client) => client.command.fold({ pose }), signal);
+     }
+     /**
+diff --git a/package.json b/package.json
+index 30f577f132a11df06c33080092a2d51a6d6b627c..84ef7f46ff4c2f55c75a91d077940f8433112d3c 100644
+--- a/package.json
++++ b/package.json
+@@ -51,7 +51,7 @@
+     "NOTICE"
+   ],
+   "dependencies": {
+-    "agent-device": "0.21.22",
++    "agent-device": "0.21.25",
+     "pngjs": "7.0.0",
+     "zod": "4.6.1"
+   },
