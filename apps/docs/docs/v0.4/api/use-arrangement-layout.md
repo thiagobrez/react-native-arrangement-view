@@ -1,6 +1,6 @@
 # useArrangementLayout
 
-A hook that returns the current [`ArrangementLayout`](./arrangement-view#arrangementlayout) and subscribes the component to updates. It is useful for adapting a pane's content to what the arrangement shows, such as whether the secondary pane is on screen.
+A hook that returns the current [`ArrangementLayout`](./use-arrangement-layout#arrangementlayout) and subscribes the component to updates. It is useful for adapting a pane's content to what the arrangement shows, such as whether the secondary pane is on screen.
 
 Call the hook inside an [`ArrangementView`](./arrangement-view). It returns what the nearest arrangement shows, and re-renders when that changes, so a pane can adapt to its sibling: for example, hide a button that opens the secondary pane while the secondary pane is already on screen.
 
@@ -18,11 +18,11 @@ To observe the layout from outside the panes, use `ArrangementView`'s `onArrange
 
 ## ArrangementLayout
 
-The layout is `null` until the panes are first laid out. 
+The layout is `null` until the panes are first laid out.
 
 - `secondaryVisible` is `true` when the secondary pane is on screen, either beside or behind the primary pane.
 - `axis` is `"horizontal"` or `"vertical"` when the panes are side by side or stacked, and `null` when only the primary pane shows or the panes overlap.
-- `isOverlapping` is `true` when both panes are on screen and the primary pane is in front of the secondary pane, either in `overlay` or in `split` layout.
+- `isOverlapping` is `true` when both panes are on screen and the primary pane is in front of the secondary pane, in the `overlay` arrangement.
 
 ```ts
 type ArrangementLayout = {
