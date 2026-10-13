@@ -1,27 +1,23 @@
 # useHingeChange
 
-Call the hook **inside a [`HingeObserver`](./hinge-observer) or a component rendered in either pane** of an [`ArrangementView`](./arrangement-view). It observes whichever of the two is nearer, keeping events associated with that view's window. It is not a process-wide sensor subscription.
+A hook to consume the hinge state changes. Call the hook inside a [`HingeObserver`](./hinge-observer) or an [`ArrangementView`](./arrangement-view). It observes whichever of the two is nearer.
+
+The hook returns the current [`HingeState`](./use-hinge-change#hingestate), and subscribes the component to updates. It invokes the callback with the initial unavailable state and then changed values.
+
+The component renders again at every angle the hinge reports. For more granular updates and better performance, use [`useHingeSelector`](./use-hinge-selector).
 
 ```tsx
 import { Text } from 'react-native';
 import { useHingeChange } from 'react-native-arrangement-view';
 
 function Player() {
-  const hinge = useHingeChange((next) => {
-    // Use angle/status for effects or interactions.
-    // Let ArrangementView handle adaptive layout.
-    console.log(next.angle, next.status);
-  });
+  const hinge = useHingeChange();
 
   return (
     <Text>{hinge.angle === null ? 'No hinge' : `${hinge.angle} rad`}</Text>
   );
 }
 ```
-
-The callback is optional; the hook also returns the current `HingeState` and subscribes the component to updates. It invokes the callback with the initial unavailable state and then changed values.
-
-The component renders again at every angle the hinge reports. Where only a decision depends on the hinge, such as whether it is half-open, use [`useHingeSelector`](./use-hinge-selector).
 
 ## HingeState
 
@@ -34,9 +30,3 @@ type HingeState = {
 ```
 
 Before the first native update, without hardware, or when observation is disabled, the state is `{ available: false, angle: null, status: 'unknown' }`.
-
-On Android, `angle` comes from the hinge angle sensor (Android 11+) and is `null` on a foldable without one.
-
-## Views outside the window
-
-A view that leaves the window, such as a screen under a pushed one, keeps the last state it observed instead of becoming unavailable. It reports the current state, and calls the callback if it changed, when it returns.

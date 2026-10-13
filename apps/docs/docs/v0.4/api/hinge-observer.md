@@ -1,8 +1,10 @@
 # HingeObserver
 
-Observes the hinge for [`useHingeChange`](./use-hinge-change) anywhere among its children, without arranging anything. It renders a hidden native view as a sibling of the children, so it takes no space and no touches.
+The provider for hinge state. Use [`useHingeChange`](./use-hinge-change) on any children to consume the current hinge state and subscribe to changes.
 
-Mount it **above your navigator**. The app root never leaves the window, so every screen reads live values, including one beneath a pushed screen:
+An [`ArrangementView`](./arrangement-view) also acts as a hinge observer. The hook reads from whichever container is nearer in the React tree, so you can use it inside a pane without adding a separate observer.
+
+Mount it **above your navigator**. It renders a hidden native view as a sibling of the children, so it takes no space and no touches.
 
 ```tsx
 import { NavigationContainer } from '@react-navigation/native';
@@ -30,6 +32,4 @@ function Camera() {
 }
 ```
 
-Hooks inside an `ArrangementView`'s panes read that arrangement, which is nearer. Its `observeHinge` prop has no equivalent here: unmount the observer to stop observing.
-
-When running below iOS 27.1, or building with an older SDK, the hinge state remains unavailable. On platforms other than iOS and Android, the children render and the state stays unavailable.
+When running below iOS 27.1, building with an older SDK, or on unsupported platforms, the hinge state remains unavailable.
