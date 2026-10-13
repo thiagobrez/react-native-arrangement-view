@@ -1720,11 +1720,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@e2e-dev/mobile@npm:0.11.0":
-  version: 0.11.0
-  resolution: "@e2e-dev/mobile@npm:0.11.0"
+"@e2e-dev/mobile@npm:^0.12.0":
+  version: 0.12.0
+  resolution: "@e2e-dev/mobile@npm:0.12.0"
   dependencies:
-    agent-device: "npm:0.21.22"
+    agent-device: "npm:0.21.25"
     pngjs: "npm:7.0.0"
     zod: "npm:4.6.1"
   peerDependencies:
@@ -1733,24 +1733,7 @@ __metadata:
   peerDependenciesMeta:
     ai:
       optional: true
-  checksum: 10c0/944bd1db77cd39d379a312ba692cb79b058a2e7e39d7ff0b9b7a80d4280219a90e530863b400e26d50e9976d06da2e03ee4f394c42cb8359c40ea0941d26b2e0
-  languageName: node
-  linkType: hard
-
-"@e2e-dev/mobile@patch:@e2e-dev/mobile@npm%3A0.11.0#~/.yarn/patches/@e2e-dev-mobile-npm-0.11.0-93972f2a48.patch":
-  version: 0.11.0
-  resolution: "@e2e-dev/mobile@patch:@e2e-dev/mobile@npm%3A0.11.0#~/.yarn/patches/@e2e-dev-mobile-npm-0.11.0-93972f2a48.patch::version=0.11.0&hash=cb67a0"
-  dependencies:
-    agent-device: "npm:0.21.22"
-    pngjs: "npm:7.0.0"
-    zod: "npm:4.6.1"
-  peerDependencies:
-    ai: ^7.0.0
-    e2e: ">=0.15.0 <1"
-  peerDependenciesMeta:
-    ai:
-      optional: true
-  checksum: 10c0/caa7c567ca9513643f47191516a3dd9ebef269ba506233439e3e237a69a75cc40d1083412292a3d759b1b0fa2e746f159cab879356f8ba1abaff54054a5638a7
+  checksum: 10c0/f2ce7b01e32b984acee67b641f973a28354d47c3601bd24753a86c40a79e4781076866a343e2e2c37a5ba9ba037057e4749057c5ecc1c0f8118e675ddf0ec966
   languageName: node
   linkType: hard
 
@@ -6389,7 +6372,7 @@ __metadata:
   resolution: "example-expo@workspace:apps/example-expo"
   dependencies:
     "@bottom-tabs/react-navigation": "npm:^1.4.0"
-    "@e2e-dev/mobile": "patch:@e2e-dev/mobile@npm%3A0.11.0#~/.yarn/patches/@e2e-dev-mobile-npm-0.11.0-93972f2a48.patch"
+    "@e2e-dev/mobile": "npm:^0.12.0"
     "@expo/metro-runtime": "npm:~57.0.16"
     "@react-native-vector-icons/material-design-icons": "npm:^13.1.4"
     "@react-navigation/native": "npm:^7.4.1"
