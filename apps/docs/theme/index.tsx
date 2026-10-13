@@ -1,5 +1,16 @@
-import { useSite, useVersion } from '@rspress/core/runtime';
-import { Layout as BaseLayout, Link } from '@rspress/core/theme-original';
+import {
+  normalizeImagePath,
+  useFrontmatter,
+  useSite,
+  useVersion,
+} from '@rspress/core/runtime';
+import {
+  HomeHero as BaseHomeHero,
+  Layout as BaseLayout,
+  Link,
+  type HomeHeroProps,
+} from '@rspress/core/theme-original';
+import { FoldableLogo } from '../components/FoldableLogo/FoldableLogo';
 import styles from './index.module.css';
 
 /**
@@ -29,5 +40,23 @@ function Layout() {
   return <BaseLayout beforeDocContent={<VersionBanner />} />;
 }
 
-export { Layout };
+/** The home page's hero, its image, the logo, shown as a 3D model. */
+function HomeHero(props: HomeHeroProps) {
+  const { frontmatter } = useFrontmatter();
+  const image = frontmatter.hero?.image;
+  const src = typeof image?.src === 'string' ? image.src : image?.src?.light;
+
+  return (
+    <BaseHomeHero
+      {...props}
+      image={
+        src && (
+          <FoldableLogo src={normalizeImagePath(src)} alt={image?.alt ?? ''} />
+        )
+      }
+    />
+  );
+}
+
+export { HomeHero, Layout };
 export * from '@rspress/core/theme-original';

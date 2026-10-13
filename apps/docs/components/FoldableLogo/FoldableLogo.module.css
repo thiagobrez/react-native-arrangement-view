@@ -1,0 +1,139 @@
+.logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.image {
+  width: 160px;
+  height: auto;
+  margin: 0 auto;
+}
+
+.stage {
+  position: relative;
+  width: 100%;
+  max-width: 26rem;
+  aspect-ratio: 4 / 3;
+}
+
+.canvas,
+.placeholder {
+  position: absolute;
+  inset: 0;
+  transition: opacity 0.3s;
+}
+
+.canvas {
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: grab;
+  /* A swipe up or down still scrolls the page. */
+  touch-action: pan-y;
+}
+
+.canvas[data-ready='true'] {
+  opacity: 1;
+}
+
+/* The image stands where the model appears, at about its size. */
+.placeholder {
+  width: auto;
+  height: 86%;
+  margin: auto;
+  pointer-events: none;
+}
+
+.placeholder[data-hidden='true'] {
+  opacity: 0;
+}
+
+.postures {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 20px;
+  background: var(--rp-c-bg-soft);
+}
+
+.posture {
+  padding: 4px 14px;
+  border: 0;
+  background: none;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 24px;
+  color: var(--rp-c-text-2);
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    background-color 0.2s;
+}
+
+.posture:hover {
+  color: var(--rp-c-text-1);
+}
+
+.posture[aria-pressed='true'] {
+  color: #fff;
+  background: var(--rp-c-brand);
+}
+
+.posture:focus-visible {
+  outline: 2px solid var(--rp-c-brand);
+  outline-offset: 2px;
+}
+
+.hinge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--rp-c-text-2);
+}
+
+.hinge input {
+  width: 11rem;
+  accent-color: var(--rp-c-brand);
+  cursor: pointer;
+}
+
+.angle {
+  /* Wide enough for 180°, so the slider stays put as the angle changes. */
+  min-width: 2.5em;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  color: var(--rp-c-text-1);
+}
+
+.state {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 14px;
+  color: var(--rp-c-text-2);
+}
+
+.state code {
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-family: var(--rp-font-family-mono);
+  font-size: 13px;
+  color: var(--rp-c-text-1);
+  background: var(--rp-c-bg-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .canvas,
+  .placeholder,
+  .posture {
+    transition: none;
+  }
+}
