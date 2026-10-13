@@ -11,6 +11,10 @@
   "dependencies": {
     "@rspress/core": "patch:@rspress/core@npm%3A2.0.23#~/.yarn/patches/@rspress-core-npm-2.0.23-128feeb699.patch",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@types/three": "^0.186.0"
   }
 }
