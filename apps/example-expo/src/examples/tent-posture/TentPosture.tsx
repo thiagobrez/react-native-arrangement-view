@@ -9,8 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import {
   ArrangementView,
-  useHingeChange,
-  type HingeState,
+  useHingeSelector,
 } from 'react-native-arrangement-view';
 import { AlarmSettings } from './AlarmSettings';
 import { ClockFace } from './ClockFace';
@@ -35,7 +34,15 @@ export function TentPosture() {
   const [alarm, setAlarm] = useState(() => new Date(2026, 0, 1, 6, 30));
   const [wake, setWake] = useState<'asleep' | 'waking' | 'ringing'>('asleep');
   const glow = useAnimatedValue(0);
-  const [tent, setTent] = useState(false);
+
+  // iOS has no tent posture, and the hinge's status can't tell one apart: it
+  // lags behind the angle, so a tent reads `closed` when reached from closed
+  // and `partiallyOpen` when reached from open. What a tent is, is the hinge
+  // open while the app is on the outer display, in landscape: a window with a
+  // compact height, under 480 pt. The inner display is never that short.
+  const hingeOpen = useHingeSelector((hinge) => (hinge.angle ?? 0) > 0.5); // radians, about 30°
+  const { height } = useWindowDimensions();
+  const tent = hingeOpen && height < 480;
 
   const stop = () => {
     glow.stopAnimation();
@@ -70,11 +77,11 @@ export function TentPosture() {
     >
       <ArrangementView style={styles.screen}>
         <ArrangementView.Primary>
-          <Clock
+          <ClockFace
             alarm={alarm}
             glow={glow}
             ringing={wake === 'ringing'}
-            onTentChange={setTent}
+            standBy={tent}
             onStop={stop}
           />
         </ArrangementView.Primary>
@@ -89,30 +96,6 @@ export function TentPosture() {
       </ArrangementView>
     </SafeAreaView>
   );
-}
-
-/**
- * iOS has no tent posture, and the hinge's status can't tell one apart: it
- * lags behind the angle, so a tent reads `closed` when reached from closed
- * and `partiallyOpen` when reached from open. What a tent is, is the hinge
- * open while the app is on the outer display, in landscape: a window with a
- * compact height, under 480 pt. The inner display is never that short.
- */
-function isTent(hinge: HingeState, windowHeight: number) {
-  return (hinge.angle ?? 0) > 0.5 && windowHeight < 480; // radians, about 30°
-}
-
-/** The clock face, which finds out from the hinge whether it's on a nightstand. */
-function Clock({
-  onTentChange,
-  ...props
-}: Omit<Parameters<typeof ClockFace>[0], 'standBy'> & {
-  onTentChange: (tent: boolean) => void;
-}) {
-  const tent = isTent(useHingeChange(), useWindowDimensions().height);
-  // The hook only works inside a pane, so the pane tells the screen.
-  useEffect(() => onTentChange(tent), [tent, onTentChange]);
-  return <ClockFace {...props} standBy={tent} />;
 }
 
 const styles = StyleSheet.create({

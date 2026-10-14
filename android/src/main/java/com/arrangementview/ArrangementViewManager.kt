@@ -26,7 +26,7 @@ class ArrangementViewManager : ReactViewManager() {
 
   override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Any> =
     (super.getExportedCustomDirectEventTypeConstants() ?: mutableMapOf()).apply {
-      put(ArrangementView.HINGE_EVENT, mapOf("registrationName" to "onHingeChange"))
+      put(HingeTracker.EVENT, mapOf("registrationName" to "onHingeChange"))
       put(ArrangementView.GEOMETRY_EVENT, mapOf("registrationName" to "onGeometryChange"))
     }
 
