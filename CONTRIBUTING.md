@@ -35,7 +35,7 @@ yarn example android:release
 yarn example test:e2e:android
 ```
 
-Results are written to `apps/example-expo/.e2e/`. The E2E workflow runs the Android tests on CI. The iOS tests run locally only, because GitHub's Mac runners can't run the iPhone Duo simulator yet ([#23](https://github.com/thiagobrez/react-native-arrangement-view/issues/23)).
+Results are written to `apps/example-expo/.e2e/`. The CI workflow runs the Android tests. The iOS tests run locally only, because GitHub's Mac runners can't run the iPhone Duo simulator yet ([#23](https://github.com/thiagobrez/react-native-arrangement-view/issues/23)).
 
 ## Docs
 
