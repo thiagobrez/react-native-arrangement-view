@@ -37,8 +37,6 @@ yarn example test:e2e:android
 
 Results are written to `apps/example-expo/.e2e/`. The E2E workflow runs the Android tests on CI. The iOS tests run locally only, because GitHub's Mac runners can't run the iPhone Duo simulator yet ([#23](https://github.com/thiagobrez/react-native-arrangement-view/issues/23)).
 
-e2e folds only the iPhone Duo, so `.yarn/patches/` adds `device.fold` for foldable Android emulators, through their hinge sensor. Drop it when `@e2e-dev/mobile` folds Android.
-
 ## Docs
 
 The documentation site in `docs/` is built with [Rspress](https://rspress.rs) and deployed to GitHub Pages from `main`. The logo and screenshots it shows are served from `docs/public/`, which the README also uses. The README keeps only installation and a quick start; document everything else on the site.

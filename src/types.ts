@@ -15,6 +15,9 @@ export type HingeState = Readonly<{
   status: HingeStatus;
 }>;
 export type HingeChangeHandler = (hinge: HingeState) => void;
+export interface HingeObserverProps {
+  children?: ReactNode;
+}
 /** What an arrangement shows. */
 export type ArrangementLayout = Readonly<{
   /** The secondary pane is on screen: beside the primary, or behind it in overlay. */

@@ -1,0 +1,87 @@
+import { PostureShots } from '../../../components/PostureShots';
+
+# Tent posture
+
+Stood up as a tent, with the inner display folded inwards, iPhone Duo keeps the app on the outer display, in landscape. iOS has no tent state. [`useHingeChange`](../api/use-hinge-change) reports the angle the hinge is open at, around 81°, but its status lags behind the angle: a tent reached from closed reads `closed`, and one reached from open reads `partiallyOpen`. So don't look for a status. What makes a tent is the hinge being open while the app is on the outer display, which in landscape is a window with a compact height:
+
+```tsx
+import { useWindowDimensions } from 'react-native';
+import { useHingeChange } from 'react-native-arrangement-view';
+
+function Primary() {
+  const hinge = useHingeChange();
+  const { height } = useWindowDimensions();
+  // Open past 30° (0.5 rad), yet in a window under 480 pt tall, a compact
+  // height: the outer display, in landscape. The inner one is never that short.
+  const tent = (hinge.angle ?? 0) > 0.5 && height < 480;
+
+  return tent ? <TentView /> : <NormalPrimary />;
+}
+```
+
+This follows Apple's guidance for iPhone Duo: there is no system pose, so infer one from the hinge angle, the orientation and the size class together, and keep the hinge for interactions and effects while the arrangement does the layout. Both thresholds are heuristics. Apple does not guarantee the precision or update rate of `angle`, so check the behavior on hardware.
+
+Android has no tent posture either. A Pixel foldable hands over to its inner display as soon as it is open a little way, about 30° on the emulator, and from there WindowManager reports a half-open fold, which `ArrangementView` splits across. So the check above is true on Android only for a moment, with the cover display outwards.
+
+## Hiding headers and indicators
+
+Usually in Tent posture, we want a fullscreen without distractions. Use the tent state to hide the navigation header, auto-hide the home indicator, and remove safe areas.
+
+```tsx
+function Screen() {
+  const [tent, setTent] = useState(false);
+
+  const navigation = useNavigation();
+  useLayoutEffect(() => {
+    navigation.setOptions({ headerShown: !tent, autoHideHomeIndicator: tent });
+  }, [navigation, tent]);
+
+  return (
+    <SafeAreaView
+      style={styles.screen}
+      edges={tent ? [] : ['left', 'right', 'bottom']}
+    >
+      <ArrangementView style={styles.screen}>
+        <ArrangementView.Primary>
+          <Primary onTentChange={setTent} />
+        </ArrangementView.Primary>
+        <ArrangementView.Secondary>
+          <Secondary />
+        </ArrangementView.Secondary>
+      </ArrangementView>
+    </SafeAreaView>
+  );
+}
+```
+
+## Example
+
+The [example app](https://github.com/thiagobrez/react-native-arrangement-view/tree/main/apps/example-expo/src/examples/tent-posture) shows a bedside clock after the one Apple showed with iPhone Duo. The clock is the primary pane, so it's what shows where only one pane fits, and the alarm's settings are the secondary pane. In a tent, the clock fills the outer display in red, like StandBy at night. "Preview wake-up" plays the glow that comes before an alarm.
+
+| Posture             | Layout                                                                                                                    |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Closed              | The clock, with the settings stacked below it. A shorter cover display, under 900 dp tall on Android, fits the clock only |
+| Half-open, tabletop | The clock on the upright half, and the settings on the half on the table                                                  |
+| Half-open, book     | The clock on the leading half, and the settings on the trailing half                                                      |
+| Open flat           | The clock and the settings side by side                                                                                   |
+| Tent                | The clock alone, in red, on the outer display. It warms as the glow rises, until the alarm rings                          |
+
+<PostureShots
+  dir="examples/tent-posture"
+  platforms={['ios']}
+  postures={[
+    { file: 'tent', label: 'Tent' },
+    { file: 'tent-glow', label: 'Tent, the glow rising' },
+    { file: 'tent-ringing', label: 'Tent, the alarm ringing' },
+  ]}
+/>
+
+<PostureShots
+  dir="examples/tent-posture"
+  postures={[
+    { file: 'closed', label: 'Closed' },
+    { file: 'tabletop', label: 'Tabletop' },
+    { file: 'book', label: 'Book' },
+    { file: 'open', label: 'Open' },
+  ]}
+/>

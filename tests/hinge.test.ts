@@ -8,6 +8,7 @@ import {
   normalizeHinge,
   unavailableHinge,
   useHingeChange,
+  useHingeSelector,
   useHingeStore,
 } from '../src/hinge.ts';
 import type { HingeState } from '../src/types.ts';
@@ -116,4 +117,73 @@ test('an arrangement feeds native events to its store, and resets it when observ
   });
   assert.equal(store, initialStore);
   assert.equal(store.getSnapshot(), unavailableHinge);
+});
+
+test('the hook reads the nearest observer, and needs one', async () => {
+  const outer = createHingeStore();
+  const inner = createHingeStore();
+  function Probe() {
+    return createElement('div', null, useHingeChange().status);
+  }
+  let root!: ReactTestRenderer;
+  await act(() => {
+    root = create(
+      createElement(
+        HingeContext,
+        { value: outer },
+        createElement(HingeContext, { value: inner }, createElement(Probe))
+      )
+    );
+  });
+  await act(() => {
+    outer.update({ available: true, angle: Math.PI, status: 'fullyOpen' });
+  });
+  assert.equal(root.root.findByType('div').children[0], 'unknown');
+  await act(() => {
+    inner.update({ available: true, angle: 1.5, status: 'partiallyOpen' });
+  });
+  assert.equal(root.root.findByType('div').children[0], 'partiallyOpen');
+
+  const error = console.error;
+  console.error = () => {};
+  try {
+    await assert.rejects(async () => {
+      await act(() => {
+        create(createElement(Probe));
+      });
+    }, /inside a HingeObserver or an ArrangementView pane/);
+  } finally {
+    console.error = error;
+  }
+});
+
+test('a selector renders again only when its value changes', async () => {
+  const store = createHingeStore();
+  let renders = 0;
+  function Probe() {
+    renders++;
+    const halfOpen = useHingeSelector(
+      (hinge) => hinge.status === 'partiallyOpen'
+    );
+    return createElement('div', null, String(halfOpen));
+  }
+  let root!: ReactTestRenderer;
+  await act(() => {
+    root = create(
+      createElement(HingeContext, { value: store }, createElement(Probe))
+    );
+  });
+  assert.equal(renders, 1);
+  for (const angle of [0.5, 1, 1.5]) {
+    await act(() => {
+      store.update({ available: true, angle, status: 'partiallyOpen' });
+    });
+  }
+  assert.equal(renders, 2);
+  assert.equal(root.root.findByType('div').children[0], 'true');
+  await act(() => {
+    store.update({ available: true, angle: Math.PI, status: 'fullyOpen' });
+  });
+  assert.equal(renders, 3);
+  assert.equal(root.root.findByType('div').children[0], 'false');
 });

@@ -34,7 +34,7 @@
   },
   "private": true,
   "devDependencies": {
-    "@e2e-dev/mobile": "patch:@e2e-dev/mobile@npm%3A0.10.0#~/.yarn/patches/@e2e-dev-mobile-npm-0.10.0-fef61f6f0f.patch",
+    "@e2e-dev/mobile": "^0.12.0",
     "e2e": "^0.18.0",
     "react-native-builder-bob": "^0.43.1",
     "react-native-monorepo-config": "^0.4.0"
