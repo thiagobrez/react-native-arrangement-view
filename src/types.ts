@@ -16,7 +16,6 @@ export type HingeState = Readonly<{
 }>;
 export type HingeChangeHandler = (hinge: HingeState) => void;
 export interface HingeObserverProps {
-  /** The tree in which `useHingeChange` observes this observer's window. */
   children?: ReactNode;
 }
 /** What an arrangement shows. */

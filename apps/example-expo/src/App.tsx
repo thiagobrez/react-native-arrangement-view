@@ -22,7 +22,6 @@ const theme = {
 export default function App() {
   return (
     <SafeAreaProvider style={styles.root}>
-      {/* Above the navigator, so screens under a pushed one keep observing. */}
       <HingeObserver>
         <NavigationContainer theme={theme}>
           <Stack.Navigator

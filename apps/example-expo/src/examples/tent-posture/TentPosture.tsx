@@ -34,7 +34,15 @@ export function TentPosture() {
   const [alarm, setAlarm] = useState(() => new Date(2026, 0, 1, 6, 30));
   const [wake, setWake] = useState<'asleep' | 'waking' | 'ringing'>('asleep');
   const glow = useAnimatedValue(0);
-  const tent = useTent();
+
+  // iOS has no tent posture, and the hinge's status can't tell one apart: it
+  // lags behind the angle, so a tent reads `closed` when reached from closed
+  // and `partiallyOpen` when reached from open. What a tent is, is the hinge
+  // open while the app is on the outer display, in landscape: a window with a
+  // compact height, under 480 pt. The inner display is never that short.
+  const hingeOpen = useHingeSelector((hinge) => (hinge.angle ?? 0) > 0.5); // radians, about 30°
+  const { height } = useWindowDimensions();
+  const tent = hingeOpen && height < 480;
 
   const stop = () => {
     glow.stopAnimation();
@@ -88,21 +96,6 @@ export function TentPosture() {
       </ArrangementView>
     </SafeAreaView>
   );
-}
-
-/**
- * iOS has no tent posture, and the hinge's status can't tell one apart: it
- * lags behind the angle, so a tent reads `closed` when reached from closed
- * and `partiallyOpen` when reached from open. What a tent is, is the hinge
- * open while the app is on the outer display, in landscape: a window with a
- * compact height, under 480 pt. The inner display is never that short.
- */
-function useTent() {
-  // The app's HingeObserver lets the screen itself read the hinge, not just
-  // its panes. Selecting the one fact it needs keeps the screen from rendering
-  // again at every angle on the way.
-  const open = useHingeSelector((hinge) => (hinge.angle ?? 0) > 0.5); // radians, about 30°
-  return useWindowDimensions().height < 480 && open;
 }
 
 const styles = StyleSheet.create({
