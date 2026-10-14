@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { defineConfig } from '@rspress/core';
 
 const root = path.join(import.meta.dirname, 'docs');
-const assets = path.join(import.meta.dirname, '../../docs');
+const assets = path.join(import.meta.dirname, 'public');
 const repo = 'https://github.com/thiagobrez/react-native-arrangement-view';
 const site = 'https://thiagobrez.github.io/react-native-arrangement-view/';
 const title = 'react-native-arrangement-view';
@@ -21,7 +21,7 @@ const versions = fs
 // The released version is the default. Changesets bumps the package's version
 // when a release merges, so newer folders stay unreleased until then.
 const { version } = JSON.parse(
-  fs.readFileSync(path.join(import.meta.dirname, '../../package.json'), 'utf8')
+  fs.readFileSync(path.join(import.meta.dirname, '../package.json'), 'utf8')
 );
 const [major, minor] = version.split('.');
 const latest = `v${major}.${minor}`;
@@ -51,15 +51,15 @@ export default defineConfig({
   multiVersion: { default: latest, versions },
   builderConfig: {
     server: {
-      // Serve the logo and screenshots the README uses from the repository's
-      // docs/ directory, so both read the same files.
+      // Serve the logo and screenshots from public/ beside this config, not
+      // from the content root. The README reads the same files.
       publicDir: { name: assets },
     },
   },
   themeConfig: {
     socialLinks: [{ icon: 'github', mode: 'link', content: repo }],
     editLink: {
-      docRepoBaseUrl: `${repo}/tree/main/apps/docs/docs`,
+      docRepoBaseUrl: `${repo}/tree/main/docs/docs`,
     },
   },
 });

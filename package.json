@@ -96,7 +96,8 @@
   },
   "workspaces": [
     ".",
-    "apps/*"
+    "apps/*",
+    "docs"
   ],
   "packageManager": "yarn@4.11.0",
   "react-native-builder-bob": {

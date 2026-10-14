@@ -29,7 +29,7 @@ export default defineConfig([
       'lib/',
       'apps/example-expo/ios/',
       'apps/example-expo/android/',
-      'apps/docs/doc_build/',
+      'docs/doc_build/',
       'android/build/',
       '.artifacts/',
     ],

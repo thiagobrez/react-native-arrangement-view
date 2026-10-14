@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/logo/logo.svg" alt="react-native-arrangement-view logo" width="160" />
+<img src="docs/public/logo/logo.svg" alt="react-native-arrangement-view logo" width="160" />
 
 # react-native-arrangement-view
 
@@ -56,12 +56,12 @@ function Player() {
 
 **Half-open · Portrait**
 
-| iOS                                                                 | Android                                                                 |
-| ------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| <img src="docs/comparison/ios/half-portrait-split.jpg" width="400"> | <img src="docs/comparison/android/half-portrait-split.jpg" width="400"> |
+| iOS                                                                        | Android                                                                        |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| <img src="docs/public/comparison/ios/half-portrait-split.jpg" width="400"> | <img src="docs/public/comparison/android/half-portrait-split.jpg" width="400"> |
 
 **Half-open · Turned right**
 
-| iOS                                                                        | Android                                                                        |
-| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| <img src="docs/comparison/ios/half-landscape-right-split.jpg" width="400"> | <img src="docs/comparison/android/half-landscape-right-split.jpg" width="400"> |
+| iOS                                                                               | Android                                                                               |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| <img src="docs/public/comparison/ios/half-landscape-right-split.jpg" width="400"> | <img src="docs/public/comparison/android/half-landscape-right-split.jpg" width="400"> |

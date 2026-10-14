@@ -5620,9 +5620,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"docs@workspace:apps/docs":
+"docs@workspace:docs":
   version: 0.0.0-use.local
-  resolution: "docs@workspace:apps/docs"
+  resolution: "docs@workspace:docs"
   dependencies:
     "@rspress/core": "patch:@rspress/core@npm%3A2.0.23#~/.yarn/patches/@rspress-core-npm-2.0.23-128feeb699.patch"
     react: "npm:19.2.3"

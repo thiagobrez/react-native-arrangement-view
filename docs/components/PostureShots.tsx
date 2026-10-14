@@ -9,7 +9,7 @@ const allPlatforms = [
 type Platform = (typeof allPlatforms)[number]['dir'];
 
 type Props = {
-  /** A folder in the repository's docs/ directory. */
+  /** A folder in public/. */
   dir: string;
   postures: { file: string; label: string }[];
   /** For an example that runs on one platform only. Default both. */
