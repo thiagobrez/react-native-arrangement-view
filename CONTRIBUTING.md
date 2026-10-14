@@ -39,14 +39,14 @@ Results are written to `apps/example-expo/.e2e/`. The E2E workflow runs the Andr
 
 ## Docs
 
-The documentation site in `apps/docs/` is built with [Rspress](https://rspress.rs) and deployed to GitHub Pages from `main`. The logo and comparison screenshots it shows are served from the repository's `docs/` directory, which the README also uses. The README keeps only installation and a quick start; document everything else on the site.
+The documentation site in `docs/` is built with [Rspress](https://rspress.rs) and deployed to GitHub Pages from `main`. The logo and screenshots it shows are served from `docs/public/`, which the README also uses. The README keeps only installation and a quick start; document everything else on the site.
 
 ```sh
 yarn docs dev       # http://localhost:3000/react-native-arrangement-view/
 yarn docs build
 ```
 
-The docs are versioned per minor release; patch releases share their minor's docs. Each version has a folder in `apps/docs/docs/`, such as `v0.2/`, with its own `_nav.json` and `_meta.json` for the navbar and sidebar. The version of the released package, read from `package.json`, is the default and is served at the site root; the others are served under their version, such as `/v0.1/`. Document a change in the folder of the version that ships it.
+The docs are versioned per minor release; patch releases share their minor's docs. Each version has a folder in `docs/docs/`, such as `v0.2/`, with its own `_nav.json` and `_meta.json` for the navbar and sidebar. The version of the released package, read from `package.json`, is the default and is served at the site root; the others are served under their version, such as `/v0.1/`. Document a change in the folder of the version that ships it.
 
 To document a minor version before it ships, copy the latest folder to the new version's name; its pages say they aren't released yet. When the release pull request merges and bumps `package.json`, the docs deploy makes the version the default. Pages that keep the same path in every version let the version menu switch between them directly.
 

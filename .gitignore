@@ -79,7 +79,7 @@ android/keystores/debug.keystore
 lib/
 
 # Rspress
-apps/docs/doc_build/
+docs/doc_build/
 
 # React Native Codegen
 ios/generated
