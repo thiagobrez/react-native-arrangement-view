@@ -41,8 +41,13 @@ describe('axes', () => {
     device,
     screen,
   }) => {
+    const primary = screen.getByText('Primary');
+    const secondary = screen.getByText('Secondary');
     await device.fold('half-open');
     await expect(screen.getByText('Side by side')).toHaveCount(2);
+    // A tap sent right after the fold has been lost on CI, so wait for the
+    // panes to sit side by side first.
+    await expect.poll(() => isLeftOf(primary, secondary)).toBe(true);
 
     await screen.getByRole('button', 'Vertical').tap();
 
