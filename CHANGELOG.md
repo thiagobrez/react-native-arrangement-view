@@ -1,5 +1,15 @@
 # react-native-arrangement-view
 
+## 0.4.0
+
+### Minor Changes
+
+- [#16](https://github.com/thiagobrez/react-native-arrangement-view/pull/16) [`8b20d02`](https://github.com/thiagobrez/react-native-arrangement-view/commit/8b20d02de7c9f264f93582a3115c4adcbcb99946) Thanks [@thiagobrez](https://github.com/thiagobrez)! - Add `isOverlapping` to `ArrangementLayout`, true while both panes are on screen with the primary in front, as in overlay when no hinge separates them.
+
+- [#12](https://github.com/thiagobrez/react-native-arrangement-view/pull/12) [`91bdedd`](https://github.com/thiagobrez/react-native-arrangement-view/commit/91bdedd212545cd5d04da0f6f44bc315a797eb63) Thanks [@thiagobrez](https://github.com/thiagobrez)! - Add `HingeObserver`, so `useHingeChange` works outside an `ArrangementView`. A view that leaves the window, such as a screen under a pushed one, now keeps its last hinge state instead of reporting it unavailable.
+
+- [#12](https://github.com/thiagobrez/react-native-arrangement-view/pull/12) [`f61f958`](https://github.com/thiagobrez/react-native-arrangement-view/commit/f61f958497b17b4304740db037ad97e69d4ad965) Thanks [@thiagobrez](https://github.com/thiagobrez)! - Add `useHingeSelector`, which observes one value derived from the hinge and renders again only when that value changes.
+
 ## 0.3.0
 
 ### Minor Changes

@@ -19,8 +19,8 @@ export interface PaneProps {
 }
 
 /**
- * App content for one slot of the arrangement. It reports the size SwiftUI
- * assigned it and the hinge angle observed by the enclosing ArrangementView.
+ * App content for one slot of the arrangement. It reports the size its
+ * ArrangementView gave it, the hinge that view observes, and its layout.
  */
 export function Pane({ primary, arrangement }: PaneProps) {
   const [size, setSize] = useState({ width: 0, height: 0 });

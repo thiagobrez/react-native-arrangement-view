@@ -1,6 +1,9 @@
 import SwiftUI
 import Combine
 
+// UIKit is only the React Native / SwiftUI hosting boundary. All arrangement
+// decisions and hinge observation below use SwiftUI, including the fallback.
+
 private final class ArrangementModel: ObservableObject {
   @Published var primary: UIView?
   @Published var secondary: UIView?
@@ -48,8 +51,6 @@ private final class ArrangementModel: ObservableObject {
   }
 }
 
-// UIKit is only the React Native / SwiftUI hosting boundary. All arrangement
-// decisions and hinge observation below use SwiftUI, including the fallback.
 private final class PaneContainer: UIView {
   weak var model: ArrangementModel?
   let pane: UIView
@@ -169,7 +170,7 @@ private struct ArrangementContent: View {
     if model.arrangement == "overlay" {
       ZStack { secondary; primary }
     } else {
-      // Deterministic compact fallback. The secondary React tree stays mounted.
+      // The secondary React tree stays mounted.
       primary
     }
   }

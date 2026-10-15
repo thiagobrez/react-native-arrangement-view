@@ -14,7 +14,6 @@ export interface ScrubberProps {
   onScrubbingChange: (scrubbing: boolean) => void;
 }
 
-/** A seek bar with elapsed and remaining time. Tap or drag to seek. */
 export function Scrubber({
   currentTime,
   duration,

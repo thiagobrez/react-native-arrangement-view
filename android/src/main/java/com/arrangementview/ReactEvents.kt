@@ -6,7 +6,6 @@ import com.facebook.react.bridge.WritableMap
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.events.Event
 
-/** Sends a direct event from this view to its React component. */
 // getEventDispatcher(context), its replacement, does not exist in React Native 0.83.
 @Suppress("DEPRECATION")
 internal fun View.dispatchReactEvent(context: ReactContext, name: String, payload: WritableMap) {

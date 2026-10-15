@@ -6,7 +6,6 @@ export interface ChipProps {
   onPress: () => void;
 }
 
-/** A selectable pill used for the arrangement and axis controls. */
 export function Chip({ label, selected, onPress }: ChipProps) {
   return (
     <Pressable

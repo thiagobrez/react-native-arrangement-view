@@ -36,8 +36,7 @@ export function SplitViewExample() {
   // HingeObserver, as it is outside the details' ArrangementView.
   //
   // An unfolding device still reads half-open when its inner display lights,
-  // just short of flat, and hiding the sidebar then would flash. Selecting
-  // the one fact keeps the split from rendering again at every angle.
+  // just short of flat, and hiding the sidebar then would flash.
   const halfOpen = useHingeSelector(
     (hinge) =>
       hinge.status === 'partiallyOpen' && (hinge.angle ?? 0) < NEARLY_FLAT

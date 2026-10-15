@@ -119,11 +119,6 @@ function Measured({
   );
 }
 
-/**
- * How the column's ArrangementView placed the panes. Half-open, the split
- * puts its sidebar's edge on the hinge, so the panes only go side by side
- * once the sidebar is hidden and the column spans the hinge.
- */
 function describe(layout: ReturnType<typeof useArrangementLayout>) {
   if (!layout) return '…';
   if (!layout.secondaryVisible) return 'overview only';

@@ -9,7 +9,6 @@ import androidx.window.layout.WindowInfoTracker
 import androidx.window.layout.WindowLayoutInfo
 import com.facebook.react.uimanager.ThemedReactContext
 
-/** An empty view that reports the hinge of the window it is attached to. */
 class HingeObserverView(private val reactContext: ThemedReactContext) : View(reactContext) {
 
   private val hinge = HingeTracker(reactContext) { dispatchReactEvent(reactContext, HingeTracker.EVENT, it) }
