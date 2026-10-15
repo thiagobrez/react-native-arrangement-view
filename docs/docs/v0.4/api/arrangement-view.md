@@ -1,3 +1,7 @@
+---
+description: ArrangementView is a React Native component that arranges a primary and a secondary pane side by side, stacked or overlaid, around a foldable's hinge.
+---
+
 # ArrangementView
 
 The container component where you render your primary and secondary panes. It arranges them side by side or stacked, depending on the platform, device, and orientation.

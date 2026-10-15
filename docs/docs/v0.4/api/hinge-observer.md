@@ -1,3 +1,7 @@
+---
+description: HingeObserver provides a foldable's hinge angle and status to every screen of a React Native app, outside an ArrangementView.
+---
+
 # HingeObserver
 
 The provider for hinge state. Use [`useHingeChange`](./use-hinge-change) on any children to consume the current hinge state and subscribe to changes.

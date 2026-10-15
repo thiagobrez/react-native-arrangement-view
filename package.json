@@ -1,7 +1,7 @@
 {
   "name": "react-native-arrangement-view",
   "version": "0.3.0",
-  "description": "Foldable-aware adaptive arrangements and hinge observation for React Native",
+  "description": "Foldable layouts and hinge state for React Native",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {
@@ -44,13 +44,26 @@
   },
   "keywords": [
     "react-native",
+    "expo",
     "ios",
     "android",
-    "swiftui",
-    "jetpack-windowmanager",
-    "arrangement",
     "foldable",
-    "hinge"
+    "foldables",
+    "foldable-devices",
+    "fold",
+    "hinge",
+    "hinge-angle",
+    "posture",
+    "tabletop",
+    "dual-screen",
+    "iphone-duo",
+    "pixel-fold",
+    "adaptive-layout",
+    "two-pane",
+    "split-view",
+    "arrangement",
+    "swiftui",
+    "jetpack-windowmanager"
   ],
   "repository": {
     "type": "git",
@@ -61,7 +74,7 @@
   "bugs": {
     "url": "https://github.com/thiagobrez/react-native-arrangement-view/issues"
   },
-  "homepage": "https://github.com/thiagobrez/react-native-arrangement-view#readme",
+  "homepage": "https://thiagobrez.github.io/react-native-arrangement-view/",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
     "access": "public"

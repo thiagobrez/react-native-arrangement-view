@@ -4,7 +4,7 @@
 
 # react-native-arrangement-view
 
-**Foldable devices adaptive arrangement views and hinge observation for React Native.**
+**Foldable layouts and hinge state for React Native.**
 
 [Documentation](https://thiagobrez.github.io/react-native-arrangement-view/)
 
