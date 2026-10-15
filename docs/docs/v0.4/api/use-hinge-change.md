@@ -1,3 +1,7 @@
+---
+description: useHingeChange is a React Native hook that returns a foldable's hinge angle, and whether the device is closed, partially open or fully open.
+---
+
 # useHingeChange
 
 A hook to consume the hinge state changes. Call the hook inside a [`HingeObserver`](./hinge-observer) or an [`ArrangementView`](./arrangement-view). It observes whichever of the two is nearer.

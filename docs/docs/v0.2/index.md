@@ -3,7 +3,7 @@ pageType: home
 
 hero:
   name: react-native-arrangement-view
-  tagline: Foldable devices adaptive arrangement views and hinge observation for React Native.
+  tagline: Foldable layouts and hinge state for React Native.
   image:
     src: /logo/logo.svg
     alt: react-native-arrangement-view logo

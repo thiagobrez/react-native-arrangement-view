@@ -1,3 +1,7 @@
+---
+description: useArrangementLayout tells a React Native component whether the secondary pane is on screen, and whether the panes are side by side, stacked or overlapping.
+---
+
 # useArrangementLayout
 
 A hook that returns the current [`ArrangementLayout`](./use-arrangement-layout#arrangementlayout) and subscribes the component to updates. It is useful for adapting a pane's content to what the arrangement shows, such as whether the secondary pane is on screen.

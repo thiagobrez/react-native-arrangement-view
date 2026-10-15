@@ -1,3 +1,7 @@
+---
+description: useHingeSelector follows one value derived from a foldable's hinge, such as half-open, and renders again only when that value changes.
+---
+
 # useHingeSelector
 
 A hook that observes one value derived from the hinge. The component renders again only when that value changes:

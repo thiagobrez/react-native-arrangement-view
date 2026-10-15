@@ -1,3 +1,7 @@
+---
+description: "The rules ArrangementView follows to place two panes around a foldable's hinge on iOS and Android: window size, posture, axes and the primary pane's side."
+---
+
 # How panes are arranged
 
 Each platform follows its own conventions. iOS delegates arrangement to SwiftUI's `ArrangementView`. Android has no system equivalent, so the library applies Material's adaptive layout rules, the ones behind Compose's `calculatePaneScaffoldDirective`, to the window size and the fold that Jetpack WindowManager reports.
