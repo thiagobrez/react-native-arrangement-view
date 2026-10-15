@@ -12,11 +12,9 @@ export interface Example {
   name: string;
   title: string;
   component: ComponentType;
-  /** Options for the example's screen in the examples stack. */
   options?: NativeStackNavigationOptions;
 }
 
-/** Examples shown on the home screen, in display order. */
 export const examples: Example[] = [
   {
     name: 'features-demo',

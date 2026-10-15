@@ -49,8 +49,6 @@ export function FeaturesDemo() {
         </View>
       </View>
 
-      {/*<View style={{flex: 1, backgroundColor: 'red'}} />*/}
-
       <ArrangementView
         style={styles.arrangement}
         arrangement={arrangement}

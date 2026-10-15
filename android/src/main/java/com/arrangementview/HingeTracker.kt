@@ -79,7 +79,6 @@ internal class HingeTracker(context: Context, private val emit: (WritableMap) ->
 
   override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) = Unit
 
-  /** Reports the current state when it differs from the last one reported. */
   private fun emitHinge() {
     if (!enabled || awaitingLayout || awaitingSensor) return
     val degrees = degrees

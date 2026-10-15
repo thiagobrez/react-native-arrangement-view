@@ -26,8 +26,6 @@ export function ArrangementView({
   ...props
 }: ArrangementViewProps) {
   const [store, onHingeChange] = useHingeStore(observeHinge);
-  // The native view assigns panes by index, so primary is always emitted first
-  // regardless of the order the slots were written in.
   const layoutStore = useLayoutStore(onArrangementLayoutChange);
   const onPanesChange = useCallback<NonNullable<NativeProps['onPanesChange']>>(
     ({
@@ -55,6 +53,7 @@ export function ArrangementView({
           onHingeChange={onHingeChange}
           onPanesChange={onPanesChange}
         >
+          {/* The native view assigns panes by index: primary is always first. */}
           <NativePane
             collapsable={false}
             pointerEvents="box-none"
