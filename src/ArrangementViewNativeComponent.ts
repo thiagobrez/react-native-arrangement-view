@@ -10,9 +10,8 @@ type HingeEvent = Readonly<{
   status: string;
 }>;
 
-// Codegen needs event objects written out, and its C++ structs have no
-// optional fields, so a hidden secondary pane is flagged. `fold` below can be
-// optional only because Android builds that event by hand.
+// Codegen needs event objects written out, and has no optional ones, so a
+// hidden secondary pane is flagged.
 type PanesEvent = Readonly<{
   primary: Readonly<{
     x: CodegenTypes.Double;
@@ -48,22 +47,21 @@ type GeometryEvent = Readonly<{
   }>;
 }>;
 
-/**
- * On iOS, SwiftUI arranges the panes: it takes `arrangement`, `axes` and
- * `primaryEdge`, and reports where it put them in `onPanesChange`. On
- * Android, arrange.ts arranges them from what `onGeometryChange` reports.
- */
 export interface NativeProps extends ViewProps {
+  /** iOS only: SwiftUI arranges the panes. On Android, arrange.ts does. */
   arrangement?: CodegenTypes.WithDefault<'split' | 'overlay', 'split'>;
+  /** iOS only, as above. */
   axes?: CodegenTypes.WithDefault<'both' | 'horizontal' | 'vertical', 'both'>;
-  /** `auto` keeps SwiftUI's placement. */
+  /** iOS only, as above. `auto` keeps SwiftUI's placement. */
   primaryEdge?: CodegenTypes.WithDefault<
     'auto' | 'leading' | 'trailing',
     'auto'
   >;
   observeHinge?: CodegenTypes.WithDefault<boolean, true>;
   onHingeChange?: CodegenTypes.DirectEventHandler<HingeEvent>;
+  /** iOS only: where SwiftUI put the panes. On Android, arrange.ts knows. */
   onPanesChange?: CodegenTypes.DirectEventHandler<PanesEvent>;
+  /** Android only: the sizes and fold that arrange.ts lays the panes out by. */
   onGeometryChange?: CodegenTypes.DirectEventHandler<GeometryEvent>;
 }
 
