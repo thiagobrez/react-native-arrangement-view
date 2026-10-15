@@ -55,7 +55,6 @@ const BEVEL = 0.022;
 // Keeps a display clear of the body it lies on.
 const LIFT = 0.003;
 
-// The logo's colors.
 const BODY = '#262a3c';
 const SCREEN_OFF = '#1b1e2b';
 const CREASE = '#8a93b0';

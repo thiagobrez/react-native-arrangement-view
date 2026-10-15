@@ -194,7 +194,6 @@ function WorkoutCard({
           {amount}
         </View>
       ) : (
-        // Name and time, then the amount and the date.
         <View style={styles.cardBody}>
           <View style={styles.cardTop}>
             <Text style={styles.kind} numberOfLines={1}>
