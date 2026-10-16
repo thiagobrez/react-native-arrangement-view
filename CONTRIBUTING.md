@@ -54,7 +54,7 @@ To document a minor version before it ships, copy the latest folder to the new v
 
 ## iOS
 
-Select Xcode 27.1+ before CocoaPods installation to enable arrangement APIs. Older SDKs compile only the fallback. The CI macOS job checks the fallback build with its installed SDK; native posture validation requires an iOS 27.1 Duo simulator.
+Build with Xcode 27.1+ to enable arrangement APIs. Older SDKs compile only the fallback. The SDK is checked at compile time, so switching Xcode needs no new `pod install`. The CI macOS job checks the fallback build with its installed SDK; native posture validation requires an iOS 27.1 Duo simulator.
 
 ## Android
 

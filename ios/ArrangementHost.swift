@@ -126,7 +126,9 @@ private struct ArrangementContent: View {
   }
 
   @ViewBuilder var body: some View {
-#if RAV_HAS_ARRANGEMENT
+// Runtime availability alone cannot compile symbols absent from an older SDK.
+// ArrangementView first ships in the iOS 27.1 SDK, whose SwiftUICore is 8.0.85.
+#if canImport(SwiftUICore, _version: 8.0.85)
     if #available(iOS 27.1, *) {
       nativeArrangement
         .onHingeChange(isEnabled: model.observeHinge) { _, context in
@@ -151,7 +153,7 @@ private struct ArrangementContent: View {
 #endif
   }
 
-#if RAV_HAS_ARRANGEMENT
+#if canImport(SwiftUICore, _version: 8.0.85)
   @available(iOS 27.1, *)
   @ViewBuilder private var nativeArrangement: some View {
     if model.arrangement == "overlay" {
