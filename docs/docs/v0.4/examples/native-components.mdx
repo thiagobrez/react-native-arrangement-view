@@ -6,21 +6,17 @@ import { PostureShots } from '../../../components/PostureShots';
 
 # Native components
 
-On iOS, native components are placed by the OS and avoid the hinge automatically. This example opens the [bottom sheet from Expo UI](https://docs.expo.dev/versions/v57.0.0/sdk/ui/universal/bottomsheet/) over an `ArrangementView`. When in the Book posture, the bottom sheet moves to the left half automatically. This is done by iOS, not the library. The library only places the `ArrangementView.Primary` and `ArrangementView.Secondary` panes, and whatever is inside them.
+On iOS, native components avoid the hinge automatically. In this example, when in Book posture, iOS moves the bottom sheet to the left half. 
+
+`react-native-arrangement-view` only places the `ArrangementView.Primary` and `ArrangementView.Secondary` panes, and whatever is inside them.
 
 On Android, Material's bottom sheet doesn't move when folding. It stays in the middle.
 
-The full example is in the [example app](https://github.com/thiagobrez/react-native-arrangement-view/tree/main/apps/example-expo/src/examples/native-components).
+This example opens the [bottom sheet from Expo UI](https://docs.expo.dev/versions/v57.0.0/sdk/ui/universal/bottomsheet/) over an `ArrangementView`. The full example is in the [example app](https://github.com/thiagobrez/react-native-arrangement-view/tree/main/apps/example-expo/src/examples/native-components).
 
-## Code
+## Rendering the native component
 
-Install Expo UI:
-
-```sh
-npx expo install @expo/ui
-```
-
-Then put the sheet next to the `ArrangementView`, not inside a pane. The sheet covers the whole screen, and the system places it:
+Render a native component anywhere in the screen (outside the `ArrangementView`). In this example, we're using BottomSheet from Expo UI, but you can use any native component.
 
 ```tsx
 import { useState } from 'react';
