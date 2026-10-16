@@ -1,0 +1,133 @@
+---
+description: Animate React Native views with a foldable's hinge angle on the UI thread with Reanimated, without rendering while the device folds.
+---
+
+import { PostureShots } from '../../../components/PostureShots';
+
+# Reanimated
+
+Effects that follow the hinge as the device folds: a side view of the device, whose lid swings to the hinge's angle; cards that fan out as it opens; and a glow that brightens. They read the hinge with [`useAnimatedHinge`](../api/use-animated-hinge), so they move on the UI thread, and no component renders while the device folds. The full example is in the [example app](https://github.com/thiagobrez/react-native-arrangement-view/tree/main/apps/example-expo/src/examples/reanimated).
+
+## Arrangement
+
+The lid is the primary pane, so it's what shows where only one fits. The cards are the secondary pane. The glow is behind the arrangement, outside its panes.
+
+```tsx
+import { StyleSheet, View } from 'react-native';
+import { ArrangementView } from 'react-native-arrangement-view';
+
+export function ReanimatedExample() {
+  return (
+    <View style={styles.screen}>
+      <Glow />
+      <ArrangementView style={styles.screen}>
+        <ArrangementView.Primary>
+          <HingeDial />
+        </ArrangementView.Primary>
+        <ArrangementView.Secondary>
+          <CardFan />
+        </ArrangementView.Secondary>
+      </ArrangementView>
+    </View>
+  );
+}
+```
+
+## Following the angle
+
+Inside a pane, the hook observes the `ArrangementView`. The lid turns with the angle, in radians, and takes its color from the status. A derived value animates the color only when the status changes, not at every angle:
+
+```tsx
+import Animated, {
+  useAnimatedStyle,
+  useDerivedValue,
+  withTiming,
+} from 'react-native-reanimated';
+import { useAnimatedHinge } from 'react-native-arrangement-view/reanimated';
+
+const statusColors = {
+  unknown: '#5d6580',
+  closed: '#8b93b8',
+  partiallyOpen: '#ffb454',
+  fullyOpen: '#5eead4',
+};
+
+function HingeDial() {
+  const hinge = useAnimatedHinge();
+  const color = useDerivedValue(() =>
+    withTiming(statusColors[hinge.status.get()], { duration: 250 })
+  );
+  const lid = useAnimatedStyle(() => {
+    const angle = hinge.angle.get();
+    return {
+      // No angle to show while the hinge is unavailable.
+      opacity: angle === null ? 0 : 1,
+      backgroundColor: color.get(),
+      transform: [{ rotate: `${-(angle ?? 0)}rad` }],
+    };
+  });
+
+  return (
+    <View style={styles.dial}>
+      <View style={styles.base} />
+      <Animated.View style={[styles.lid, lid]} />
+    </View>
+  );
+}
+```
+
+The cards share one hook, and pass its angle down to each card's style:
+
+```tsx
+function CardFan() {
+  const { angle } = useAnimatedHinge();
+  return cards.map((card) => (
+    <Card key={card.offset} angle={angle} {...card} />
+  ));
+}
+
+function Card({ angle, offset }: CardProps) {
+  const style = useAnimatedStyle(() => {
+    const open = (angle.get() ?? 0) / Math.PI; // 0 closed, 1 flat
+    return {
+      transform: [
+        { translateX: offset * interpolate(open, [0, 1], [8, 84]) },
+        { rotate: `${offset * interpolate(open, [0, 1], [2, 16])}deg` },
+      ],
+    };
+  });
+  return <Animated.View style={[styles.card, style]} />;
+}
+```
+
+## Outside the panes
+
+The glow isn't in a pane, so the hook observes the nearest [`HingeObserver`](../api/hinge-observer), which the example app mounts above its navigator:
+
+```tsx
+function Glow() {
+  const { angle } = useAnimatedHinge();
+  const style = useAnimatedStyle(() => ({
+    opacity: interpolate(angle.get() ?? 0, [0, Math.PI], [0.2, 1]),
+  }));
+  return <Animated.View style={[StyleSheet.absoluteFill, styles.glow, style]} />;
+}
+```
+
+## Screenshots
+
+| Posture                     | Effects                                                       |
+| --------------------------- | ------------------------------------------------------------- |
+| Closed                      | The lid lies on the base, the cards are stacked, the glow dim |
+| Half-open, tabletop or book | The lid stands at the hinge's angle, the cards half fanned    |
+| Open                        | The lid lies flat, the cards fanned out, the glow bright      |
+
+<PostureShots
+  dir="examples/reanimated"
+  postures={[
+    { file: 'closed', label: 'Closed' },
+    { file: 'open', label: 'Open' },
+    { file: 'tabletop', label: 'Tabletop' },
+    { file: 'book', label: 'Book' },
+  ]}
+/>
