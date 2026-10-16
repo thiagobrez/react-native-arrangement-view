@@ -19,6 +19,11 @@ class ArrangementViewManager : ReactViewManager() {
     view.observeHinge = value
   }
 
+  @ReactProp(name = "hingeWorklets", defaultInt = 0)
+  fun setHingeWorklets(view: ArrangementView, value: Int) {
+    view.hingeWorklets = value
+  }
+
   override fun setPadding(view: ReactViewGroup, left: Int, top: Int, right: Int, bottom: Int) {
     (view as ArrangementView).setContentInsets(left, top, right, bottom)
   }

@@ -3,6 +3,7 @@ package com.arrangementview
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
+import com.facebook.react.uimanager.annotations.ReactProp
 
 @ReactModule(name = HingeObserverViewManager.NAME)
 class HingeObserverViewManager : SimpleViewManager<HingeObserverView>() {
@@ -10,6 +11,11 @@ class HingeObserverViewManager : SimpleViewManager<HingeObserverView>() {
 
   override fun createViewInstance(context: ThemedReactContext): HingeObserverView =
     HingeObserverView(context)
+
+  @ReactProp(name = "hingeWorklets", defaultInt = 0)
+  fun setHingeWorklets(view: HingeObserverView, value: Int) {
+    view.hingeWorklets = value
+  }
 
   override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Any> =
     (super.getExportedCustomDirectEventTypeConstants() ?: mutableMapOf()).apply {

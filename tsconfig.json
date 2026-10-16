@@ -4,6 +4,9 @@
     "paths": {
       "react-native-arrangement-view": [
         "./src/index"
+      ],
+      "react-native-arrangement-view/reanimated": [
+        "./src/reanimated/index"
       ]
     },
     "allowUnreachableCode": false,

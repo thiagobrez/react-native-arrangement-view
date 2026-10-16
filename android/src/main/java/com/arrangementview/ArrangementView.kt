@@ -21,9 +21,11 @@ import com.facebook.react.views.view.ReactViewGroup
  */
 class ArrangementView(private val reactContext: ThemedReactContext) : ReactViewGroup(reactContext) {
 
-  private val hinge = HingeTracker(reactContext) { dispatchReactEvent(reactContext, HingeTracker.EVENT, it) }
+  private val hinge = HingeTracker(this) { dispatchReactEvent(reactContext, HingeTracker.EVENT, it) }
 
   var observeHinge by hinge::enabled
+
+  var hingeWorklets by hinge::worklets
 
   private val windowInfo = WindowInfoTrackerCallbackAdapter(WindowInfoTracker.getOrCreate(reactContext))
 

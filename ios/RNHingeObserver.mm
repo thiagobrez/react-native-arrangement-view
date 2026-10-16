@@ -55,6 +55,13 @@ using namespace facebook::react;
   }
   return self;
 }
+- (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps {
+  const auto &next = *std::static_pointer_cast<const RNHingeObserverProps>(props);
+  const auto &previous = *std::static_pointer_cast<const RNHingeObserverProps>(_props);
+  // A worklet is counted after it registers, and starts from the current state.
+  if (next.hingeWorklets > previous.hingeWorklets && _hinge) [self emit:*_hinge];
+  [super updateProps:props oldProps:oldProps];
+}
 - (void)emit:(RNHingeObserverEventEmitter::OnHingeChange)hinge {
   _hinge = hinge;
   if (!_eventEmitter) return;

@@ -1,6 +1,7 @@
 #import "RNArrangementView.h"
 #import "RNArrangementPane.h"
 #import "ArrangementView-Swift.h"
+#import <optional>
 #import <react/renderer/components/RNArrangementViewSpec/ComponentDescriptors.h>
 #import <react/renderer/components/RNArrangementViewSpec/EventEmitters.h>
 #import <react/renderer/components/RNArrangementViewSpec/Props.h>
@@ -9,6 +10,7 @@ using namespace facebook::react;
 @implementation RNArrangementView {
   RNArrangementHost *_host;
   NSMutableArray<UIView *> *_panes;
+  std::optional<RNArrangementViewEventEmitter::OnHingeChange> _hinge;
 }
 + (ComponentDescriptorProvider)componentDescriptorProvider {
   return concreteComponentDescriptorProvider<RNArrangementViewComponentDescriptor>();
@@ -23,9 +25,10 @@ using namespace facebook::react;
     __weak RNArrangementView *weakSelf = self;
     _host.onHingeChange = ^(BOOL available, double angle, NSString *status) {
       RNArrangementView *strongSelf = weakSelf;
-      if (!strongSelf || !strongSelf->_eventEmitter) return;
-      auto emitter = std::static_pointer_cast<const RNArrangementViewEventEmitter>(strongSelf->_eventEmitter);
-      emitter->onHingeChange({(bool)available, angle, std::string(status.UTF8String)});
+      if (!strongSelf) return;
+      strongSelf->_hinge = RNArrangementViewEventEmitter::OnHingeChange{
+          (bool)available, angle, std::string(status.UTF8String)};
+      [strongSelf emitHinge];
     };
     _host.onPanesChange = ^(CGRect primary, CGRect secondary, BOOL secondaryVisible) {
       RNArrangementView *strongSelf = weakSelf;
@@ -72,8 +75,15 @@ using namespace facebook::react;
 - (void)updatePanes {
   [_host setPanes:_panes.count > 0 ? _panes[0] : nil secondary:_panes.count > 1 ? _panes[1] : nil];
 }
+- (void)emitHinge {
+  if (!_eventEmitter || !_hinge) return;
+  std::static_pointer_cast<const RNArrangementViewEventEmitter>(_eventEmitter)->onHingeChange(*_hinge);
+}
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps {
   const auto &next = *std::static_pointer_cast<const RNArrangementViewProps>(props);
+  const auto &previous = *std::static_pointer_cast<const RNArrangementViewProps>(_props);
+  // A worklet is counted after it registers, and starts from the current state.
+  if (next.hingeWorklets > previous.hingeWorklets) [self emitHinge];
   NSString *arrangement = next.arrangement == RNArrangementViewArrangement::Overlay ? @"overlay" : @"split";
   NSString *axes = @"both";
   if (next.axes == RNArrangementViewAxes::Horizontal) axes = @"horizontal";
