@@ -1,0 +1,118 @@
+import { PostureShots } from '../../../components/PostureShots';
+
+# Primary pane on the trailing side
+
+A step tracker with two panes: the day's dashboard is the primary pane, and a calendar of past days is the secondary pane. Closed, the device shows the dashboard. Unfolded, the calendar opens beside it, and the dashboard stays where it was. The full example is in the [example app](https://github.com/thiagobrez/react-native-arrangement-view/tree/main/apps/example-expo/src/examples/step-tracker).
+
+## Arrangement
+
+On a closed book-style foldable, the cover display sits over the right half of the inner display. By default, a split puts the primary pane on the leading side, so the dashboard would jump to the left half when the device unfolds.
+
+`primaryEdge="trailing"` puts the primary pane on the trailing side instead. The dashboard stays in position when unfolding, and the calendar opens in the new space on the left:
+
+```tsx
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ArrangementView } from 'react-native-arrangement-view';
+
+function StepsScreen() {
+  const [selected, setSelected] = useState(today);
+
+  return (
+    <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
+      <ArrangementView
+        style={{ flex: 1 }}
+        axes="horizontal"
+        primaryEdge="trailing"
+      >
+        <ArrangementView.Primary>
+          <Dashboard selected={selected} onSelect={setSelected} />
+        </ArrangementView.Primary>
+        <ArrangementView.Secondary>
+          <HistoryCalendar selected={selected} onSelect={setSelected} />
+        </ArrangementView.Secondary>
+      </ArrangementView>
+    </SafeAreaView>
+  );
+}
+```
+
+`axes="horizontal"` lets the panes sit side by side only, never stacked. Where they can't be side by side, such as in tabletop posture, the dashboard shows alone.
+
+Leading and trailing follow the layout direction, so in a right-to-left app the trailing side is the left. See [The primary pane's side](../guide/how-panes-are-arranged#the-primary-panes-side).
+
+## Hiding the Calendar button
+
+Closed, the calendar pane is not on screen, so the example shows a Calendar button that opens the calendar in a sheet. Unfolded, the calendar is already visible, so the example hides the button.
+
+The button is a native header button. On iPhone Duo, the system places it in the column beside the content, together with the tabs. It is outside the panes, so the screen reads the layout from `onArrangementLayoutChange`. `secondaryVisible` is `true` while the calendar pane is on screen:
+
+```tsx
+import {
+  ArrangementView,
+  type ArrangementLayout,
+} from 'react-native-arrangement-view';
+
+function StepsScreen() {
+  const navigation = useNavigation();
+  const [selected, setSelected] = useState(today);
+  const [layout, setLayout] = useState<ArrangementLayout | null>(null);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+
+  const showCalendarButton = layout !== null && !layout.secondaryVisible;
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () =>
+        showCalendarButton ? (
+          <CalendarButton onPress={() => setCalendarOpen(true)} />
+        ) : null,
+    });
+  }, [navigation, showCalendarButton]);
+
+  return (
+    <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
+      <ArrangementView
+        style={{ flex: 1 }}
+        axes="horizontal"
+        primaryEdge="trailing"
+        onArrangementLayoutChange={(next) => {
+          setLayout(next);
+          if (next.secondaryVisible) setCalendarOpen(false);
+        }}
+      >
+        {/* The dashboard and calendar panes */}
+      </ArrangementView>
+      <Modal
+        visible={calendarOpen}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setCalendarOpen(false)}
+      >
+        <HistoryCalendar selected={selected} onSelect={setSelected} />
+      </Modal>
+    </SafeAreaView>
+  );
+}
+```
+
+The layout is `null` until the panes are first laid out, so the button stays hidden until then and doesn't flash on an unfolded device. If the device unfolds while the sheet is open, the example closes the sheet, because the calendar pane now shows the same thing.
+
+Inside a pane, [`useArrangementLayout`](../api/use-arrangement-layout) returns the same layout.
+
+## Screenshots
+
+| Posture                     | Layout                                                                                          |
+| --------------------------- | ----------------------------------------------------------------------------------------------- |
+| Closed                      | The dashboard, with the Calendar button                                                         |
+| Open flat                   | The calendar on the leading side, and the dashboard on the trailing side. No button             |
+| Half-open, held like a book | The same, with the calendar and the dashboard on either side of the hinge                       |
+| Half-open, tabletop         | The dashboard alone, with the Calendar button. On Android, it stays on the half above the hinge |
+
+<PostureShots
+  dir="examples/trailing-primary-pane"
+  postures={[
+    { file: 'closed', label: 'Closed' },
+    { file: 'open', label: 'Open' },
+    { file: 'book', label: 'Book' },
+    { file: 'tabletop', label: 'Tabletop' },
+  ]}
+/>
