@@ -6,14 +6,11 @@ import { PostureShots } from '../../../components/PostureShots';
 
 # Native components
 
-Native components are drawn by iOS and Android, not by your app. On a foldable, the system decides where they go, so you don't need `ArrangementView` for them. This example opens the [bottom sheet from Expo UI](https://docs.expo.dev/versions/v57.0.0/sdk/ui/universal/bottomsheet/) over an `ArrangementView`. The full example is in the [example app](https://github.com/thiagobrez/react-native-arrangement-view/tree/main/apps/example-expo/src/examples/native-components).
+On iOS, native components are placed by the OS and avoid the hinge automatically. This example opens the [bottom sheet from Expo UI](https://docs.expo.dev/versions/v57.0.0/sdk/ui/universal/bottomsheet/) over an `ArrangementView`. When in the Book posture, the bottom sheet moves to the primary side automatically. This is done by iOS, not the library. The library only places the `ArrangementView.Primary` and `ArrangementView.Secondary` panes, and whatever is inside them.
 
-## What happens
+On Android, Material's bottom sheet doesn't move when folding. It stays in the middle.
 
-- **iOS:** when the device is open flat, the sheet sits in the middle of the screen. When it is half-open and held like a book, iOS moves the sheet to one half, so it doesn't cross the fold. Open the device again, and the sheet moves back to the middle.
-- **Android:** Material's bottom sheet doesn't move for the fold. Held like a book, the sheet stays in the middle, across the fold.
-
-Your app doesn't do any of this. The sheet's code is the same in every posture.
+The full example is in the [example app](https://github.com/thiagobrez/react-native-arrangement-view/tree/main/apps/example-expo/src/examples/native-components).
 
 ## Code
 
