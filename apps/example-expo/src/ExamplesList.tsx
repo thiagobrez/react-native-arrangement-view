@@ -49,7 +49,6 @@ const platformBadges = {
   },
 };
 
-/** A pill marking an example that only runs on one platform. */
 function PlatformBadge({ platform }: { platform: 'ios' | 'android' }) {
   const { label, color, backgroundColor } = platformBadges[platform];
   return (

@@ -14,7 +14,6 @@ export interface Example {
   title: string;
   component: ComponentType;
   options?: NativeStackNavigationOptions;
-  /** The only platform the example runs on, marked in the list. */
   platform?: 'ios' | 'android';
 }
 
