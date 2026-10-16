@@ -2,6 +2,8 @@
 description: ArrangementView is a React Native component that arranges a primary and a secondary pane side by side, stacked or overlaid, around a foldable's hinge.
 ---
 
+import { PlatformBadge } from '../../../components/PlatformBadge';
+
 # ArrangementView
 
 The container component where you render your primary and secondary panes. It arranges them side by side or stacked, depending on the platform, device, and orientation.
@@ -33,8 +35,8 @@ export function PlayerScreen() {
 | `primaryEdge`               | none                | `"leading"` or `"trailing"`: the side the primary pane takes when the panes are side by side; see [The primary pane's side](../guide/how-panes-are-arranged#the-primary-panes-side) |
 | `onArrangementLayoutChange` | none                | Called with the [`ArrangementLayout`](./use-arrangement-layout#arrangementlayout) when it changes                                                                                   |
 | `observeHinge`              | `true`              | Enables observation for hooks inside this arrangement; disabling it does not disable adaptive layout                                                                                |
-| `hingePolicy`               | `"avoidSeparating"` | Android only. The hinges the panes keep clear of: `"avoidSeparating"` a half-open one, `"alwaysAvoid"` a flat one too, `"neverAvoid"` none                                          |
-| `hingeGap`                  | `24`                | Android only. The space in dp between the panes around an avoided hinge, never narrower than the hinge itself                                                                       |
+| `hingePolicy`               | `"avoidSeparating"` | <PlatformBadge platform="android" /> The hinges the panes keep clear of: `"avoidSeparating"` a half-open one, `"alwaysAvoid"` a flat one too, `"neverAvoid"` none                   |
+| `hingeGap`                  | `24`                | <PlatformBadge platform="android" /> The space in dp between the panes around an avoided hinge, never narrower than the hinge itself                                                |
 
 Give the arrangement a bounded size, usually `flex: 1`. The platform determines whether a split is appropriate.
 

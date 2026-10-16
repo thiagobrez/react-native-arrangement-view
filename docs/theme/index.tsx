@@ -8,9 +8,11 @@ import {
   HomeHero as BaseHomeHero,
   Layout as BaseLayout,
   Link,
+  Tag as BaseTag,
   type HomeHeroProps,
 } from '@rspress/core/theme-original';
 import { FoldableLogo } from '../components/FoldableLogo/FoldableLogo';
+import { isPlatform, PlatformBadge } from '../components/PlatformBadge';
 import styles from './index.module.css';
 
 /**
@@ -58,5 +60,14 @@ function HomeHero(props: HomeHeroProps) {
   );
 }
 
-export { HomeHero, Layout };
+/** A page's `tag: ios` or `tag: android` marks it in the sidebar. */
+function Tag({ tag }: { tag?: string }) {
+  return tag && isPlatform(tag) ? (
+    <PlatformBadge platform={tag} />
+  ) : (
+    <BaseTag tag={tag} />
+  );
+}
+
+export { HomeHero, Layout, Tag };
 export * from '@rspress/core/theme-original';
