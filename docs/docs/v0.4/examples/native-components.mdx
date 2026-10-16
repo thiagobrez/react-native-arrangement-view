@@ -6,7 +6,7 @@ import { PostureShots } from '../../../components/PostureShots';
 
 # Native components
 
-On iOS, native components avoid the hinge automatically. In this example, when in Book posture, iOS moves the bottom sheet to the left half. 
+On iOS, native components avoid the hinge automatically. In this example, when in Book posture, iOS moves the bottom sheet to the left half.
 
 `react-native-arrangement-view` only places the `ArrangementView.Primary` and `ArrangementView.Secondary` panes, and whatever is inside them.
 
@@ -45,7 +45,6 @@ export function NativeComponents() {
         <Column spacing={12}>
           <Text>A native sheet</Text>
           <Button label="Close" onPress={() => setSheetShown(false)} />
-          {/* Keeps the content at the top of the sheet. */}
           <Spacer flexible />
         </Column>
       </BottomSheet>
