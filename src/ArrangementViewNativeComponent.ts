@@ -59,6 +59,8 @@ export interface NativeProps extends ViewProps {
   >;
   observeHinge?: CodegenTypes.WithDefault<boolean, true>;
   onHingeChange?: CodegenTypes.DirectEventHandler<HingeEvent>;
+  /** How many worklets follow onHingeChange on the UI thread. See src/reanimated. */
+  hingeWorklets?: CodegenTypes.WithDefault<CodegenTypes.Int32, 0>;
   /** iOS only: where SwiftUI put the panes. On Android, arrange.ts knows. */
   onPanesChange?: CodegenTypes.DirectEventHandler<PanesEvent>;
   /** Android only: the sizes and fold that arrange.ts lays the panes out by. */

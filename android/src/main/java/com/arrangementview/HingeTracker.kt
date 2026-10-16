@@ -6,6 +6,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Build
+import android.view.View
 import androidx.window.layout.FoldingFeature
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.WritableMap
@@ -17,7 +18,7 @@ import com.facebook.react.bridge.WritableMap
  * the window's layout to a new listener and the sensor reports its value when registered; nothing
  * is reported until both have, so a fresh angle never pairs with a stale fold or the reverse.
  */
-internal class HingeTracker(context: Context, private val emit: (WritableMap) -> Unit) :
+internal class HingeTracker(private val view: View, private val emit: (WritableMap) -> Unit) :
   SensorEventListener {
 
   var enabled = true
@@ -25,9 +26,23 @@ internal class HingeTracker(context: Context, private val emit: (WritableMap) ->
       if (field == value) return
       field = value
       updateSensor()
-      // JS resets to unavailable when disabled; re-enabling must replay the current state.
+      // Re-enabling must replay the current state.
       last = null
-      emitHinge()
+      if (value) emitHinge() else emit(hingeMap(false, UNKNOWN_ANGLE, "unknown"))
+    }
+
+  /** How many worklets follow the hinge on the UI thread, to animate with its angle. */
+  var worklets = 0
+    set(value) {
+      val added = value > field
+      val animating = (value > 0) != (field > 0)
+      field = value
+      if (animating) updateSensor()
+      // A worklet is counted after it registers, and starts from the current state.
+      if (added) {
+        last = null
+        emitHinge()
+      }
     }
 
   var fold: FoldingFeature? = null
@@ -37,7 +52,7 @@ internal class HingeTracker(context: Context, private val emit: (WritableMap) ->
       emitHinge()
     }
 
-  private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+  private val sensorManager = view.context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
   private val sensor: Sensor? =
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
       sensorManager.getDefaultSensor(Sensor.TYPE_HINGE_ANGLE)
@@ -67,7 +82,12 @@ internal class HingeTracker(context: Context, private val emit: (WritableMap) ->
     if (enabled && attached && sensor != null) {
       // A sensor that has reported reports again when registered.
       awaitingSensor = degrees != null
-      sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL)
+      // An animation can use an angle every frame. The system's posture detection usually runs the
+      // sensor that fast anyway, but a listener can only count on the rate it asks for.
+      val period =
+        if (worklets > 0) (1_000_000 / (view.display?.refreshRate ?: 60f)).toInt()
+        else SensorManager.SENSOR_DELAY_NORMAL
+      sensorManager.registerListener(this, sensor, period)
     }
   }
 
@@ -93,20 +113,24 @@ internal class HingeTracker(context: Context, private val emit: (WritableMap) ->
         else -> "unknown"
       }
     val available = fold != null || sensor != null
-    val radians = if (degrees != null) Math.toRadians(degrees.toDouble()) else Double.NaN
+    val radians = if (degrees != null) Math.toRadians(degrees.toDouble()) else UNKNOWN_ANGLE
     val hinge = Triple(available, radians, status)
     if (hinge == last) return
     last = hinge
-    emit(
-      Arguments.createMap().apply {
-        putBoolean("available", available)
-        putDouble("angle", radians)
-        putString("status", status)
-      })
+    emit(hingeMap(available, radians, status))
   }
+
+  private fun hingeMap(available: Boolean, radians: Double, status: String): WritableMap =
+    Arguments.createMap().apply {
+      putBoolean("available", available)
+      putDouble("angle", radians)
+      putString("status", status)
+    }
 
   companion object {
     const val EVENT = "topHingeChange"
+    // Not NaN: Reanimated drops an event it can't write as JSON. JS reads a negative angle as unknown.
+    private const val UNKNOWN_ANGLE = -1.0
     private const val CLOSED_DEGREES = 5f
   }
 }

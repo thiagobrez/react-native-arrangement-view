@@ -6,6 +6,7 @@ import { StepTracker } from './step-tracker/StepTracker';
 import { TentPosture } from './tent-posture/TentPosture';
 import { VideoPlayer } from './video-player/VideoPlayer';
 import { SplitViewExample } from './split-view/SplitViewExample';
+import { ReanimatedExample } from './reanimated/Reanimated';
 
 export interface Example {
   /** Route name; also used for testIDs. */
@@ -55,5 +56,10 @@ export const examples: Example[] = [
     name: 'tent-posture',
     title: 'Tent posture',
     component: TentPosture,
+  },
+  {
+    name: 'reanimated',
+    title: 'Reanimated',
+    component: ReanimatedExample,
   },
 ];

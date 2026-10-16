@@ -31,6 +31,12 @@ test('missing hardware is unavailable, and unknown future statuses stay unknown'
       .angle,
     null
   );
+  // Android sends an unknown angle as negative, since Reanimated drops NaN.
+  assert.equal(
+    normalizeHinge({ available: true, angle: -1, status: 'partiallyOpen' })
+      .angle,
+    null
+  );
 });
 
 test('native radians are preserved without angle-based status inference', () => {
@@ -96,9 +102,9 @@ test('hook receives changes, uses the latest callback, and cleans up on unmount'
 
 test('an arrangement feeds native events to its store, and resets it when observation stops', async () => {
   let store!: ReturnType<typeof createHingeStore>;
-  let onHingeChange!: ReturnType<typeof useHingeStore>[1];
+  let onHingeChange!: ReturnType<typeof useHingeStore>[1]['onHingeChange'];
   function Arrangement({ observeHinge }: { observeHinge: boolean }) {
-    [store, onHingeChange] = useHingeStore(observeHinge);
+    [store, { onHingeChange }] = useHingeStore(observeHinge);
     return null;
   }
   let root!: ReactTestRenderer;
@@ -117,6 +123,35 @@ test('an arrangement feeds native events to its store, and resets it when observ
   });
   assert.equal(store, initialStore);
   assert.equal(store.getSnapshot(), unavailableHinge);
+});
+
+test('the native view counts the worklets following it, until each is released', async () => {
+  let store!: ReturnType<typeof createHingeStore>;
+  const counts: number[] = [];
+  function Observer() {
+    const [observed, { hingeWorklets }] = useHingeStore(true);
+    store = observed;
+    counts.push(hingeWorklets);
+    return null;
+  }
+  await act(() => {
+    create(createElement(Observer));
+  });
+  let releaseFirst!: () => void;
+  let releaseSecond!: () => void;
+  await act(() => {
+    releaseFirst = store.addWorklet();
+    releaseSecond = store.addWorklet();
+  });
+  assert.equal(counts.at(-1), 2);
+  await act(() => {
+    releaseFirst();
+  });
+  assert.equal(counts.at(-1), 1);
+  await act(() => {
+    releaseSecond();
+  });
+  assert.equal(counts.at(-1), 0);
 });
 
 test('the hook reads the nearest observer, and needs one', async () => {

@@ -25,7 +25,7 @@ export function ArrangementView({
   hingeGap: _hingeGap,
   ...props
 }: ArrangementViewProps) {
-  const [store, onHingeChange] = useHingeStore(observeHinge);
+  const [store, hingeProps] = useHingeStore(observeHinge);
   const layoutStore = useLayoutStore(onArrangementLayoutChange);
   const onPanesChange = useCallback<NonNullable<NativeProps['onPanesChange']>>(
     ({
@@ -50,7 +50,7 @@ export function ArrangementView({
           axes={axes}
           primaryEdge={primaryEdge}
           observeHinge={observeHinge}
-          onHingeChange={onHingeChange}
+          {...hingeProps}
           onPanesChange={onPanesChange}
         >
           {/* The native view assigns panes by index: primary is always first. */}
