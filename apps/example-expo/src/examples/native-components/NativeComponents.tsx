@@ -13,12 +13,6 @@ import {
   useArrangementLayout,
 } from 'react-native-arrangement-view';
 
-/**
- * Expo UI's BottomSheet over an ArrangementView. The sheet is the system's
- * own (SwiftUI on iOS, Jetpack Compose on Android), so the system decides
- * where it goes. Held like a book, iOS moves it to one half, off the fold;
- * Android's Material sheet stays in the middle.
- */
 export function NativeComponents() {
   const [sheetShown, setSheetShown] = useState(false);
 
@@ -29,8 +23,13 @@ export function NativeComponents() {
           <View style={styles.pane}>
             <Text style={styles.title}>Native components</Text>
             <Text style={styles.body}>
-              Open the sheet, then fold or unfold the device. The system decides
-              where the sheet goes, not this screen.
+              Open the sheet, then fold or unfold the device. Native iOS
+              components will avoid the hinge automatically. This is not done by
+              the library.
+            </Text>
+            <Text style={styles.body}>
+              react-native-arrangement-view only places the panes and what's
+              inside them.
             </Text>
             <Pressable
               testID="open-sheet"
@@ -70,7 +69,6 @@ export function NativeComponents() {
             The system draws this sheet, so it also decides where it goes.
           </NativeText>
           <Button label="Close" onPress={() => setSheetShown(false)} />
-          {/* Keeps the content at the top of the sheet. */}
           <Spacer flexible />
         </Column>
       </BottomSheet>
