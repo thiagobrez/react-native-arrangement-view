@@ -17,7 +17,7 @@ export interface Example {
   platform?: 'ios' | 'android';
 }
 
-const allExamples: Example[] = [
+export const examples: Example[] = [
   {
     name: 'features-demo',
     title: 'Features demo',
@@ -42,18 +42,24 @@ const allExamples: Example[] = [
       autoHideHomeIndicator: true,
     },
   },
-  {
-    name: 'split-view',
-    title: 'Split view',
-    component: SplitViewExample,
-    options: { headerTransparent: true, headerTitle: '' },
-    // react-native-screens' Split is a UISplitViewController.
-    platform: 'ios',
-  },
+  // react-native-screens' Split is a UISplitViewController, so iOS only.
+  ...(Platform.OS === 'ios'
+    ? [
+        {
+          name: 'split-view',
+          title: 'Split view',
+          component: SplitViewExample,
+          options: { headerTransparent: true, headerTitle: '' },
+          platform: 'ios' as const,
+        },
+      ]
+    : []),
   {
     name: 'tent-posture',
     title: 'Tent posture',
     component: TentPosture,
+    // Android has no tent, but shows the example's other postures.
+    platform: 'ios',
   },
   {
     name: 'native-components',
@@ -61,7 +67,3 @@ const allExamples: Example[] = [
     component: NativeComponents,
   },
 ];
-
-export const examples = allExamples.filter(
-  (example) => !example.platform || example.platform === Platform.OS
-);
