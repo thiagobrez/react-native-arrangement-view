@@ -10,6 +10,7 @@ private final class ArrangementModel: ObservableObject {
   @Published var arrangement = "split"
   @Published var axes = "both"
   @Published var primaryEdge = "auto"
+  @Published var primaryVerticalEdge = "auto"
   @Published var observeHinge = true
   var hingeChanged: ((Bool, Double, String) -> Void)?
   var paneLayout: ((UIView, CGRect) -> Void)?
@@ -98,7 +99,7 @@ private struct ArrangementContent: View {
   @ObservedObject var model: ArrangementModel
   @Environment(\.layoutDirection) private var layoutDirection
 
-  // The panes keep the inherited direction if the arrangement overrides it.
+  // The panes keep the inherited direction if the split overrides it.
   @ViewBuilder private var primary: some View {
     if let pane = model.primary {
       ReactPane(pane: pane, model: model).environment(\.layoutDirection, layoutDirection)
@@ -110,18 +111,10 @@ private struct ArrangementContent: View {
     }
   }
 
-  // SwiftUI puts a split's primary pane on the leading side, and an overlay's
-  // after the hinge, on the trailing side. Neither style can choose the side,
-  // so the arrangement reverses the direction when `primaryEdge` names the other.
-  private var arrangementDirection: LayoutDirection {
-    let primaryLeads = model.arrangement != "overlay"
-    let reversed: Bool
-    switch model.primaryEdge {
-    case "leading": reversed = !primaryLeads
-    case "trailing": reversed = primaryLeads
-    default: reversed = false
-    }
-    guard reversed else { return layoutDirection }
+  // SwiftUI puts a split's primary pane on the leading side and cannot choose
+  // the side, so the split reverses the direction when `primaryEdge` is trailing.
+  private var splitDirection: LayoutDirection {
+    guard model.primaryEdge == "trailing" else { return layoutDirection }
     return layoutDirection == .rightToLeft ? .leftToRight : .rightToLeft
   }
 
@@ -158,13 +151,34 @@ private struct ArrangementContent: View {
   @available(iOS 27.1, *)
   @ViewBuilder private var nativeArrangement: some View {
     if model.arrangement == "overlay" {
-      ArrangementView { primary } secondary: { secondary }
-        .arrangementViewStyle(.overlay.axes(model.supportedAxes))
-        .environment(\.layoutDirection, arrangementDirection)
+      ArrangementView {
+        primary.overlayArrangementEdge(horizontalEdge(primary: true)).overlayArrangementEdge(verticalEdge(primary: true))
+      } secondary: {
+        secondary.overlayArrangementEdge(horizontalEdge(primary: false)).overlayArrangementEdge(verticalEdge(primary: false))
+      }
+      .arrangementViewStyle(.overlay.axes(model.supportedAxes))
     } else {
       ArrangementView { primary } secondary: { secondary }
         .arrangementViewStyle(.split.axes(model.supportedAxes))
-        .environment(\.layoutDirection, arrangementDirection)
+        .environment(\.layoutDirection, splitDirection)
+    }
+  }
+
+  // An overlay puts its primary pane after the hinge: on the trailing side, or
+  // below it. A pane given an edge takes it even when the other pane has it by
+  // default, so the secondary pane is given the opposite edge.
+  private func horizontalEdge(primary: Bool) -> HorizontalEdge? {
+    switch model.primaryEdge {
+    case "leading": primary ? .leading : .trailing
+    case "trailing": primary ? .trailing : .leading
+    default: nil
+    }
+  }
+  private func verticalEdge(primary: Bool) -> VerticalEdge? {
+    switch model.primaryVerticalEdge {
+    case "top": primary ? .top : .bottom
+    case "bottom": primary ? .bottom : .top
+    default: nil
     }
   }
 #endif
@@ -214,10 +228,11 @@ public final class RNArrangementHost: UIView {
     if model.primary !== primary { model.primary = primary }
     if model.secondary !== secondary { model.secondary = secondary }
   }
-  @objc public func configure(_ arrangement: String, axes: String, primaryEdge: String, observeHinge: Bool) {
+  @objc public func configure(_ arrangement: String, axes: String, primaryEdge: String, primaryVerticalEdge: String, observeHinge: Bool) {
     if model.arrangement != arrangement { model.arrangement = arrangement }
     if model.axes != axes { model.axes = axes }
     if model.primaryEdge != primaryEdge { model.primaryEdge = primaryEdge }
+    if model.primaryVerticalEdge != primaryVerticalEdge { model.primaryVerticalEdge = primaryVerticalEdge }
     if model.observeHinge != observeHinge {
       model.observeHinge = observeHinge
       if !observeHinge { model.hingeChanged?(false, 0, "unknown") }

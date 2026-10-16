@@ -34,7 +34,7 @@ export interface ArrangeOptions {
   axes: ArrangementAxes;
   hingePolicy?: HingePolicy;
   hingeGap?: number;
-  primaryEdge?: PrimaryEdge;
+  primaryEdge?: PrimaryEdge | readonly PrimaryEdge[];
   rtl?: boolean;
 }
 
@@ -49,6 +49,39 @@ export interface PaneFrames {
   primary: Frame;
   /** Null when only the primary pane is shown. */
   secondary: Frame | null;
+}
+
+export interface PrimaryEdges {
+  /** The side when the panes are side by side. */
+  horizontal?: 'leading' | 'trailing';
+  /** The side when an overlay's panes are stacked. */
+  vertical?: 'top' | 'bottom';
+  /** Human-readable problems with the value, for dev warnings. */
+  problems: string[];
+}
+
+/**
+ * Splits `primaryEdge` into a side for each axis. Of two sides on the same
+ * axis, the first is kept and the other reported.
+ */
+export function resolvePrimaryEdge(
+  value: PrimaryEdge | readonly PrimaryEdge[] | undefined
+): PrimaryEdges {
+  const edges: PrimaryEdges = { problems: [] };
+  const list =
+    value === undefined ? [] : typeof value === 'string' ? [value] : value;
+  for (const edge of list) {
+    const kept =
+      edge === 'leading' || edge === 'trailing'
+        ? (edges.horizontal ??= edge)
+        : (edges.vertical ??= edge);
+    if (kept !== edge) {
+      edges.problems.push(
+        `ArrangementView received primaryEdge "${kept}" and "${edge}"; only "${kept}" is used.`
+      );
+    }
+  }
+  return edges;
 }
 
 type Axis = 'horizontal' | 'vertical';
@@ -72,7 +105,8 @@ const EXPANDED_HEIGHT = 900;
  * `hingeGap` around it. A separating hinge always splits, whatever the window
  * size, as it does on iOS. A split that doesn't fit, or that `axes` excludes,
  * shows only the primary pane. `primaryEdge` puts the primary pane on the
- * leading or trailing side of panes placed side by side.
+ * leading or trailing side of panes placed side by side, and an overlay's
+ * above or below panes that are stacked.
  */
 export function arrange(
   { width, height, window, fold }: Geometry,
@@ -85,6 +119,7 @@ export function arrange(
     rtl = false,
   }: ArrangeOptions
 ): PaneFrames {
+  const edge = resolvePrimaryEdge(primaryEdge);
   const full = { left: 0, top: 0, width, height };
   const tabletop =
     fold?.halfOpened === true && fold.orientation === 'horizontal';
@@ -97,7 +132,8 @@ export function arrange(
 
   // Panes before and after the span [start, end] along the axis. The primary
   // pane goes first, on the leading side, unless `primaryAfter`, or on the side
-  // `primaryEdge` names.
+  // `primaryEdge` names. Stacked, so does an overlay's; a split's always goes
+  // first, as on iOS.
   const split = (
     axis: Axis,
     start: number,
@@ -115,9 +151,13 @@ export function arrange(
             { ...full, top: end, height: height - end },
           ];
     const primaryIsAfter =
-      axis === 'horizontal' && primaryEdge
-        ? (primaryEdge === 'trailing') !== rtl
-        : (rtl && axis === 'horizontal') !== primaryAfter;
+      axis === 'horizontal'
+        ? edge.horizontal
+          ? (edge.horizontal === 'trailing') !== rtl
+          : rtl !== primaryAfter
+        : arrangement === 'overlay' && edge.vertical
+          ? edge.vertical === 'bottom'
+          : primaryAfter;
     return primaryIsAfter
       ? { primary: after, secondary: before }
       : { primary: before, secondary: after };

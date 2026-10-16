@@ -81,7 +81,10 @@ using namespace facebook::react;
   NSString *primaryEdge = @"auto";
   if (next.primaryEdge == RNArrangementViewPrimaryEdge::Leading) primaryEdge = @"leading";
   if (next.primaryEdge == RNArrangementViewPrimaryEdge::Trailing) primaryEdge = @"trailing";
-  [_host configure:arrangement axes:axes primaryEdge:primaryEdge observeHinge:next.observeHinge];
+  NSString *primaryVerticalEdge = @"auto";
+  if (next.primaryVerticalEdge == RNArrangementViewPrimaryVerticalEdge::Top) primaryVerticalEdge = @"top";
+  if (next.primaryVerticalEdge == RNArrangementViewPrimaryVerticalEdge::Bottom) primaryVerticalEdge = @"bottom";
+  [_host configure:arrangement axes:axes primaryEdge:primaryEdge primaryVerticalEdge:primaryVerticalEdge observeHinge:next.observeHinge];
   [super updateProps:props oldProps:oldProps];
 }
 @end

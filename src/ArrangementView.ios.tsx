@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { StyleSheet } from 'react-native';
 import NativeArrangementView from './ArrangementViewNativeComponent';
 import NativePane from './ArrangementPaneNativeComponent';
+import { resolvePrimaryEdge } from './arrange';
 import { HingeContext, useHingeStore } from './hinge';
 import { describeLayout, LayoutContext, useLayoutStore } from './layout';
 import {
@@ -41,6 +42,8 @@ export function ArrangementView({
   );
   const { primary, secondary, problems } = resolveSlots(children);
   warnOnce(problems);
+  const edge = resolvePrimaryEdge(primaryEdge);
+  warnOnce(edge.problems);
   return (
     <HingeContext value={store}>
       <LayoutContext value={layoutStore}>
@@ -48,7 +51,8 @@ export function ArrangementView({
           {...props}
           arrangement={arrangement}
           axes={axes}
-          primaryEdge={primaryEdge}
+          primaryEdge={edge.horizontal}
+          primaryVerticalEdge={edge.vertical}
           observeHinge={observeHinge}
           onHingeChange={onHingeChange}
           onPanesChange={onPanesChange}
