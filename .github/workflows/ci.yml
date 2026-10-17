@@ -177,7 +177,7 @@ jobs:
           - runner: macos-latest
             xcode: '26'
             arrangement: false
-          # The native ArrangementView needs the iOS 27.1 SDK; see the podspec.
+          # The native ArrangementView needs the iOS 27.1 SDK; see ios/ArrangementHost.swift.
           - runner: xcode-27
             xcode: '27.1'
             arrangement: true
@@ -202,22 +202,25 @@ jobs:
         run: |
           yarn example expo prebuild --platform ios
 
+      - name: Build example for iOS
+        run: |
+          yarn example build:ios
+
+      # The library refers to SwiftUI's split style only when it compiled the native arrangement.
       - name: Check native ArrangementView is compiled only with the iOS 27.1 SDK
         run: |
-          if grep -q RAV_HAS_ARRANGEMENT "apps/example-expo/ios/Pods/Target Support Files/ArrangementView/"*.xcconfig; then
+          library=apps/example-expo/ios/build/Build/Products/Debug-iphonesimulator/ArrangementView/libArrangementView.a
+          test -f "$library"
+          if nm -u "$library" | grep SplitArrangementViewStyle > /dev/null; then
             compiled=true
           else
             compiled=false
           fi
 
           if [[ $compiled != "${{ matrix.arrangement }}" ]]; then
-            echo "::error::RAV_HAS_ARRANGEMENT is $compiled with the iOS $(xcrun --sdk iphoneos --show-sdk-version) SDK, expected ${{ matrix.arrangement }}"
+            echo "::error::Native ArrangementView compiled: $compiled with the iOS $(xcrun --sdk iphoneos --show-sdk-version) SDK, expected ${{ matrix.arrangement }}"
             exit 1
           fi
-
-      - name: Build example for iOS
-        run: |
-          yarn example build:ios
 
   # Installs the tarball from build-library into a fresh Expo app outside the
   # monorepo, as an end user would, so nothing resolves through the workspace or src/.

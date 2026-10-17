@@ -14,12 +14,8 @@ Pod::Spec.new do |s|
   s.swift_version = "5.0"
   s.frameworks = "SwiftUI"
 
-  # Runtime availability alone cannot compile symbols absent from an older SDK.
-  sdk_version = `xcrun --sdk iphoneos --show-sdk-version`.strip
-  has_arrangement = Gem::Version.new(sdk_version) >= Gem::Version.new("27.1")
   s.pod_target_xcconfig = {
-    "DEFINES_MODULE" => "YES",
-    "SWIFT_ACTIVE_COMPILATION_CONDITIONS" => "$(inherited) #{has_arrangement ? 'RAV_HAS_ARRANGEMENT' : ''}"
+    "DEFINES_MODULE" => "YES"
   }
   s.source       = { :git => "https://github.com/thiagobrez/react-native-arrangement-view.git", :tag => "#{s.version}" }
 

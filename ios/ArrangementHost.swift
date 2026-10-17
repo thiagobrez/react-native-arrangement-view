@@ -126,7 +126,10 @@ private struct ArrangementContent: View {
   }
 
   @ViewBuilder var body: some View {
-#if RAV_HAS_ARRANGEMENT
+// Inspired from Expo: https://github.com/expo/expo/blob/1ef42ab2fc01d6cc8bb7d94c1c3e60be42a3731d/packages/expo-ui/ios/ArrangementViewView.swift#L16-L18
+// Runtime availability alone cannot compile symbols absent from an older SDK.
+// ArrangementView first ships in the iOS 27.1 SDK, whose SwiftUICore is 8.0.85.
+#if canImport(SwiftUICore, _version: 8.0.85)
     if #available(iOS 27.1, *) {
       nativeArrangement
         .onHingeChange(isEnabled: model.observeHinge) { _, context in
@@ -151,7 +154,7 @@ private struct ArrangementContent: View {
 #endif
   }
 
-#if RAV_HAS_ARRANGEMENT
+#if canImport(SwiftUICore, _version: 8.0.85)
   @available(iOS 27.1, *)
   @ViewBuilder private var nativeArrangement: some View {
     if model.arrangement == "overlay" {
