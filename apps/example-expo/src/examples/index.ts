@@ -58,7 +58,6 @@ export const examples: Example[] = [
     name: 'tent-posture',
     title: 'Tent posture',
     component: TentPosture,
-    // Android has no tent, but shows the example's other postures.
     platform: 'ios',
   },
   {
