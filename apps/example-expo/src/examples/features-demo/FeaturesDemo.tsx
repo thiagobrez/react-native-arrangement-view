@@ -14,6 +14,7 @@ export function FeaturesDemo() {
   const [arrangement, setArrangement] = useState<Arrangement>('split');
   const [axes, setAxes] = useState<ArrangementAxes>('both');
   const [primaryEdge, setPrimaryEdge] = useState<PrimaryEdge>();
+  const [primaryVerticalEdge, setPrimaryVerticalEdge] = useState<PrimaryEdge>();
   return (
     <SafeAreaView style={styles.screen} edges={['left', 'right', 'bottom']}>
       <View style={styles.header}>
@@ -46,6 +47,15 @@ export function FeaturesDemo() {
               onPress={() => setPrimaryEdge(edge)}
             />
           ))}
+          <View style={styles.separator} />
+          {([undefined, 'top', 'bottom'] as const).map((edge) => (
+            <Chip
+              key={edge ?? 'default'}
+              label={edge ? `Primary ${edge}` : 'Default vertical edge'}
+              selected={edge === primaryVerticalEdge}
+              onPress={() => setPrimaryVerticalEdge(edge)}
+            />
+          ))}
         </View>
       </View>
 
@@ -53,7 +63,9 @@ export function FeaturesDemo() {
         style={styles.arrangement}
         arrangement={arrangement}
         axes={axes}
-        primaryEdge={primaryEdge}
+        primaryEdge={[primaryEdge, primaryVerticalEdge].filter(
+          (edge) => edge !== undefined
+        )}
       >
         <ArrangementView.Primary>
           <Pane primary arrangement={arrangement} />
