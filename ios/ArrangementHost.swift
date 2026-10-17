@@ -126,6 +126,7 @@ private struct ArrangementContent: View {
   }
 
   @ViewBuilder var body: some View {
+// Inspired from Expo: https://github.com/expo/expo/blob/1ef42ab2fc01d6cc8bb7d94c1c3e60be42a3731d/packages/expo-ui/ios/ArrangementViewView.swift#L16-L18
 // Runtime availability alone cannot compile symbols absent from an older SDK.
 // ArrangementView first ships in the iOS 27.1 SDK, whose SwiftUICore is 8.0.85.
 #if canImport(SwiftUICore, _version: 8.0.85)
