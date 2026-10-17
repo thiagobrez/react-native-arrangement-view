@@ -1,5 +1,11 @@
 # react-native-arrangement-view
 
+## 0.4.1
+
+### Patch Changes
+
+- [#37](https://github.com/thiagobrez/react-native-arrangement-view/pull/37) [`12f38cd`](https://github.com/thiagobrez/react-native-arrangement-view/commit/12f38cdf45e2e1910032b58b3fe7d904d14ef67a) Thanks [@thiagobrez](https://github.com/thiagobrez)! - Check for the iOS 27.1 SDK when compiling instead of during `pod install`, so switching Xcode after installing pods no longer builds the wrong arrangement.
+
 ## 0.4.0
 
 ### Minor Changes
