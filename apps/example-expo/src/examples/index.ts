@@ -14,6 +14,7 @@ export interface Example {
   title: string;
   component: ComponentType;
   options?: NativeStackNavigationOptions;
+  platform?: 'ios' | 'android';
 }
 
 export const examples: Example[] = [
@@ -49,6 +50,7 @@ export const examples: Example[] = [
           title: 'Split view',
           component: SplitViewExample,
           options: { headerTransparent: true, headerTitle: '' },
+          platform: 'ios' as const,
         },
       ]
     : []),
@@ -56,6 +58,7 @@ export const examples: Example[] = [
     name: 'tent-posture',
     title: 'Tent posture',
     component: TentPosture,
+    platform: 'ios',
   },
   {
     name: 'native-components',

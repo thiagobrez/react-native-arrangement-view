@@ -1,0 +1,34 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  height: 1.375rem;
+  padding: 0 0.625rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: normal;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* Apple's system blue and Android's green. */
+.ios {
+  color: #0a62c9;
+  background: #007aff1f;
+}
+
+.android {
+  color: #13814a;
+  background: #3ddc8429;
+}
+
+:global(.dark) .ios {
+  color: #6cb0ff;
+  background: #0a84ff2e;
+}
+
+:global(.dark) .android {
+  color: #5fe39b;
+  background: #3ddc8424;
+}
