@@ -17,6 +17,15 @@ private final class ArrangementModel: ObservableObject {
   weak var host: UIView?
   private var reported: (primary: CGRect, secondary: CGRect?)?
   private var reportScheduled = false
+  private var sentHinge: (Bool, Double, String)?
+
+  /// SwiftUI repeats `onHingeChange` with equal contexts while a fold
+  /// relayouts, so only a hinge that differs from the last one sent goes out.
+  func sendHinge(_ available: Bool, _ angle: Double, _ status: String) {
+    if let sentHinge, sentHinge == (available, angle, status) { return }
+    sentHinge = (available, angle, status)
+    hingeChanged?(available, angle, status)
+  }
 
   /// Reports where the panes are once the current layout pass is over, and
   /// only if that changed. A hidden pane is not in the window.
@@ -126,7 +135,7 @@ private struct ArrangementContent: View {
       nativeArrangement
         .onHingeChange { _, context in
           guard let hinge = context.hinge else {
-            model.hingeChanged?(false, 0, "unknown")
+            model.sendHinge(false, 0, "unknown")
             return
           }
           let status: String
@@ -136,7 +145,7 @@ private struct ArrangementContent: View {
           case .fullyOpen: status = "fullyOpen"
           default: status = "unknown"
           }
-          model.hingeChanged?(true, hinge.angle.radians, status)
+          model.sendHinge(true, hinge.angle.radians, status)
         }
     } else {
       fallback
