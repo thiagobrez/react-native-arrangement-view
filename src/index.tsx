@@ -14,5 +14,7 @@ export type {
   HingePolicy,
   HingeState,
   HingeStatus,
+  HorizontalEdge,
   PrimaryEdge,
+  VerticalEdge,
 } from './types';

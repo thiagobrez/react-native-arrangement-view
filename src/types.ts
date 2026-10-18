@@ -3,8 +3,15 @@ import type { ViewProps } from 'react-native';
 
 export type Arrangement = 'split' | 'overlay';
 export type ArrangementAxes = 'both' | 'horizontal' | 'vertical';
-/** The side the primary pane takes when the panes are side by side. */
-export type PrimaryEdge = 'leading' | 'trailing';
+/** The primary pane's side when the panes are side by side. */
+export type HorizontalEdge = 'leading' | 'trailing';
+/** The primary pane's side when an overlay's panes are stacked. */
+export type VerticalEdge = 'top' | 'bottom';
+/**
+ * A side the primary pane takes: leading or trailing when the panes are side
+ * by side, top or bottom when an overlay's panes are stacked.
+ */
+export type PrimaryEdge = HorizontalEdge | VerticalEdge;
 /** Which hinges the panes keep clear of, after Material's `HingePolicy`. */
 export type HingePolicy = 'avoidSeparating' | 'alwaysAvoid' | 'neverAvoid';
 export type HingeStatus = 'unknown' | 'closed' | 'partiallyOpen' | 'fullyOpen';
@@ -37,15 +44,19 @@ export interface ArrangementViewProps extends ViewProps {
   arrangement?: Arrangement;
   axes?: ArrangementAxes;
   /**
-   * The side the primary pane takes when the panes are side by side: in a left-to-right layout,
-   * leading is left, and trailing is right. Stacked panes are unaffected.
-   * By default a split's primary pane is on the leading side, and
-   * an overlay's is after the hinge, on the trailing side.
+   * The side the primary pane takes. When the panes are side by side, leading
+   * or trailing: in a left-to-right layout, leading is left, and trailing is
+   * right. When an overlay's panes are stacked, as around a half-open hinge in
+   * tabletop posture, top or bottom. Pass one side, or a horizontal and a
+   * vertical side in that order, such as `['trailing', 'top']`.
+   * By default a split's primary pane is on the leading side, and an
+   * overlay's is after the hinge: on the trailing side, or below it. A split's
+   * stacked primary pane is always on top.
    *
    * Screen readers go through the panes in reading order, so with the primary
-   * pane on the trailing side, the secondary pane is read first.
+   * pane on the trailing side, or below, the secondary pane is read first.
    */
-  primaryEdge?: PrimaryEdge;
+  primaryEdge?: PrimaryEdge | readonly [HorizontalEdge, VerticalEdge];
   /**
    * Called when the arrangement's layout changes, starting from its first.
    * Inside a pane, use `useArrangementLayout` instead.

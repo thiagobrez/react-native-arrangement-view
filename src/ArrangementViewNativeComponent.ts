@@ -57,6 +57,11 @@ export interface NativeProps extends ViewProps {
     'auto' | 'leading' | 'trailing',
     'auto'
   >;
+  /** iOS only, as above: `primaryEdge`'s side for an overlay's stacked panes. */
+  primaryVerticalEdge?: CodegenTypes.WithDefault<
+    'auto' | 'top' | 'bottom',
+    'auto'
+  >;
   observeHinge?: CodegenTypes.WithDefault<boolean, true>;
   onHingeChange?: CodegenTypes.DirectEventHandler<HingeEvent>;
   /** iOS only: where SwiftUI put the panes. On Android, arrange.ts knows. */

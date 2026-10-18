@@ -2,7 +2,9 @@ import type {
   Arrangement,
   ArrangementAxes,
   HingePolicy,
+  HorizontalEdge,
   PrimaryEdge,
+  VerticalEdge,
 } from './types';
 
 /** A fold within the arrangement, as Jetpack WindowManager reports it. */
@@ -34,7 +36,7 @@ export interface ArrangeOptions {
   axes: ArrangementAxes;
   hingePolicy?: HingePolicy;
   hingeGap?: number;
-  primaryEdge?: PrimaryEdge;
+  primaryEdge?: PrimaryEdge | readonly [HorizontalEdge, VerticalEdge];
   rtl?: boolean;
 }
 
@@ -49,6 +51,45 @@ export interface PaneFrames {
   primary: Frame;
   /** Null when only the primary pane is shown. */
   secondary: Frame | null;
+}
+
+export interface PrimaryEdges {
+  /** The side when the panes are side by side. */
+  horizontal?: HorizontalEdge;
+  /** The side when an overlay's panes are stacked. */
+  vertical?: VerticalEdge;
+  /** Human-readable problems with the value, for dev warnings. */
+  problems: string[];
+}
+
+const isHorizontal = (edge: unknown): edge is HorizontalEdge =>
+  edge === 'leading' || edge === 'trailing';
+const isVertical = (edge: unknown): edge is VerticalEdge =>
+  edge === 'top' || edge === 'bottom';
+
+/**
+ * Splits `primaryEdge` into a side for each axis. A pair must be horizontal,
+ * then vertical; any other array is ignored and reported, for callers
+ * without type checking.
+ */
+export function resolvePrimaryEdge(
+  value: PrimaryEdge | readonly [HorizontalEdge, VerticalEdge] | undefined
+): PrimaryEdges {
+  if (value === undefined) return { problems: [] };
+  if (typeof value === 'string') {
+    if (isHorizontal(value)) return { horizontal: value, problems: [] };
+    if (isVertical(value)) return { vertical: value, problems: [] };
+    return { problems: [] };
+  }
+  const [horizontal, vertical] = value;
+  if (value.length === 2 && isHorizontal(horizontal) && isVertical(vertical)) {
+    return { horizontal, vertical, problems: [] };
+  }
+  return {
+    problems: [
+      `ArrangementView expects primaryEdge as one side or a horizontal and a vertical side in that order, such as ["leading", "top"], and ignored ${JSON.stringify(value)}.`,
+    ],
+  };
 }
 
 type Axis = 'horizontal' | 'vertical';
@@ -72,7 +113,8 @@ const EXPANDED_HEIGHT = 900;
  * `hingeGap` around it. A separating hinge always splits, whatever the window
  * size, as it does on iOS. A split that doesn't fit, or that `axes` excludes,
  * shows only the primary pane. `primaryEdge` puts the primary pane on the
- * leading or trailing side of panes placed side by side.
+ * leading or trailing side of panes placed side by side, and an overlay's
+ * above or below panes that are stacked.
  */
 export function arrange(
   { width, height, window, fold }: Geometry,
@@ -85,6 +127,7 @@ export function arrange(
     rtl = false,
   }: ArrangeOptions
 ): PaneFrames {
+  const edge = resolvePrimaryEdge(primaryEdge);
   const full = { left: 0, top: 0, width, height };
   const tabletop =
     fold?.halfOpened === true && fold.orientation === 'horizontal';
@@ -97,7 +140,8 @@ export function arrange(
 
   // Panes before and after the span [start, end] along the axis. The primary
   // pane goes first, on the leading side, unless `primaryAfter`, or on the side
-  // `primaryEdge` names.
+  // `primaryEdge` names. Stacked, so does an overlay's; a split's always goes
+  // first, as on iOS.
   const split = (
     axis: Axis,
     start: number,
@@ -115,9 +159,13 @@ export function arrange(
             { ...full, top: end, height: height - end },
           ];
     const primaryIsAfter =
-      axis === 'horizontal' && primaryEdge
-        ? (primaryEdge === 'trailing') !== rtl
-        : (rtl && axis === 'horizontal') !== primaryAfter;
+      axis === 'horizontal'
+        ? edge.horizontal
+          ? (edge.horizontal === 'trailing') !== rtl
+          : rtl !== primaryAfter
+        : arrangement === 'overlay' && edge.vertical
+          ? edge.vertical === 'bottom'
+          : primaryAfter;
     return primaryIsAfter
       ? { primary: after, secondary: before }
       : { primary: before, secondary: after };

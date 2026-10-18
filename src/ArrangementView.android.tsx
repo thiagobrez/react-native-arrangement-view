@@ -1,7 +1,12 @@
 import { useCallback, useLayoutEffect, useState } from 'react';
 import { I18nManager, StyleSheet, View } from 'react-native';
 import NativeArrangementView from './ArrangementViewNativeComponent';
-import { arrange, type Frame, type Geometry } from './arrange';
+import {
+  arrange,
+  resolvePrimaryEdge,
+  type Frame,
+  type Geometry,
+} from './arrange';
 import { HingeContext, useHingeStore } from './hinge';
 import { describeLayout, LayoutContext, useLayoutStore } from './layout';
 import {
@@ -51,6 +56,7 @@ export function ArrangementView({
   useLayoutEffect(() => layoutStore.update(layout));
   const { primary, secondary, problems } = resolveSlots(children);
   warnOnce(problems);
+  warnOnce(resolvePrimaryEdge(primaryEdge).problems);
   return (
     <HingeContext value={store}>
       <LayoutContext value={layoutStore}>

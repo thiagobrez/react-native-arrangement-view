@@ -276,3 +276,47 @@ test('primaryEdge puts the primary pane on the leading or trailing side', () => 
     );
   }
 });
+
+test("primaryEdge's top or bottom puts an overlay's primary pane above or below the hinge", () => {
+  const above = { left: 0, top: 0, width: 880, height: 413 };
+  const below = { left: 0, top: 437, width: 880, height: 413 };
+  assert.deepEqual(arrange(tabletop, { ...overlay, primaryEdge: 'top' }), {
+    primary: above,
+    secondary: below,
+  });
+  assert.deepEqual(arrange(tabletop, { ...overlay, primaryEdge: 'bottom' }), {
+    primary: below,
+    secondary: above,
+  });
+  // A split's primary pane stays on top, as on iOS.
+  assert.deepEqual(
+    arrange(tabletop, { ...split, primaryEdge: 'bottom' }),
+    arrange(tabletop, split)
+  );
+  // Panes side by side, or overlapping, are unaffected.
+  for (const geometry of [book, inner, coverPortrait]) {
+    for (const options of [split, overlay]) {
+      assert.deepEqual(
+        arrange(geometry, { ...options, primaryEdge: 'top' }),
+        arrange(geometry, options)
+      );
+    }
+  }
+});
+
+test('primaryEdge takes a horizontal and a vertical side', () => {
+  const edges = ['leading', 'top'] as const;
+  assert.deepEqual(
+    arrange(book, { ...overlay, primaryEdge: edges }),
+    arrange(book, { ...overlay, primaryEdge: 'leading' })
+  );
+  assert.deepEqual(
+    arrange(tabletop, { ...overlay, primaryEdge: edges }),
+    arrange(tabletop, { ...overlay, primaryEdge: 'top' })
+  );
+  assert.deepEqual(
+    // @ts-expect-error The horizontal side comes first.
+    arrange(tabletop, { ...overlay, primaryEdge: ['top', 'leading'] }),
+    arrange(tabletop, overlay)
+  );
+});
