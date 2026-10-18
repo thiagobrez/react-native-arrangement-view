@@ -11,7 +11,6 @@ private final class ArrangementModel: ObservableObject {
   @Published var axes = "both"
   @Published var primaryEdge = "auto"
   @Published var primaryVerticalEdge = "auto"
-  @Published var observeHinge = true
   var hingeChanged: ((Bool, Double, String) -> Void)?
   var paneLayout: ((UIView, CGRect) -> Void)?
   var panesChanged: ((CGRect, CGRect?) -> Void)?
@@ -125,7 +124,7 @@ private struct ArrangementContent: View {
 #if canImport(SwiftUICore, _version: 8.0.85)
     if #available(iOS 27.1, *) {
       nativeArrangement
-        .onHingeChange(isEnabled: model.observeHinge) { _, context in
+        .onHingeChange { _, context in
           guard let hinge = context.hinge else {
             model.hingeChanged?(false, 0, "unknown")
             return
@@ -228,15 +227,11 @@ public final class RNArrangementHost: UIView {
     if model.primary !== primary { model.primary = primary }
     if model.secondary !== secondary { model.secondary = secondary }
   }
-  @objc public func configure(_ arrangement: String, axes: String, primaryEdge: String, primaryVerticalEdge: String, observeHinge: Bool) {
+  @objc public func configure(_ arrangement: String, axes: String, primaryEdge: String, primaryVerticalEdge: String) {
     if model.arrangement != arrangement { model.arrangement = arrangement }
     if model.axes != axes { model.axes = axes }
     if model.primaryEdge != primaryEdge { model.primaryEdge = primaryEdge }
     if model.primaryVerticalEdge != primaryVerticalEdge { model.primaryVerticalEdge = primaryVerticalEdge }
-    if model.observeHinge != observeHinge {
-      model.observeHinge = observeHinge
-      if !observeHinge { model.hingeChanged?(false, 0, "unknown") }
-    }
   }
   public override func layoutSubviews() {
     super.layoutSubviews()
