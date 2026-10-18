@@ -304,7 +304,7 @@ test("primaryEdge's top or bottom puts an overlay's primary pane above or below 
   }
 });
 
-test('primaryEdge takes a side for each axis', () => {
+test('primaryEdge takes a horizontal and a vertical side', () => {
   const edges = ['leading', 'top'] as const;
   assert.deepEqual(
     arrange(book, { ...overlay, primaryEdge: edges }),
@@ -315,7 +315,8 @@ test('primaryEdge takes a side for each axis', () => {
     arrange(tabletop, { ...overlay, primaryEdge: 'top' })
   );
   assert.deepEqual(
-    arrange(book, { ...overlay, primaryEdge: [] }),
-    arrange(book, overlay)
+    // @ts-expect-error The horizontal side comes first.
+    arrange(tabletop, { ...overlay, primaryEdge: ['top', 'leading'] }),
+    arrange(tabletop, overlay)
   );
 });

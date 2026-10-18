@@ -35,7 +35,7 @@ Without `primaryEdge`, a split's primary pane is on the leading side and an over
 
 `primaryEdge="trailing"` suits a book-style foldable in a left-to-right app: closed, its cover display sits over the right half of the inner one, so the content on the cover stays in place as the device unfolds, and the secondary pane opens beside it. Leading and trailing follow the layout direction, and stacked panes, such as in tabletop posture, are unaffected.
 
-Stacked, a split's primary pane is always on top. An overlay's goes below the hinge, on the half that rests on the table in tabletop posture, unless `primaryEdge` names `"top"` or `"bottom"`. Pass one side for each axis to set both:
+Stacked, a split's primary pane is always on top. An overlay's goes below the hinge, on the half that rests on the table in tabletop posture, unless `primaryEdge` names `"top"` or `"bottom"`. To set both, pass the horizontal side, then the vertical one:
 
 ```tsx
 <ArrangementView

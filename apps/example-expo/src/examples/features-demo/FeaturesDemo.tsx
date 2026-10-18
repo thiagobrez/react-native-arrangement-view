@@ -5,7 +5,8 @@ import {
   ArrangementView,
   type Arrangement,
   type ArrangementAxes,
-  type PrimaryEdge,
+  type HorizontalEdge,
+  type VerticalEdge,
 } from 'react-native-arrangement-view';
 import { Chip } from './Chip';
 import { Pane } from './Pane';
@@ -13,8 +14,8 @@ import { Pane } from './Pane';
 export function FeaturesDemo() {
   const [arrangement, setArrangement] = useState<Arrangement>('split');
   const [axes, setAxes] = useState<ArrangementAxes>('both');
-  const [primaryEdge, setPrimaryEdge] = useState<PrimaryEdge>();
-  const [primaryVerticalEdge, setPrimaryVerticalEdge] = useState<PrimaryEdge>();
+  const [horizontalEdge, setHorizontalEdge] = useState<HorizontalEdge>();
+  const [verticalEdge, setVerticalEdge] = useState<VerticalEdge>();
   return (
     <SafeAreaView style={styles.screen} edges={['left', 'right', 'bottom']}>
       <View style={styles.header}>
@@ -43,8 +44,8 @@ export function FeaturesDemo() {
             <Chip
               key={edge ?? 'default'}
               label={edge ? `Primary ${edge}` : 'Default edge'}
-              selected={edge === primaryEdge}
-              onPress={() => setPrimaryEdge(edge)}
+              selected={edge === horizontalEdge}
+              onPress={() => setHorizontalEdge(edge)}
             />
           ))}
           <View style={styles.separator} />
@@ -52,8 +53,8 @@ export function FeaturesDemo() {
             <Chip
               key={edge ?? 'default'}
               label={edge ? `Primary ${edge}` : 'Default vertical edge'}
-              selected={edge === primaryVerticalEdge}
-              onPress={() => setPrimaryVerticalEdge(edge)}
+              selected={edge === verticalEdge}
+              onPress={() => setVerticalEdge(edge)}
             />
           ))}
         </View>
@@ -63,9 +64,11 @@ export function FeaturesDemo() {
         style={styles.arrangement}
         arrangement={arrangement}
         axes={axes}
-        primaryEdge={[primaryEdge, primaryVerticalEdge].filter(
-          (edge) => edge !== undefined
-        )}
+        primaryEdge={
+          horizontalEdge && verticalEdge
+            ? [horizontalEdge, verticalEdge]
+            : (horizontalEdge ?? verticalEdge)
+        }
       >
         <ArrangementView.Primary>
           <Pane primary arrangement={arrangement} />

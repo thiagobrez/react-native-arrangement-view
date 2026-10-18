@@ -14,22 +14,28 @@ test('one side sets its own axis only', () => {
   assert.deepEqual(resolvePrimaryEdge(undefined), { problems: [] });
 });
 
-test('an array sets a side for each axis, in any order', () => {
-  assert.deepEqual(resolvePrimaryEdge(['bottom', 'leading']), {
+test('a pair sets the horizontal side, then the vertical one', () => {
+  assert.deepEqual(resolvePrimaryEdge(['leading', 'bottom']), {
     horizontal: 'leading',
     vertical: 'bottom',
     problems: [],
   });
-  assert.deepEqual(resolvePrimaryEdge(['top', 'top']), {
-    vertical: 'top',
-    problems: [],
-  });
 });
 
-test('two sides on one axis keep the first and report the other', () => {
-  const edges = resolvePrimaryEdge(['leading', 'top', 'trailing', 'bottom']);
-  assert.equal(edges.horizontal, 'leading');
-  assert.equal(edges.vertical, 'top');
-  assert.equal(edges.problems.length, 2);
-  assert.match(edges.problems[0]!, /"leading" and "trailing"/);
+test('any other array is ignored and reported', () => {
+  const invalid = [
+    ['top', 'leading'],
+    ['leading', 'trailing'],
+    ['leading'],
+    [],
+    ['leading', 'top', 'bottom'],
+  ];
+  for (const value of invalid) {
+    // Untyped callers can pass these; the type only allows a pair.
+    const edges = resolvePrimaryEdge(value as never);
+    assert.equal(edges.horizontal, undefined);
+    assert.equal(edges.vertical, undefined);
+    assert.equal(edges.problems.length, 1);
+    assert.match(edges.problems[0]!, /in that order/);
+  }
 });
