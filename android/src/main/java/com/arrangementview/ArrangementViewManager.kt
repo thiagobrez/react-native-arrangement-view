@@ -2,7 +2,6 @@ package com.arrangementview
 
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.ThemedReactContext
-import com.facebook.react.uimanager.annotations.ReactProp
 import com.facebook.react.views.view.ReactViewGroup
 import com.facebook.react.views.view.ReactViewManager
 
@@ -13,11 +12,6 @@ class ArrangementViewManager : ReactViewManager() {
 
   override fun createViewInstance(context: ThemedReactContext): ReactViewGroup =
     ArrangementView(context)
-
-  @ReactProp(name = "observeHinge", defaultBoolean = true)
-  fun setObserveHinge(view: ArrangementView, value: Boolean) {
-    view.observeHinge = value
-  }
 
   override fun setPadding(view: ReactViewGroup, left: Int, top: Int, right: Int, bottom: Int) {
     (view as ArrangementView).setContentInsets(left, top, right, bottom)

@@ -33,4 +33,4 @@ type HingeState = {
 };
 ```
 
-Before the first native update, without hardware, or when observation is disabled, the state is `{ available: false, angle: null, status: 'unknown' }`.
+Before the first native update, or without hardware, the state is `{ available: false, angle: null, status: 'unknown' }`.

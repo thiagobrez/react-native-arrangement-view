@@ -19,14 +19,13 @@ export function ArrangementView({
   arrangement = 'split',
   axes = 'both',
   primaryEdge,
-  observeHinge = true,
   onArrangementLayoutChange,
   // Android only: SwiftUI has its own rules for hinges and window sizes.
   hingePolicy: _hingePolicy,
   hingeGap: _hingeGap,
   ...props
 }: ArrangementViewProps) {
-  const [store, onHingeChange] = useHingeStore(observeHinge);
+  const [store, onHingeChange] = useHingeStore();
   const layoutStore = useLayoutStore(onArrangementLayoutChange);
   const onPanesChange = useCallback<NonNullable<NativeProps['onPanesChange']>>(
     ({
@@ -53,7 +52,6 @@ export function ArrangementView({
           axes={axes}
           primaryEdge={edge.horizontal}
           primaryVerticalEdge={edge.vertical}
-          observeHinge={observeHinge}
           onHingeChange={onHingeChange}
           onPanesChange={onPanesChange}
         >

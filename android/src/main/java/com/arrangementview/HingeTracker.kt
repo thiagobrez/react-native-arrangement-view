@@ -20,16 +20,6 @@ import com.facebook.react.bridge.WritableMap
 internal class HingeTracker(context: Context, private val emit: (WritableMap) -> Unit) :
   SensorEventListener {
 
-  var enabled = true
-    set(value) {
-      if (field == value) return
-      field = value
-      updateSensor()
-      // JS resets to unavailable when disabled; re-enabling must replay the current state.
-      last = null
-      emitHinge()
-    }
-
   var fold: FoldingFeature? = null
     set(value) {
       field = value
@@ -64,7 +54,7 @@ internal class HingeTracker(context: Context, private val emit: (WritableMap) ->
 
   private fun updateSensor() {
     sensorManager.unregisterListener(this)
-    if (enabled && attached && sensor != null) {
+    if (attached && sensor != null) {
       // A sensor that has reported reports again when registered.
       awaitingSensor = degrees != null
       sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL)
@@ -80,7 +70,7 @@ internal class HingeTracker(context: Context, private val emit: (WritableMap) ->
   override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) = Unit
 
   private fun emitHinge() {
-    if (!enabled || awaitingLayout || awaitingSensor) return
+    if (awaitingLayout || awaitingSensor) return
     val degrees = degrees
     val fold = fold
     // WindowManager names the open postures. It reports no fold for a closed device, whose app

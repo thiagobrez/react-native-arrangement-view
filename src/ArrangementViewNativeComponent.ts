@@ -62,7 +62,6 @@ export interface NativeProps extends ViewProps {
     'auto' | 'top' | 'bottom',
     'auto'
   >;
-  observeHinge?: CodegenTypes.WithDefault<boolean, true>;
   onHingeChange?: CodegenTypes.DirectEventHandler<HingeEvent>;
   /** iOS only: where SwiftUI put the panes. On Android, arrange.ts knows. */
   onPanesChange?: CodegenTypes.DirectEventHandler<PanesEvent>;

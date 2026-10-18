@@ -62,8 +62,6 @@ export interface ArrangementViewProps extends ViewProps {
    * Inside a pane, use `useArrangementLayout` instead.
    */
   onArrangementLayoutChange?: ArrangementLayoutHandler;
-  /** Disable hinge observation without affecting adaptive layout. Default true. */
-  observeHinge?: boolean;
   /**
    * Android only. Which hinges the panes keep clear of: `avoidSeparating`
    * (default) a half-open one, `alwaysAvoid` a flat one too, `neverAvoid` none.
