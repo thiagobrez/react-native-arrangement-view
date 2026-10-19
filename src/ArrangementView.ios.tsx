@@ -2,9 +2,9 @@ import { useCallback } from 'react';
 import { StyleSheet } from 'react-native';
 import NativeArrangementView from './ArrangementViewNativeComponent';
 import NativePane from './ArrangementPaneNativeComponent';
-import { resolvePrimaryEdge } from './arrange';
 import { HingeContext, useHingeStore } from './hinge';
 import { describeLayout, LayoutContext, useLayoutStore } from './layout';
+import { resolvePrimaryEdge } from './primaryEdge';
 import {
   ArrangementPrimary,
   ArrangementSecondary,

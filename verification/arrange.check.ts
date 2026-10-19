@@ -1,19 +1,12 @@
-// Bounded exhaustive check of arrange() and describeLayout(), Android's pane
-// layout. It runs the real functions on every input in the grid below, then on
-// seeded random dp values, and checks each property in PROPERTIES on every
-// result. Run with `yarn verify:arrange`. See .claude/skills/verify-arrange.
-import type {
-  ArrangeOptions,
-  Fold,
-  Frame,
-  Geometry,
-  PaneFrames,
-} from '../src/arrange.ts';
+import {
+  arrangeAll,
+  type ArrangeOptions,
+  type Fold,
+  type Frame,
+  type Geometry,
+  type PaneFrames,
+} from './native/arrange.ts';
 
-// arrange.mutants.ts points these at broken copies, to see each property fail.
-const { arrange }: typeof import('../src/arrange.ts') = await import(
-  process.env.ARRANGE_SOURCE ?? '../src/arrange.ts'
-);
 const { describeLayout }: typeof import('../src/layout.ts') = await import(
   process.env.LAYOUT_SOURCE ?? '../src/layout.ts'
 );
@@ -390,17 +383,28 @@ const cases = function* () {
   yield* grid();
   yield* sampled(500_000);
 };
+const CASES_PER_HARNESS_RUN = 65_536;
+let batch: Case[] = [];
+const checkBatch = () => {
+  const results = arrangeAll(batch);
+  batch.forEach((c, i) => {
+    const result = results[i]!;
+    checked++;
+    for (const [name, property] of Object.entries(PROPERTIES)) {
+      const why = property(c, result);
+      if (!why) continue;
+      const seen = failures.get(name);
+      if (seen) seen.count++;
+      else failures.set(name, { case: c, result, why, count: 1 });
+    }
+  });
+  batch = [];
+};
 for (const c of cases()) {
-  const result = arrange(c.geometry, c.options);
-  checked++;
-  for (const [name, property] of Object.entries(PROPERTIES)) {
-    const why = property(c, result);
-    if (!why) continue;
-    const seen = failures.get(name);
-    if (seen) seen.count++;
-    else failures.set(name, { case: c, result, why, count: 1 });
-  }
+  batch.push(c);
+  if (batch.length === CASES_PER_HARNESS_RUN) checkBatch();
 }
+checkBatch();
 
 const seconds = ((Date.now() - started) / 1000).toFixed(1);
 console.log(`Checked ${checked.toLocaleString('en')} cases in ${seconds}s.`);

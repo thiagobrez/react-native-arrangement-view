@@ -2,7 +2,7 @@ import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
 import { createElement } from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
-import { arrange, type Geometry } from '../src/arrange.ts';
+import { arrange, type Geometry } from '../verification/native/arrange.ts';
 import {
   createLayoutStore,
   describeLayout,

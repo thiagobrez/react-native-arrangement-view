@@ -6,8 +6,20 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react';
-import type { PaneFrames } from './arrange';
 import type { ArrangementLayout, ArrangementLayoutHandler } from './types';
+
+export interface Frame {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+export interface PaneFrames {
+  primary: Frame;
+  /** Null when only the primary pane is shown. */
+  secondary: Frame | null;
+}
 
 /**
  * What the panes' frames show. Panes that overlap, as in overlay, have no

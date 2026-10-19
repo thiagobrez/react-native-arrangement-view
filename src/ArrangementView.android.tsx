@@ -1,14 +1,15 @@
 import { useCallback, useLayoutEffect, useState } from 'react';
 import { I18nManager, StyleSheet, View } from 'react-native';
 import NativeArrangementView from './ArrangementViewNativeComponent';
-import {
-  arrange,
-  resolvePrimaryEdge,
-  type Frame,
-  type Geometry,
-} from './arrange';
+import { arrange, type Geometry } from './arrange';
 import { HingeContext, useHingeStore } from './hinge';
-import { describeLayout, LayoutContext, useLayoutStore } from './layout';
+import {
+  describeLayout,
+  LayoutContext,
+  useLayoutStore,
+  type Frame,
+} from './layout';
+import { resolvePrimaryEdge } from './primaryEdge';
 import {
   ArrangementPrimary,
   ArrangementSecondary,

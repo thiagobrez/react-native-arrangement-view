@@ -1,4 +1,5 @@
-import { arrange, type Frame, type Geometry } from '../../../src/arrange.ts';
+import { arrange, type Geometry } from '../../../src/arrange.ts';
+import type { Frame } from '../../../src/layout.ts';
 import type { HingeStatus } from '../../../src/types.ts';
 
 /** How the device is held: standing like a book, laid on a table, or stood up as a tent. */

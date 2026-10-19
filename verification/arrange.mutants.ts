@@ -1,6 +1,3 @@
-// Shows that each property in arrange.check.ts can fail: it breaks one line of
-// src/arrange.ts or src/layout.ts at a time, in a copy, and expects the check
-// to report the named property. Run with `yarn verify:arrange:mutants`.
 import { execFile } from 'node:child_process';
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { availableParallelism } from 'node:os';
@@ -10,7 +7,7 @@ import { promisify } from 'node:util';
 const execFileAsync = promisify(execFile);
 
 interface Mutant {
-  file: 'arrange.ts' | 'layout.ts';
+  file: 'arrange.h' | 'primaryEdge.ts' | 'layout.ts';
   find: string;
   replace: string;
   /** The property the check must report as failing. */
@@ -20,83 +17,83 @@ interface Mutant {
 const MUTANTS: Mutant[] = [
   {
     // The gap ignores a hinge wider than hingeGap.
-    file: 'arrange.ts',
-    find: 'Math.max(end - start, hingeGap) / 2',
+    file: 'arrange.h',
+    find: 'jsMax(end - start, hingeGap) / 2',
     replace: 'hingeGap / 2',
     breaks: 'clear of an avoided hinge',
   },
   {
     // A single pane beside a hinge spans it.
-    file: 'arrange.ts',
-    find: 'return { primary: split(axis, before, after).primary, secondary: null };',
-    replace: 'return { primary: full, secondary: null };',
+    file: 'arrange.h',
+    find: 'return {split(axis, before, after).primary, std::nullopt};',
+    replace: 'return {full, std::nullopt};',
     breaks: 'clear of an avoided hinge',
   },
   {
-    file: 'arrange.ts',
-    find: 'Math.max(end - start, hingeGap) / 2',
-    replace: 'Math.max(end - start, hingeGap) / 4',
+    file: 'arrange.h',
+    find: 'jsMax(end - start, hingeGap) / 2',
+    replace: 'jsMax(end - start, hingeGap) / 4',
     breaks: 'hingeGap between panes',
   },
   {
     // A separating hinge splits only where two panes fit anyway.
-    file: 'arrange.ts',
-    find: 'fold.separating ? allows(axis) : fits(axis)',
+    file: 'arrange.h',
+    find: 'fold->separating ? allows(axis) : fits(axis)',
     replace: 'fits(axis)',
     breaks: 'a separating hinge always splits',
   },
   {
     // Tabletop is read from the window size alone.
-    file: 'arrange.ts',
-    find: 'const tabletop =',
-    replace: 'const tabletop = false &&',
+    file: 'arrange.h',
+    find: 'const bool tabletop =',
+    replace: 'const bool tabletop = false &&',
     breaks: 'tabletop shows both panes',
   },
   {
-    file: 'arrange.ts',
-    find: "const allows = (axis: Axis) => axes === 'both' || axes === axis;",
-    replace: 'const allows = (_axis: Axis) => true;',
+    file: 'arrange.h',
+    find: 'const auto allows = [&](Axis axis) { return axes == Axes::Both || axes == axis; };',
+    replace: 'const auto allows = [&](Axis) { return true; };',
     breaks: 'axes is respected',
   },
   {
     // primaryEdge ignores RTL.
-    file: 'arrange.ts',
-    find: "(edge.horizontal === 'trailing') !== rtl",
-    replace: "edge.horizontal === 'trailing'",
+    file: 'arrange.h',
+    find: '(primaryEdge == HorizontalEdge::Trailing) != rtl',
+    replace: 'primaryEdge == HorizontalEdge::Trailing',
     breaks: 'primary on its edge',
   },
   {
     // A vertical primaryEdge reaches split's stacked panes too.
-    file: 'arrange.ts',
-    find: "arrangement === 'overlay' && edge.vertical",
-    replace: 'edge.vertical',
+    file: 'arrange.h',
+    find: 'arrangement == Arrangement::Overlay && primaryVerticalEdge',
+    replace: 'primaryVerticalEdge',
     breaks: 'primary on its edge',
   },
   {
     // A pair is read vertical first.
-    file: 'arrange.ts',
+    file: 'primaryEdge.ts',
     find: 'const [horizontal, vertical] = value;',
     replace: 'const [vertical, horizontal] = value;',
     breaks: 'primary on its edge',
   },
   {
     // Overlay's primary pane goes before the hinge.
-    file: 'arrange.ts',
-    find: "split(axis, before, after, arrangement === 'overlay')",
+    file: 'arrange.h',
+    find: 'split(axis, before, after, arrangement == Arrangement::Overlay)',
     replace: 'split(axis, before, after)',
     breaks: 'primary on its edge',
   },
   {
-    file: 'arrange.ts',
-    find: 'const after = Math.min(extent, middle + half);',
-    replace: 'const after = middle + half;',
+    file: 'arrange.h',
+    find: 'const double after = jsMin(extent, middle + half);',
+    replace: 'const double after = middle + half;',
     breaks: 'inside the arrangement',
   },
   {
     // The pane before the span runs on past it.
-    file: 'arrange.ts',
-    find: '{ ...full, width: start }',
-    replace: '{ ...full, width: width - start }',
+    file: 'arrange.h',
+    find: 'Frame{0, 0, start, height}',
+    replace: 'Frame{0, 0, width - start, height}',
     breaks: 'split panes do not overlap',
   },
   {
@@ -107,23 +104,37 @@ const MUTANTS: Mutant[] = [
   },
 ];
 
-const src = (file: string) =>
-  fileURLToPath(new URL(`../src/${file}`, import.meta.url));
+const source = (file: Mutant['file']) =>
+  fileURLToPath(
+    new URL(
+      `../${file === 'arrange.h' ? 'cpp' : 'src'}/${file}`,
+      import.meta.url
+    )
+  );
 // Inside the repo, so the copies resolve node_modules as src does.
 const scratch = fileURLToPath(new URL('./.mutants/', import.meta.url));
 const check = fileURLToPath(new URL('./arrange.check.ts', import.meta.url));
 
 // Each mutant runs the whole check, so they run side by side, one per core.
 async function run(mutant: Mutant, i: number) {
-  const original = readFileSync(src(mutant.file), 'utf8');
+  const original = readFileSync(source(mutant.file), 'utf8');
   const label = `${mutant.file}: ${mutant.find} -> ${mutant.replace}`;
   if (!original.includes(mutant.find))
     return `  STALE   ${label}\n          the line is gone; update this mutant`;
-  const copy = `${scratch}${i}-${mutant.file}`;
-  writeFileSync(copy, original.replace(mutant.find, mutant.replace));
+  const dir = `${scratch}${i}/`;
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(
+    `${dir}${mutant.file}`,
+    original.replace(mutant.find, mutant.replace)
+  );
+  const variable = {
+    'arrange.h': 'ARRANGE_CPP_DIR',
+    'primaryEdge.ts': 'PRIMARY_EDGE_SOURCE',
+    'layout.ts': 'LAYOUT_SOURCE',
+  }[mutant.file];
   const env = {
     ...process.env,
-    [mutant.file === 'arrange.ts' ? 'ARRANGE_SOURCE' : 'LAYOUT_SOURCE']: copy,
+    [variable]: mutant.file === 'arrange.h' ? dir : `${dir}${mutant.file}`,
   };
   const { stdout } = await execFileAsync(
     process.execPath,
