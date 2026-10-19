@@ -58,7 +58,7 @@ Exactly one `ArrangementView.Primary` and one `ArrangementView.Secondary`, in ei
 Use `split` for content that works alone or beside other content, such as a list and its details. Use `overlay` when the secondary pane is the main content and the primary floats on top, such as a video and its controls: see the [Video player](../examples/video-player) example.
 
 <PostureShots
-  dir="api/arrangement-view"
+  publicFolder="api/arrangement-view"
   postures={[
     { file: 'split-book', label: 'Split, book' },
     { file: 'overlay-book', label: 'Overlay, book' },
@@ -82,7 +82,7 @@ If the posture calls for the other direction:
 Use it when your content only works one way. A dashboard with a calendar beside it can pass `"horizontal"`: in book posture the calendar sits beside the dashboard, and in tabletop the dashboard shows alone. A video player can pass `"vertical"`: in book posture the video fills the screen, and in tabletop it moves above the hinge.
 
 <PostureShots
-  dir="api/arrangement-view"
+  publicFolder="api/arrangement-view"
   postures={[
     { file: 'axes-vertical-book', label: 'Vertical, book' },
     {
@@ -118,7 +118,7 @@ With `"trailing"`, you can keep the primary pane (that is visible when the devic
 Screen readers go through the panes in reading order, whichever is primary: with the primary pane on the trailing side, or below, the secondary pane is read first.
 
 <PostureShots
-  dir="api/arrangement-view"
+  publicFolder="api/arrangement-view"
   postures={[
     { file: 'split-book', label: 'Split, default, book' },
     {
@@ -193,7 +193,7 @@ iOS has no equivalent: SwiftUI always avoids a half-open hinge, as `"avoidSepara
 Below, `"alwaysAvoid"` opens a gap around the flat fold, and with `"neverAvoid"` in tabletop posture the inner display is wide enough for two columns, so the panes sit side by side across the hinge.
 
 <PostureShots
-  dir="api/arrangement-view"
+  publicFolder="api/arrangement-view"
   platforms={['android']}
   postures={[
     { file: 'split-open', label: 'avoidSeparating (default), open' },
@@ -218,7 +218,7 @@ A hinge closer to the arrangement's edge than half the gap, as when the arrangem
 iOS keeps a fixed 20 pt clear on each side of the crease, and likewise ignores a hinge less than 20 pt inside the arrangement's edge.
 
 <PostureShots
-  dir="api/arrangement-view"
+  publicFolder="api/arrangement-view"
   platforms={['android']}
   postures={[
     { file: 'split-book', label: '24 (default), book' },

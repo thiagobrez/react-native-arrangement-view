@@ -12,23 +12,25 @@
   vertical-align: middle;
 }
 
-/* Apple's system blue and Android's green. */
 .ios {
+  --apple-system-blue: #007aff;
   color: #0a62c9;
-  background: #007aff1f;
+  background: color-mix(in srgb, var(--apple-system-blue) 12%, transparent);
 }
 
 .android {
+  --android-green: #3ddc84;
   color: #13814a;
-  background: #3ddc8429;
+  background: color-mix(in srgb, var(--android-green) 16%, transparent);
 }
 
 :global(.dark) .ios {
+  --apple-system-blue: #0a84ff;
   color: #6cb0ff;
-  background: #0a84ff2e;
+  background: color-mix(in srgb, var(--apple-system-blue) 18%, transparent);
 }
 
 :global(.dark) .android {
   color: #5fe39b;
-  background: #3ddc8424;
+  background: color-mix(in srgb, var(--android-green) 14%, transparent);
 }
