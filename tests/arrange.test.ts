@@ -1,7 +1,7 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
 import { arrange, type Fold, type Geometry } from './harness/arrange.ts';
-import { untyped } from './untyped.ts';
+import type { ArrangementViewProps } from '../src/types.ts';
 
 const window = (width: number, height: number): Geometry => ({
   width,
@@ -349,8 +349,10 @@ test('primaryEdge takes a horizontal and a vertical side', () => {
     arrange(tabletop, { ...overlay, primaryEdge: edges }),
     arrange(tabletop, { ...overlay, primaryEdge: 'top' })
   );
+  // @ts-expect-error The horizontal side comes first.
+  const verticalFirst: ArrangementViewProps['primaryEdge'] = ['top', 'leading'];
   assert.deepEqual(
-    arrange(tabletop, { ...overlay, primaryEdge: untyped(['top', 'leading']) }),
+    arrange(tabletop, { ...overlay, primaryEdge: verticalFirst }),
     arrange(tabletop, overlay),
     'a pair with the vertical side first is ignored'
   );

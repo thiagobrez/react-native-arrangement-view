@@ -107,7 +107,7 @@ const MUTANTS: Mutant[] = [
     breaks: 'inside the arrangement',
   },
   {
-    bug: 'The pane before the span runs on past it.',
+    bug: "The pane before a vertical hinge is measured from the far edge to the gap's start, so it overlaps the pane after a hinge left of centre and leaves a hole before a gap right of centre.",
     file: 'arrange.h',
     find: 'Frame{0, 0, start, height}',
     replace: 'Frame{0, 0, width - start, height}',
