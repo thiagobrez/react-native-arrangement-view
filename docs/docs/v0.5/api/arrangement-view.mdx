@@ -213,7 +213,9 @@ The space in dp between the panes around an avoided hinge, centred on the crease
 
 On a dual-screen device, the hinge between the two screens covers part of the window. If that hinge is wider than `hingeGap`, the gap takes the hinge's width instead, so no content goes under it. A foldable screen's hinge covers nothing, so `0` puts the panes right against the fold.
 
-iOS keeps a fixed 20 pt clear on each side of the crease.
+A hinge closer to the arrangement's edge than half the gap, as when the arrangement sits in a column that starts just before the crease, leaves no room for a pane on that side. The arrangement then ignores the hinge.
+
+iOS keeps a fixed 20 pt clear on each side of the crease, and likewise ignores a hinge less than 20 pt inside the arrangement's edge.
 
 <PostureShots
   dir="api/arrangement-view"

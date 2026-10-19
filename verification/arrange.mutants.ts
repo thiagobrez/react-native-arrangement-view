@@ -19,6 +19,21 @@ interface Mutant {
 
 const MUTANTS: Mutant[] = [
   {
+    // A hinge within hingeGap / 2 of the edge still splits, leaving a pane
+    // with no room.
+    file: 'arrange.ts',
+    find: 'if (before > 0 && after < extent) {',
+    replace: 'if (start > 0 && end < extent) {',
+    breaks: 'no empty pane',
+  },
+  {
+    // A hinge exactly hingeGap / 2 from the edge splits off a 0 dp pane.
+    file: 'arrange.ts',
+    find: 'if (before > 0 && after < extent) {',
+    replace: 'if (before >= 0 && after <= extent) {',
+    breaks: 'a hinge without room for the gap is ignored',
+  },
+  {
     // The gap ignores a hinge wider than hingeGap.
     file: 'arrange.ts',
     find: 'Math.max(end - start, hingeGap) / 2',
@@ -87,9 +102,10 @@ const MUTANTS: Mutant[] = [
     breaks: 'primary on its edge',
   },
   {
+    // The pane after the span runs on past the arrangement's end.
     file: 'arrange.ts',
-    find: 'const after = Math.min(extent, middle + half);',
-    replace: 'const after = middle + half;',
+    find: '{ ...full, left: end, width: width - end }',
+    replace: '{ ...full, left: end, width: width - start }',
     breaks: 'inside the arrangement',
   },
   {

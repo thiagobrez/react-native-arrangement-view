@@ -45,17 +45,26 @@ const isFull = (f: Frame, g: Geometry) =>
 const overlaid = ({ primary, secondary }: PaneFrames, g: Geometry) =>
   secondary !== null && isFull(primary, g) && isFull(secondary, g);
 
-/** The fold the panes keep clear of, if the policy avoids it and it crosses the arrangement. */
-function avoidedFold({ geometry: g, options: o }: Case) {
+/** The fold, if the policy avoids it, and whether the gap around it fits in the arrangement. */
+function policyFold({ geometry: g, options: o }: Case) {
   const fold = g.fold;
   if (!fold) return null;
   const avoided =
     o.hingePolicy === 'alwaysAvoid' ||
     (o.hingePolicy === 'avoidSeparating' && fold.separating);
+  if (!avoided) return null;
   const axis = foldAxis(fold);
   const [start, end] = foldSpan(axis, fold);
-  if (!avoided || !(start > 0 && end < extentOf(axis, g))) return null;
-  return { fold, axis, start, end };
+  const middle = (start + end) / 2;
+  const half = Math.max(end - start, o.hingeGap) / 2;
+  const fits = middle - half > 0 && middle + half < extentOf(axis, g);
+  return { fold, axis, start, end, fits };
+}
+
+/** The fold the panes keep clear of: one the policy avoids, with room for the gap around it. */
+function avoidedFold(c: Case) {
+  const hinge = policyFold(c);
+  return hinge?.fits ? hinge : null;
 }
 
 // Frames are floats: a pane may pass its bound by rounding, never by more.
@@ -164,6 +173,21 @@ const PROPERTIES: Record<string, Property> = {
     if (p1 - p0 > 0 && s1 - s0 > 0 && gap < wanted - EPS)
       return `panes are ${gap} apart around the hinge, not ${wanted}`;
     return null;
+  },
+
+  // A hinge the policy avoids, but too close to the edge, or too far outside,
+  // for the gap around it to fit, is treated like one the policy ignores, as
+  // on iOS. Without this, a pane on its near side gets no room.
+  'a hinge without room for the gap is ignored': (c, r) => {
+    const hinge = policyFold(c);
+    if (!hinge || hinge.fits) return null;
+    const ignored = arrange(c.geometry, {
+      ...c.options,
+      hingePolicy: 'neverAvoid',
+    });
+    return JSON.stringify(r) === JSON.stringify(ignored)
+      ? null
+      : `${JSON.stringify(r)} differs from the layout that ignores the hinge, ${JSON.stringify(ignored)}`;
   },
 
   // A separating hinge splits the panes along it whatever the window size,
@@ -375,10 +399,7 @@ function* sampled(count: number): Generator<Case> {
 
 // Properties the current code breaks, reported and not yet fixed. They still
 // print as FAIL but don't fail the run. Remove an entry once its fix lands.
-const KNOWN_FINDINGS: Record<string, string> = {
-  'no empty pane':
-    'an avoided hinge within hingeGap / 2 of the arrangement edge clamps a pane to 0 dp',
-};
+const KNOWN_FINDINGS: Record<string, string> = {};
 
 const failures = new Map<
   string,

@@ -110,11 +110,11 @@ const EXPANDED_HEIGHT = 900;
  * panes impractical there, though Material's scaffold checks only the width.
  *
  * A hinge the policy avoids decides the axis and separates the panes by
- * `hingeGap` around it. A separating hinge always splits, whatever the window
- * size, as it does on iOS. A split that doesn't fit, or that `axes` excludes,
- * shows only the primary pane. `primaryEdge` puts the primary pane on the
- * leading or trailing side of panes placed side by side, and an overlay's
- * above or below panes that are stacked.
+ * `hingeGap` around it, if that gap fits inside the arrangement. A separating
+ * hinge always splits, whatever the window size, as it does on iOS. A split
+ * that doesn't fit, or that `axes` excludes, shows only the primary pane.
+ * `primaryEdge` puts the primary pane on the leading or trailing side of panes
+ * placed side by side, and an overlay's above or below panes that are stacked.
  */
 export function arrange(
   { width, height, window, fold }: Geometry,
@@ -182,12 +182,13 @@ export function arrange(
       axis === 'horizontal'
         ? [fold.x, fold.x + fold.width, width]
         : [fold.y, fold.y + fold.height, height];
-    // A fold outside the arrangement, or along its edge, separates nothing.
-    if (start > 0 && end < extent) {
-      const middle = (start + end) / 2;
-      const half = Math.max(end - start, hingeGap) / 2;
-      const before = Math.max(0, middle - half);
-      const after = Math.min(extent, middle + half);
+    const middle = (start + end) / 2;
+    const half = Math.max(end - start, hingeGap) / 2;
+    const [before, after] = [middle - half, middle + half];
+    // A fold separates nothing unless the gap around it fits inside the
+    // arrangement, as on iOS: outside it, along its edge, or too close to it
+    // to leave room for a pane on that side.
+    if (before > 0 && after < extent) {
       // Overlay's primary pane goes after the hinge, as SwiftUI puts it.
       // A separating hinge already divides the window, so it splits whatever
       // the window size. A flat one only splits where two panes fit anyway.
