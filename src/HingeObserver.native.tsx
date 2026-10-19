@@ -18,6 +18,7 @@ export function HingeObserver({ children }: HingeObserverProps) {
     </HingeContext>
   );
 }
+HingeObserver satisfies typeof import('./HingeObserver').HingeObserver;
 
 const styles = StyleSheet.create({
   observer: { position: 'absolute', width: 0, height: 0 },
