@@ -88,3 +88,6 @@ nitrogen/
 apps/example-expo/ios/
 apps/example-expo/android/
 .artifacts/
+
+# Scratch copies made by verification/arrange.mutants.ts
+verification/.mutants/
