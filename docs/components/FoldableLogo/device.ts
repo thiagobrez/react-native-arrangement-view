@@ -1,72 +1,61 @@
-import type { Frame } from '../../../src/layout.ts';
+import { describeLayout, type Frame } from '../../../src/layout.ts';
 import type { HingeStatus } from '../../../src/types.ts';
 import { PANES } from './panes.ts';
 
-/** How the device is held: standing like a book, laid on a table, or stood up as a tent. */
-export type Orientation = 'upright' | 'tabletop' | 'tent';
+export type Hold = 'upright' | 'tabletop' | 'tent';
 export type Posture = 'closed' | 'open' | 'tabletop' | 'book' | 'tent';
 
-/** The hinge angle is in degrees: 0 closed, 180 open flat. */
 export interface Pose {
-  orientation: Orientation;
-  angle: number;
+  hold: Hold;
+  degrees: number;
 }
 
 export const postures: readonly { id: Posture; label: string; pose: Pose }[] = [
-  { id: 'closed', label: 'Closed', pose: { orientation: 'upright', angle: 0 } },
-  { id: 'open', label: 'Open', pose: { orientation: 'upright', angle: 180 } },
+  { id: 'closed', label: 'Closed', pose: { hold: 'upright', degrees: 0 } },
+  { id: 'open', label: 'Open', pose: { hold: 'upright', degrees: 180 } },
   {
     id: 'tabletop',
     label: 'Tabletop',
-    pose: { orientation: 'tabletop', angle: 100 },
+    pose: { hold: 'tabletop', degrees: 100 },
   },
-  { id: 'book', label: 'Book', pose: { orientation: 'upright', angle: 130 } },
-  { id: 'tent', label: 'Tent', pose: { orientation: 'tent', angle: 80 } },
+  { id: 'book', label: 'Book', pose: { hold: 'upright', degrees: 130 } },
+  { id: 'tent', label: 'Tent', pose: { hold: 'tent', degrees: 80 } },
 ];
 
-/** The logo is the device in book posture. */
-export const initialPose: Pose = { orientation: 'upright', angle: 130 };
+export const logoPose = postures.find(({ id }) => id === 'book')!.pose;
 
-/**
- * The displays in dp, upright. They are sized after a book-style foldable, so
- * the cover is a compact width closed and a compact height on its side, and
- * the inner display is an expanded width.
- */
-export const cover = { width: 470, height: 920 };
-export const inner = { width: 1012, height: 920 };
+export const coverDp = { width: 470, height: 920 };
+export const innerDp = { width: 1012, height: 920 };
 
-// The cover display hands over to the inner one about here, and a hinge open
-// further than FLAT_DEGREES no longer separates the panes.
-const HANDOVER_DEGREES = 30;
-const FLAT_DEGREES = 160;
+const CLOSED_BELOW_DEGREES = 30;
+const FULLY_OPEN_FROM_DEGREES = 160;
 
 const displayKey = (
-  screen: 'cover' | 'inner',
+  appDisplay: 'cover' | 'inner',
   landscape: boolean,
   halfOpened: boolean
 ) =>
-  `${screen}${landscape ? ' landscape' : ''}${
-    screen === 'inner' && halfOpened ? ' half-open' : ''
+  `${appDisplay}${landscape ? ' landscape' : ''}${
+    appDisplay === 'inner' && halfOpened ? ' half-open' : ''
   }` as keyof typeof PANES;
+
+type DisplayFrame = Frame;
 
 export interface DeviceState {
   posture: Posture;
   status: HingeStatus;
-  /** The display the app is on. */
-  screen: 'cover' | 'inner';
+  appDisplay: 'cover' | 'inner';
   landscape: boolean;
-  /** The panes on that display, upright, where Android's policy puts them. */
-  primary: Frame;
-  secondary: Frame | null;
-  /** The layout in words, as the example app's panes put it. */
+  primary: DisplayFrame;
+  secondary: DisplayFrame | null;
   panes: 'Primary only' | 'Side by side' | 'Stacked';
 }
 
-export function describeDevice({ orientation, angle }: Pose): DeviceState {
+export function describeDevice({ hold, degrees }: Pose): DeviceState {
   const status: HingeStatus =
-    angle < HANDOVER_DEGREES
+    degrees < CLOSED_BELOW_DEGREES
       ? 'closed'
-      : angle < FLAT_DEGREES
+      : degrees < FULLY_OPEN_FROM_DEGREES
         ? 'partiallyOpen'
         : 'fullyOpen';
   const posture: Posture =
@@ -74,21 +63,19 @@ export function describeDevice({ orientation, angle }: Pose): DeviceState {
       ? 'closed'
       : status === 'fullyOpen'
         ? 'open'
-        : orientation === 'upright'
+        : hold === 'upright'
           ? 'book'
-          : orientation;
+          : hold;
 
-  const screen =
-    orientation === 'tent' || status === 'closed' ? 'cover' : 'inner';
-  const landscape = orientation !== 'upright';
-  const display = screen === 'cover' ? cover : inner;
+  const appDisplay = hold === 'tent' || status === 'closed' ? 'cover' : 'inner';
+  const landscape = hold !== 'upright';
+  const display = appDisplay === 'cover' ? coverDp : innerDp;
   const window = landscape
     ? { width: display.height, height: display.width }
     : display;
   const frames =
-    PANES[displayKey(screen, landscape, status === 'partiallyOpen')];
-  // A window turned a quarter has its top at the display's left.
-  const upright = (frame: Frame): Frame =>
+    PANES[displayKey(appDisplay, landscape, status === 'partiallyOpen')];
+  const toDisplayFrame = (frame: Frame): DisplayFrame =>
     landscape
       ? {
           left: frame.top,
@@ -98,16 +85,18 @@ export function describeDevice({ orientation, angle }: Pose): DeviceState {
         }
       : frame;
 
+  const layout = describeLayout(frames);
+
   return {
     posture,
     status,
-    screen,
+    appDisplay,
     landscape,
-    primary: upright(frames.primary),
-    secondary: frames.secondary && upright(frames.secondary),
-    panes: !frames.secondary
+    primary: toDisplayFrame(frames.primary),
+    secondary: frames.secondary && toDisplayFrame(frames.secondary),
+    panes: !layout.secondaryVisible
       ? 'Primary only'
-      : frames.secondary.left > frames.primary.left
+      : layout.axis === 'horizontal'
         ? 'Side by side'
         : 'Stacked',
   };
