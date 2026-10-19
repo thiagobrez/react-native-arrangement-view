@@ -7,6 +7,7 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.views.view.ReactViewGroup
 import com.facebook.react.views.view.ReactViewManager
 
+// Extends the plain View manager so every View style (borders, overflow, ...) keeps working.
 @ReactModule(name = ArrangementViewManager.NAME)
 class ArrangementViewManager : ReactViewManager() {
   override fun getName(): String = NAME
