@@ -75,10 +75,12 @@ The [platform comparison](../guide/platform-comparison) shows both arrangements 
 
 The directions in which the panes may be placed: `"horizontal"` is side by side, `"vertical"` is stacked. It applies to either arrangement.
 
-- A split along an excluded axis never happens. The primary pane shows alone instead: on iOS at full size, across the hinge; on Android on one side of the hinge, the leading side by default, or above it.
-- An overlay never separates along an excluded axis. Its panes keep overlapping across the hinge instead.
+If the posture calls for the other direction:
 
-Use it when your content only works one way. A dashboard with a calendar beside it can pass `"horizontal"`, so that the calendar never squeezes under the dashboard. A video player can pass `"vertical"`, so that the video stays full-screen in book posture and only moves above the hinge in tabletop.
+- A split shows the primary pane alone. On iOS it fills the screen, across the hinge. On Android it sits on one side of the hinge.
+- An overlay stays as it is on a flat screen, with the primary in front of the secondary, across the hinge.
+
+Use it when your content only works one way. A dashboard with a calendar beside it can pass `"horizontal"`: in book posture the calendar sits beside the dashboard, and in tabletop the dashboard shows alone. A video player can pass `"vertical"`: in book posture the video fills the screen, and in tabletop it moves above the hinge.
 
 <PostureShots
   dir="api/arrangement-view"
