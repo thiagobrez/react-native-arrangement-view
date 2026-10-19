@@ -2,7 +2,11 @@ import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
 import { createElement } from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
-import { arrange, type Geometry } from './harness/arrange.ts';
+import {
+  arrange,
+  type ArrangeOptions,
+  type Geometry,
+} from './harness/arrange.ts';
 import {
   createLayoutStore,
   describeLayout,
@@ -28,10 +32,10 @@ const phone = window(400, 700);
 const book: Geometry = {
   ...inner,
   fold: {
-    x: 425,
+    x: inner.width / 2,
     y: 0,
     width: 0,
-    height: 880,
+    height: inner.height,
     orientation: 'vertical',
     separating: true,
     halfOpened: true,
@@ -41,47 +45,46 @@ const split = { arrangement: 'split', axes: 'both' } as const;
 const overlay = { arrangement: 'overlay', axes: 'both' } as const;
 
 test('the layout says whether the secondary pane shows, along which axis, and whether the panes overlap', () => {
-  const cases: [Geometry, typeof split | typeof overlay, ArrangementLayout][] =
+  const cases: [Geometry, ArrangeOptions, ArrangementLayout][] = [
     [
-      [
-        inner,
-        split,
-        { secondaryVisible: true, axis: 'horizontal', isOverlapping: false },
-      ],
-      [
-        coverPortrait,
-        split,
-        { secondaryVisible: true, axis: 'vertical', isOverlapping: false },
-      ],
-      [
-        phone,
-        split,
-        { secondaryVisible: false, axis: null, isOverlapping: false },
-      ],
-      [
-        inner,
-        overlay,
-        { secondaryVisible: true, axis: null, isOverlapping: true },
-      ],
-      [
-        book,
-        overlay,
-        { secondaryVisible: true, axis: 'horizontal', isOverlapping: false },
-      ],
-      [
-        book,
-        split,
-        { secondaryVisible: true, axis: 'horizontal', isOverlapping: false },
-      ],
-    ];
+      inner,
+      split,
+      { secondaryVisible: true, axis: 'horizontal', isOverlapping: false },
+    ],
+    [
+      coverPortrait,
+      split,
+      { secondaryVisible: true, axis: 'vertical', isOverlapping: false },
+    ],
+    [
+      phone,
+      split,
+      { secondaryVisible: false, axis: null, isOverlapping: false },
+    ],
+    [
+      inner,
+      overlay,
+      { secondaryVisible: true, axis: null, isOverlapping: true },
+    ],
+    [
+      book,
+      overlay,
+      { secondaryVisible: true, axis: 'horizontal', isOverlapping: false },
+    ],
+    [
+      book,
+      split,
+      { secondaryVisible: true, axis: 'horizontal', isOverlapping: false },
+    ],
+    [
+      inner,
+      { ...split, primaryEdge: 'trailing' },
+      { secondaryVisible: true, axis: 'horizontal', isOverlapping: false },
+    ],
+  ];
   for (const [geometry, options, layout] of cases) {
     assert.deepEqual(describeLayout(arrange(geometry, options)), layout);
   }
-  // Whichever side the primary pane is on.
-  assert.deepEqual(
-    describeLayout(arrange(inner, { ...split, primaryEdge: 'trailing' })),
-    { secondaryVisible: true, axis: 'horizontal', isOverlapping: false }
-  );
 });
 
 test('the store starts unknown and notifies only when the layout changes', () => {
