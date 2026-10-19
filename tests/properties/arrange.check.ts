@@ -19,8 +19,7 @@ interface Case {
     Pick<ArrangeOptions, 'primaryEdge'>;
 }
 
-// The axis the panes split along, and a frame's or fold's span on it.
-const foldAxis = (fold: Fold): Axis =>
+const splitAxis = (fold: Fold): Axis =>
   fold.orientation === 'vertical' ? 'horizontal' : 'vertical';
 const foldSpan = (axis: Axis, f: Fold) =>
   axis === 'horizontal'
@@ -45,7 +44,7 @@ function policyFold({ geometry: g, options: o }: Case) {
     o.hingePolicy === 'alwaysAvoid' ||
     (o.hingePolicy === 'avoidSeparating' && fold.separating);
   if (!avoided) return null;
-  const axis = foldAxis(fold);
+  const axis = splitAxis(fold);
   const [start, end] = foldSpan(axis, fold);
   const middle = (start + end) / 2;
   const half = Math.max(end - start, o.hingeGap) / 2;
@@ -188,12 +187,6 @@ const PROPERTIES: Record<string, Property> = {
     return `split along ${axis} with axes '${axes}'`;
   },
 
-  // Side by side, the primary pane takes the horizontal side `primaryEdge`
-  // names: by default leading for split and trailing for overlay. Leading is
-  // left in LTR and right in RTL. Stacked, a split's primary pane is always on
-  // top, and an overlay's takes the vertical side `primaryEdge` names, by
-  // default below the hinge. A single pane beside a hinge takes the side the
-  // primary would split to.
   'primary on its edge': (c, r) => {
     const { arrangement, primaryEdge, rtl } = c.options;
     const [horizontal, vertical] = edges(primaryEdge);
@@ -211,11 +204,11 @@ const PROPERTIES: Record<string, Property> = {
       primaryFirst = frameSpan(axis, r.primary)[1] <= hinge.start + EPS;
     }
     const overlay = arrangement === 'overlay';
-    const expectFirst =
-      axis === 'horizontal'
-        ? ((horizontal ?? (overlay ? 'trailing' : 'leading')) === 'leading') !==
-          rtl
-        : !overlay || vertical === 'top';
+    const defaultHorizontal = overlay ? 'trailing' : 'leading';
+    const expectLeft =
+      ((horizontal ?? defaultHorizontal) === 'leading') !== rtl;
+    const expectTop = !overlay || vertical === 'top';
+    const expectFirst = axis === 'horizontal' ? expectLeft : expectTop;
     if (primaryFirst !== expectFirst)
       return `primary is ${primaryFirst ? 'before' : 'after'} the secondary along ${axis}`;
     return null;
@@ -234,12 +227,15 @@ const PROPERTIES: Record<string, Property> = {
   },
 };
 
-// The grid. Window sizes sit on each side of Material's breakpoints (compact
-// height 480, expanded width 840, expanded height 900); arrangement sizes,
-// fold positions and gaps are small integers that put the fold before, on,
-// inside and past each edge, and the gap below, at and above the fold's width.
-const WINDOWS = [839, 840].flatMap((width) =>
-  [479, 480, 899, 900].map((height) => ({ width, height }))
+const HEIGHT_DP_MEDIUM_LOWER_BOUND = 480;
+const WIDTH_DP_EXPANDED_LOWER_BOUND = 840;
+const HEIGHT_DP_EXPANDED_LOWER_BOUND = 900;
+const eachSide = (breakpoint: number) => [breakpoint - 1, breakpoint];
+const WINDOWS = eachSide(WIDTH_DP_EXPANDED_LOWER_BOUND).flatMap((width) =>
+  [
+    ...eachSide(HEIGHT_DP_MEDIUM_LOWER_BOUND),
+    ...eachSide(HEIGHT_DP_EXPANDED_LOWER_BOUND),
+  ].map((height) => ({ width, height }))
 );
 const EXTENTS = [1, 2, 3, 4, 5, 8];
 const CROSS = [1, 3];
@@ -327,15 +323,15 @@ function* folds(
       }
 }
 
-// Seeded random cases in realistic dp, fractional included, so the grid's
-// small integers aren't the only sizes checked.
-function* sampled(count: number): Generator<Case> {
-  // Park-Miller: the same cases on every run.
-  let seed = 49_485_617;
-  const next = () => {
+function parkMiller(seed: number) {
+  return () => {
     seed = (seed * 16_807) % 2_147_483_647;
     return seed / 2_147_483_647;
   };
+}
+
+function* seededRandomCases(count: number): Generator<Case> {
+  const next = parkMiller(49_485_617);
   const pick = <T>(xs: readonly T[]) => xs[Math.floor(next() * xs.length)]!;
   const dp = (max: number) =>
     next() < 0.5 ? Math.round(next() * max) : next() * max;
@@ -372,7 +368,7 @@ let checked = 0;
 const started = Date.now();
 const cases = function* () {
   yield* grid();
-  yield* sampled(500_000);
+  yield* seededRandomCases(500_000);
 };
 const CASES_PER_HARNESS_RUN = 65_536;
 let batch: Case[] = [];
