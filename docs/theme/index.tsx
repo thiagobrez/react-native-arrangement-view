@@ -13,27 +13,24 @@ import {
 } from '@rspress/core/theme-original';
 import { FoldableLogo } from '../components/FoldableLogo/FoldableLogo';
 import { isPlatform, PlatformBadge } from '../components/PlatformBadge';
+import { newestFirst } from '../versions';
 import styles from './index.module.css';
 
-/**
- * Tells readers of another version's pages where the latest docs are. Versions
- * are listed newest first, so one before the default isn't released yet.
- */
 function VersionBanner() {
   const { site } = useSite();
   const version = useVersion();
-  const { default: latest, versions } = site.multiVersion;
+  const released = site.multiVersion.default;
 
-  if (!version || version === latest) {
+  if (!version || version === released) {
     return null;
   }
 
-  const unreleased = versions.indexOf(version) < versions.indexOf(latest);
+  const unreleased = newestFirst(version, released) < 0;
   return (
     <div className={styles.banner}>
       You're reading the docs for {version},{' '}
       {unreleased ? "which isn't released yet." : 'an older version.'}{' '}
-      <Link href="/">Go to the latest version, {latest}.</Link>
+      <Link href="/">Go to the latest version, {released}.</Link>
     </div>
   );
 }
