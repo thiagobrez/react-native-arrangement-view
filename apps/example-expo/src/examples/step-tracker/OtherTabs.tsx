@@ -12,7 +12,6 @@ const insights = [
   ['Goal streak', '14 days at 5,000 steps or more'],
 ];
 
-/** A few observations from the step history. */
 export function InsightsTab() {
   return (
     <Stack.Navigator screenOptions={headerBase}>

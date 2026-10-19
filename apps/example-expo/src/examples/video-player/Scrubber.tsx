@@ -10,7 +10,6 @@ export interface ScrubberProps {
   currentTime: number;
   duration: number;
   onSeek: (time: number) => void;
-  /** Called with true when a drag starts and false when it ends. */
   onScrubbingChange: (scrubbing: boolean) => void;
 }
 

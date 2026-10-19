@@ -8,7 +8,6 @@ export interface Trail {
   notes: string[];
 }
 
-/** Sidebar items. Selecting one shows it in the secondary column. */
 export const trails: Trail[] = [
   {
     id: 'ridge',

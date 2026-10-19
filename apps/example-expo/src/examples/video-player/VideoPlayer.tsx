@@ -11,15 +11,6 @@ const source = {
   metadata: { title: 'Big Buck Bunny', artist: 'Blender Foundation' },
 };
 
-/**
- * A full-screen player, arranged as Apple's iPhone Duo guidance describes:
- * the controls are the overlay's primary pane, in front of the video. While
- * nothing separates the panes (closed, or open flat), they float over the
- * full-screen video and hide while it plays. A half-open hinge separates
- * them: in tabletop the video stands on the upright half and the controls
- * fill the half resting on the table; held like a book, the video takes the
- * leading half and the controls the trailing one.
- */
 export function VideoPlayer() {
   const player = useVideoPlayer(source, (created) => {
     created.loop = true;

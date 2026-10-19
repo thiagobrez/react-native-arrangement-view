@@ -12,11 +12,9 @@ type Props = {
   /** A folder in public/. */
   dir: string;
   postures: { file: string; label: string }[];
-  /** For an example that runs on one platform only. Default both. */
   platforms?: Platform[];
 };
 
-/** The iOS and Android screenshots of an example in each posture. */
 export function PostureShots({
   dir,
   postures,

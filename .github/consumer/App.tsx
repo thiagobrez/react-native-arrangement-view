@@ -1,5 +1,3 @@
-// Copied over a fresh Expo app by the `consumer` CI job, which installs the
-// packed tarball instead of the workspace source.
 import { StyleSheet, Text, View } from 'react-native';
 import {
   ArrangementView,

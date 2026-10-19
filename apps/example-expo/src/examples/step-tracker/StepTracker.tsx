@@ -12,22 +12,12 @@ import { StepsTab } from './StepsTab';
 
 const Tab = createNativeBottomTabNavigator();
 
-/**
- * A step tracker after a foldable app design: each tab shows one pane on a
- * closed device and two once unfolded, with the primary pane on the trailing
- * side so it stays where the cover display was as the device opens.
- *
- * The tabs and each tab's header buttons are native, so the system places
- * them: a tab bar and navigation bar on most devices, and a vertical column
- * beside the content where the platform puts them there.
- */
 export function StepTracker() {
   const icons = useTabIcons();
   return (
     <Tab.Navigator
       labeled={false}
       tabBarActiveTintColor="#ff9500"
-      // Material's defaults on Android; iOS keeps the system's material.
       tabBarStyle={Platform.select({
         android: { backgroundColor: colors.background },
       })}
@@ -73,7 +63,6 @@ const glyphs = {
   insights: ['sparkles', 'creation'],
 } as const;
 
-/** SF Symbols on iOS; on Android, the same glyphs drawn to images. */
 function useTabIcons(): Record<keyof typeof glyphs, TabIcon> {
   const [images, setImages] = useState<Record<string, ImageSourcePropType>>({});
   useEffect(() => {

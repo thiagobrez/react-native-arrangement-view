@@ -42,7 +42,6 @@ function Layout() {
   return <BaseLayout beforeDocContent={<VersionBanner />} />;
 }
 
-/** The home page's hero, its image, the logo, shown as a 3D model. */
 function HomeHero(props: HomeHeroProps) {
   const { frontmatter } = useFrontmatter();
   const image = frontmatter.hero?.image;
@@ -60,7 +59,6 @@ function HomeHero(props: HomeHeroProps) {
   );
 }
 
-/** A page's `tag: ios` or `tag: android` marks it in the sidebar. */
 function Tag({ tag }: { tag?: string }) {
   return tag && isPlatform(tag) ? (
     <PlatformBadge platform={tag} />

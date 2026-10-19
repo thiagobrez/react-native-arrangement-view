@@ -20,7 +20,6 @@ const settings: HeaderButton = {
   icon: 'cog-outline',
 };
 
-/** The day's steps: the dashboard, and the step history once unfolded. */
 export function StepsTab() {
   return (
     <Stack.Navigator screenOptions={headerBase}>
@@ -34,7 +33,6 @@ export function StepsTab() {
 }
 
 function StepsScreen() {
-  // Shared by both panes, so choosing a day in either updates the other.
   const [selected, setSelected] = useState(today);
   // On a closed device the calendar opens as a sheet instead.
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -58,8 +56,6 @@ function StepsScreen() {
   }, [navigation, showCalendar, openCalendar]);
 
   return (
-    // The whole arrangement stays clear of system bars, such as the column
-    // that holds the tabs beside it on a foldable.
     <SafeAreaView style={styles.screen} edges={['left', 'right', 'bottom']}>
       <ArrangementView
         style={styles.screen}
@@ -67,7 +63,6 @@ function StepsScreen() {
         primaryEdge="trailing"
         onArrangementLayoutChange={(next) => {
           setLayout(next);
-          // The calendar is on screen now: the sheet would repeat it.
           if (next.secondaryVisible) setCalendarOpen(false);
         }}
       >

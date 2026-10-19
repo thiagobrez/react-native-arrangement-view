@@ -17,7 +17,6 @@ interface Props {
 
 const STEP_MINUTES = 15;
 
-/** The alarm's time, and a preview of the glow that comes before it. */
 export function AlarmSettings({
   alarm,
   onChange,

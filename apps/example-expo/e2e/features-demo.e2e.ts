@@ -1,8 +1,6 @@
 import { beforeEach, describe, test } from '@e2e-dev/mobile';
 import { expect, type Locator } from 'e2e';
 
-// Every test starts on the outer display. The engine never resets the hinge,
-// and a fresh emulator boots unfolded.
 beforeEach(async ({ app, device, screen }) => {
   await device.fold('closed');
   await app.open();

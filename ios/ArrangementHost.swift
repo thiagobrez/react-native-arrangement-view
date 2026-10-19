@@ -1,9 +1,6 @@
 import SwiftUI
 import Combine
 
-// UIKit is only the React Native / SwiftUI hosting boundary. All arrangement
-// decisions and hinge observation below use SwiftUI, including the fallback.
-
 private final class ArrangementModel: ObservableObject {
   @Published var primary: UIView?
   @Published var secondary: UIView?
@@ -128,7 +125,6 @@ private struct ArrangementContent: View {
 
   @ViewBuilder var body: some View {
 // Inspired from Expo: https://github.com/expo/expo/blob/1ef42ab2fc01d6cc8bb7d94c1c3e60be42a3731d/packages/expo-ui/ios/ArrangementViewView.swift#L16-L18
-// Runtime availability alone cannot compile symbols absent from an older SDK.
 // ArrangementView first ships in the iOS 27.1 SDK, whose SwiftUICore is 8.0.85.
 #if canImport(SwiftUICore, _version: 8.0.85)
     if #available(iOS 27.1, *) {
@@ -195,7 +191,6 @@ private struct ArrangementContent: View {
     if model.arrangement == "overlay" {
       ZStack { secondary; primary }
     } else {
-      // The secondary React tree stays mounted.
       primary
     }
   }

@@ -7,10 +7,6 @@ export type ArrangementAxes = 'both' | 'horizontal' | 'vertical';
 export type HorizontalEdge = 'leading' | 'trailing';
 /** The primary pane's side when an overlay's panes are stacked. */
 export type VerticalEdge = 'top' | 'bottom';
-/**
- * A side the primary pane takes: leading or trailing when the panes are side
- * by side, top or bottom when an overlay's panes are stacked.
- */
 export type PrimaryEdge = HorizontalEdge | VerticalEdge;
 /** Which hinges the panes keep clear of, after Material's `HingePolicy`. */
 export type HingePolicy = 'avoidSeparating' | 'alwaysAvoid' | 'neverAvoid';
@@ -25,7 +21,6 @@ export type HingeChangeHandler = (hinge: HingeState) => void;
 export interface HingeObserverProps {
   children?: ReactNode;
 }
-/** What an arrangement shows. */
 export type ArrangementLayout = Readonly<{
   /** The secondary pane is on screen: beside the primary, or behind it in overlay. */
   secondaryVisible: boolean;

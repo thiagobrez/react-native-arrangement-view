@@ -11,7 +11,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface Props {
   alarm: Date;
-  /** How far the glow has risen, from 0 to 1. */
   glow: Animated.Value;
   ringing: boolean;
   /**
@@ -24,13 +23,10 @@ interface Props {
 
 const colors = {
   day: '#f5f5f7',
-  // StandBy's night mode: one dim red, so the clock doesn't light the room.
   night: '#e5281e',
-  // The glow's light, which the digits warm to as it rises.
   dawn: '#ffd7a3',
 };
 
-/** A bedside clock: the time, large, over a glow that rises before the alarm. */
 export function ClockFace({ alarm, glow, ringing, standBy, onStop }: Props) {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const insets = useSafeAreaInsets();
@@ -121,7 +117,6 @@ function useNow() {
 
 const styles = StyleSheet.create({
   face: { flex: 1, backgroundColor: 'black' },
-  // A sunrise from the bottom edge.
   glow: {
     ...StyleSheet.absoluteFill,
     experimental_backgroundImage:

@@ -18,10 +18,6 @@ export interface PaneProps {
   arrangement: Arrangement;
 }
 
-/**
- * App content for one slot of the arrangement. It reports the size its
- * ArrangementView gave it, the hinge that view observes, and its layout.
- */
 export function Pane({ primary, arrangement }: PaneProps) {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const hinge = useHingeChange();

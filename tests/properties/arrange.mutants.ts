@@ -10,7 +10,6 @@ interface Mutant {
   file: 'arrange.h' | 'primaryEdge.ts' | 'layout.ts';
   find: string;
   replace: string;
-  /** The property the check must report as failing. */
   breaks: string;
 }
 
@@ -115,7 +114,6 @@ const source = (file: Mutant['file']) =>
 const scratch = fileURLToPath(new URL('./.mutants/', import.meta.url));
 const check = fileURLToPath(new URL('./arrange.check.ts', import.meta.url));
 
-// Each mutant runs the whole check, so they run side by side, one per core.
 async function run(mutant: Mutant, i: number) {
   const original = readFileSync(source(mutant.file), 'utf8');
   const label = `${mutant.file}: ${mutant.find} -> ${mutant.replace}`;

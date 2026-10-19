@@ -18,7 +18,6 @@ export function ArrangementView({
   axes = 'both',
   primaryEdge,
   onArrangementLayoutChange,
-  // Android only: SwiftUI has its own rules for hinges and window sizes.
   hingePolicy: _hingePolicy,
   hingeGap: _hingeGap,
   ...props

@@ -60,7 +60,7 @@ class ArrangementView(private val reactContext: ThemedReactContext) : ReactViewG
   }
 
   // Fabric positions views without a layout pass, so ancestors can move this view without any
-  // callback reaching it. Checking before each draw is cheap and sees every such change.
+  // callback reaching it.
   private val onPreDraw = ViewTreeObserver.OnPreDrawListener {
     pushGeometry()
     true
@@ -122,7 +122,6 @@ class ArrangementView(private val reactContext: ThemedReactContext) : ReactViewG
     }
     val width = width - contentInsets.left - contentInsets.right
     val height = height - contentInsets.top - contentInsets.bottom
-    // Material sizes panes by the window, as iOS size classes are by the scene.
     val window = rootView
     val geometry =
       listOf(

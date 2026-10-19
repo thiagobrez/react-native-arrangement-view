@@ -34,7 +34,6 @@ const extentOf = (axis: Axis, g: Geometry) =>
 const isFull = (f: Frame, g: Geometry) =>
   f.left === 0 && f.top === 0 && f.width === g.width && f.height === g.height;
 
-/** Both panes at full size, one over the other: overlay that didn't split. */
 const overlaid = ({ primary, secondary }: PaneFrames, g: Geometry) =>
   secondary !== null && isFull(primary, g) && isFull(secondary, g);
 
@@ -51,10 +50,8 @@ function avoidedFold({ geometry: g, options: o }: Case) {
   return { fold, axis, start, end };
 }
 
-// Frames are floats: a pane may pass its bound by rounding, never by more.
 const EPS = 1e-6;
 
-/** The axis split panes sit along, read from the frames; null unless split. */
 function paneAxis(r: PaneFrames, g: Geometry): Axis | null {
   const { primary, secondary } = r;
   if (!secondary || overlaid(r, g)) return null;
@@ -65,10 +62,6 @@ function paneAxis(r: PaneFrames, g: Geometry): Axis | null {
   return null;
 }
 
-/**
- * The sides `primaryEdge` names, horizontal then vertical: one side, or a
- * horizontal and a vertical side in that order. Anything else names none.
- */
 function edges(value: ArrangeOptions['primaryEdge']) {
   const horizontal = (e: unknown) =>
     e === 'leading' || e === 'trailing' ? e : undefined;
@@ -84,7 +77,6 @@ function edges(value: ArrangeOptions['primaryEdge']) {
 type Property = (c: Case, r: PaneFrames) => string | null;
 
 const PROPERTIES: Record<string, Property> = {
-  // Every shown pane lies inside the arrangement.
   'inside the arrangement': ({ geometry: g }, r) => {
     for (const f of [r.primary, r.secondary]) {
       if (!f) continue;
@@ -98,7 +90,6 @@ const PROPERTIES: Record<string, Property> = {
     return null;
   },
 
-  // A pane that is shown has room to show something.
   'no empty pane': (_, r) => {
     for (const [name, f] of [
       ['primary', r.primary],
@@ -110,8 +101,6 @@ const PROPERTIES: Record<string, Property> = {
     return null;
   },
 
-  // Split panes sit side by side or stacked, spanning the arrangement across
-  // their axis, and never overlap.
   'split panes do not overlap': ({ geometry: g }, r) => {
     if (!r.secondary || overlaid(r, g)) return null;
     const axis = paneAxis(r, g);
@@ -129,8 +118,6 @@ const PROPERTIES: Record<string, Property> = {
     return null;
   },
 
-  // No pane lies across a hinge the policy avoids, unless overlay draws both
-  // panes over the whole arrangement.
   'clear of an avoided hinge': (c, r) => {
     const hinge = avoidedFold(c);
     if (!hinge || overlaid(r, c.geometry)) return null;
@@ -143,8 +130,6 @@ const PROPERTIES: Record<string, Property> = {
     return null;
   },
 
-  // Panes on either side of an avoided hinge are at least hingeGap apart,
-  // and never closer than the hinge is wide.
   'hingeGap between panes': (c, r) => {
     const hinge = avoidedFold(c);
     if (!hinge || !r.secondary || overlaid(r, c.geometry)) return null;
@@ -159,8 +144,6 @@ const PROPERTIES: Record<string, Property> = {
     return null;
   },
 
-  // A separating hinge splits the panes along it whatever the window size,
-  // unless `axes` excludes that axis.
   'a separating hinge always splits': (c, r) => {
     const hinge = avoidedFold(c);
     if (!hinge?.fold.separating) return null;
@@ -173,9 +156,6 @@ const PROPERTIES: Record<string, Property> = {
     return null;
   },
 
-  // In tabletop, a split shows both panes whatever the window size, as long as
-  // `axes` allows stacking them. It stacks them along the fold if it avoids
-  // it, and otherwise wherever two panes fit, which tabletop always allows.
   'tabletop shows both panes': ({ geometry: g, options: o }, r) => {
     const tabletop = g.fold?.halfOpened && g.fold.orientation === 'horizontal';
     if (!tabletop || o.arrangement !== 'split' || o.axes === 'horizontal')
@@ -183,7 +163,6 @@ const PROPERTIES: Record<string, Property> = {
     return r.secondary ? null : 'tabletop showed one pane';
   },
 
-  // `axes` is a restriction: a split never goes along an excluded axis.
   'axes is respected': ({ geometry: g, options: { axes } }, r) => {
     const axis = paneAxis(r, g);
     if (!axis || axes === 'both' || axes === axis) return null;
@@ -223,7 +202,6 @@ const PROPERTIES: Record<string, Property> = {
     return null;
   },
 
-  // What useArrangementLayout reports matches the frames.
   'layout matches the frames': ({ geometry: g }, r) => {
     const layout = describeLayout(r);
     if (layout.secondaryVisible !== (r.secondary !== null))
@@ -366,8 +344,6 @@ function* sampled(count: number): Generator<Case> {
   }
 }
 
-// Properties the current code breaks, reported and not yet fixed. They still
-// print as FAIL but don't fail the run. Remove an entry once its fix lands.
 const KNOWN_FINDINGS: Record<string, string> = {
   'no empty pane':
     'an avoided hinge within hingeGap / 2 of the arrangement edge clamps a pane to 0 dp',

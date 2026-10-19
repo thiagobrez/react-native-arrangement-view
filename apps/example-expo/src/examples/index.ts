@@ -9,7 +9,6 @@ import { SplitViewExample } from './split-view/SplitViewExample';
 import { NativeComponents } from './native-components/NativeComponents';
 
 export interface Example {
-  /** Route name; also used for testIDs. */
   name: string;
   title: string;
   component: ComponentType;
@@ -27,7 +26,6 @@ export const examples: Example[] = [
     name: 'step-tracker',
     title: 'Step tracker',
     component: StepTracker,
-    // Each of its tabs has its own header, as in the app it's copied from.
     options: { headerShown: false, statusBarStyle: 'dark' },
   },
   {
@@ -42,7 +40,6 @@ export const examples: Example[] = [
       autoHideHomeIndicator: true,
     },
   },
-  // react-native-screens' Split is a UISplitViewController, so iOS only.
   ...(Platform.OS === 'ios'
     ? [
         {

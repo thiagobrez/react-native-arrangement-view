@@ -41,10 +41,6 @@ struct Fold {
   bool operator==(const Fold &) const = default;
 };
 
-/**
- * The arrangement's size, the size of the window it is in, and the fold, if
- * any. All in dp; the fold is relative to the arrangement.
- */
 struct Geometry {
   double width{};
   double height{};

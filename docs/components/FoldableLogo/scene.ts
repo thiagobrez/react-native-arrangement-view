@@ -66,7 +66,6 @@ const FIELD_OF_VIEW = 30;
 const VIEW_WIDTH = 4.5;
 const VIEW_HEIGHT = 3.9;
 
-/** Where the camera turns to for each posture: degrees around and above. */
 const views: Record<Posture, readonly [yaw: number, pitch: number]> = {
   closed: [24, 10],
   open: [-16, 10],
@@ -134,7 +133,6 @@ class Spring {
     this.velocity = 0;
   }
 
-  /** Advances by `dt` seconds. False once it rests on its target. */
   step(dt: number) {
     if (this.value === this.target && this.velocity === 0) return false;
     const damping = 2 * Math.sqrt(this.stiffness);
@@ -178,7 +176,6 @@ interface Screen {
   primary: FrameSprings;
   secondary: FrameSprings;
   secondaryOn: Spring;
-  /** The dashed line along a hinge that separates the inner display's panes. */
   crease: Spring;
   springs: Spring[];
   stale: boolean;
@@ -282,7 +279,6 @@ function paint(screen: Screen, font: string) {
     context.fillStyle = gradient;
     context.fillRect(left, top, width, height);
 
-    // The pane's name and size turn with the app, about the pane's centre.
     const across = MathUtils.lerp(width, height, turn);
     const down = MathUtils.lerp(height, width, turn);
     context.translate(left + width / 2, top + height / 2);
@@ -297,8 +293,6 @@ function paint(screen: Screen, font: string) {
     context.fillText(`${Math.round(across)} × ${Math.round(down)} dp`, 2, 84);
     context.restore();
   };
-  // The primary pane is painted last: where it shows alone, it grows over
-  // the secondary one.
   pane(
     'Secondary',
     screen.secondary,
@@ -451,7 +445,6 @@ export function createFoldableScene(
   Object.assign(sun.shadow.camera, { left: -5, right: 5, top: 5, bottom: -5 });
   sun.shadow.camera.updateProjectionMatrix();
   scene.add(sun);
-  // A light from the camera keeps the faces turned to it from going flat.
   camera.add(new DirectionalLight('#ffffff', 1.1));
 
   const ground = mesh(
@@ -462,7 +455,6 @@ export function createFoldableScene(
   ground.receiveShadow = true;
   scene.add(ground);
 
-  // The device: two halves turning about the hinge, and a spine between them.
   let pose = initialPose;
   let state = describeDevice(pose);
   const screens = {
@@ -511,8 +503,6 @@ export function createFoldableScene(
   const right = half(1);
   const left = half(-1);
 
-  // The cover display is on the back of the left half, which closes over the
-  // right one, so its left edge is at the hinge.
   const coverWidth = cover.width * DP;
   const coverHeight = cover.height * DP;
   const coverDisplay = display(
@@ -590,7 +580,6 @@ export function createFoldableScene(
     left.group.rotation.y = fold * (1 - held.share);
     spine.rotation.y = (fold * (1 - 2 * held.share)) / 2;
 
-    // Stand the device on the ground, in the middle of the view.
     device.position.set(0, 0, 0);
     device.updateMatrixWorld(true);
     box.makeEmpty().expandByObject(right.body).expandByObject(left.body);
@@ -680,7 +669,6 @@ export function createFoldableScene(
   observer.observe(canvas);
   resize();
 
-  // The text is painted with the page's font, which may still be loading.
   let disposed = false;
   document.fonts.ready.then(() => {
     if (disposed) return;
@@ -689,7 +677,6 @@ export function createFoldableScene(
     invalidate();
   });
 
-  // Dragging turns the camera about the device.
   let drag: { x: number; y: number } | null = null;
   const onPointerDown = (event: PointerEvent) => {
     if (event.button !== 0) return;

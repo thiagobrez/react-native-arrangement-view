@@ -58,7 +58,6 @@ export const HingeContext = createContext<ReturnType<
   typeof createHingeStore
 > | null>(null);
 
-/** One observer's store, and the native event handler that feeds it. */
 export function useHingeStore() {
   const [store] = useState(createHingeStore);
   const onHingeChange = useCallback(

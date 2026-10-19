@@ -58,7 +58,6 @@ android {
 
 dependencies {
   implementation "com.facebook.react:react-android"
-  // Jetpack WindowManager reports the fold; window-java adapts its Flow to a callback.
   implementation "androidx.window:window:1.5.1"
   implementation "androidx.window:window-java:1.5.1"
 }

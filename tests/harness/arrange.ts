@@ -28,23 +28,17 @@ const { resolvePrimaryEdge }: typeof import('../../src/primaryEdge.ts') =
 
 export type { Frame, PaneFrames };
 
-/** A fold within the arrangement, as Jetpack WindowManager reports it. */
 export interface Fold {
   x: number;
   y: number;
   width: number;
   height: number;
-  /** A vertical fold runs top to bottom, as in book posture. */
   orientation: 'vertical' | 'horizontal';
   /** Half-open, or a hinge that hides content. */
   separating: boolean;
   halfOpened: boolean;
 }
 
-/**
- * The arrangement's size, the size of the window it is in, and the fold, if
- * any. All in dp; the fold is relative to the arrangement.
- */
 export interface Geometry {
   width: number;
   height: number;
