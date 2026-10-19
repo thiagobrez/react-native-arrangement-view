@@ -7,7 +7,7 @@ import { PostureShots } from '../../../components/PostureShots';
 
 # ArrangementView
 
-The container component where you render your primary and secondary panes. It arranges them side by side or stacked, depending on the platform, device, and orientation.
+The container component where you render your primary and secondary panes. It arranges them side by side, stacked, or overlaid, depending on the platform, device, and orientation.
 
 ```tsx
 import { ArrangementView } from 'react-native-arrangement-view';
@@ -26,6 +26,12 @@ export function PlayerScreen() {
 }
 ```
 
+It also takes the [`View` props](https://reactnative.dev/docs/view#props), such as `style` and `testID`. Give the arrangement a bounded size, usually `flex: 1`. The platform determines whether a split is appropriate.
+
+The component adds no safe-area padding. Place it within the safe area supplied by your screen/navigation container, or handle insets in your content.
+
+To adapt a pane's content to what the arrangement shows, such as whether the secondary pane is on screen, use [`useArrangementLayout`](./use-arrangement-layout) inside a pane, or `onArrangementLayoutChange` outside the panes.
+
 ## Props
 
 | Prop                                                               | Default             | Meaning                                                                                           |
@@ -39,14 +45,6 @@ export function PlayerScreen() {
 | [`hingePolicy`](#hingepolicy) <PlatformBadge platform="android" /> | `"avoidSeparating"` | The hinges the panes keep clear of                                                                |
 | [`hingeGap`](#hingegap) <PlatformBadge platform="android" />       | `24`                | The space in dp between the panes around an avoided hinge                                         |
 
-It also takes the [`View` props](https://reactnative.dev/docs/view#props), such as `style` and `testID`. Give the arrangement a bounded size, usually `flex: 1`. The platform determines whether a split is appropriate.
-
-The component adds no safe-area padding. Place it within the safe area supplied by your screen/navigation container, or handle insets in your content.
-
-To adapt a pane's content to what the arrangement shows, such as whether the secondary pane is on screen, use [`useArrangementLayout`](./use-arrangement-layout) inside a pane, or `onArrangementLayoutChange` outside the panes.
-
-The screenshots below are from the Features demo in the [example app](https://github.com/thiagobrez/react-native-arrangement-view/tree/main/apps/example-expo/src/examples/features-demo), on the iPhone Duo and Pixel 10 Pro Fold. Each pane shows its size and the layout it reports.
-
 ### children
 
 Exactly one `ArrangementView.Primary` and one `ArrangementView.Secondary`, in either order. See [below](#arrangementviewprimary--arrangementviewsecondary) for what goes in each.
@@ -55,8 +53,8 @@ Exactly one `ArrangementView.Primary` and one `ArrangementView.Secondary`, in ei
 
 `"split" | "overlay"`, default `"split"`.
 
-- `"split"` shares the arrangement between the two panes, side by side or stacked, when the window has room for both or a half-open hinge divides it. Otherwise the primary pane shows alone, and the secondary pane stays mounted but off screen.
-- `"overlay"` gives both panes the whole arrangement, with the primary in front, until a half-open hinge separates them. The primary pane then goes after the hinge: on the trailing side, or below it, unless [`primaryEdge`](#primaryedge) names another side.
+- `"split"` shares the arrangement between the two panes, side by side or stacked, when the window has room for both, or the device unfolds and the hinge divides them. Otherwise the primary pane shows alone, and the secondary pane stays mounted but off screen.
+- `"overlay"` gives both panes the whole arrangement, with the **primary** in front, until the device unfolds. Then, the primary pane goes on the `trailing` side (right screen, if not RTL), or below it (if on Tabletop posture), unless [`primaryEdge`](#primaryedge) names another side.
 
 Use `split` for content that works alone or beside other content, such as a list and its details. Use `overlay` when the secondary pane is the main content and the primary floats on top, such as a video and its controls: see the [Video player](../examples/video-player) example.
 
@@ -97,17 +95,22 @@ Use it when your content only works one way. A dashboard with a calendar beside 
 
 `"leading" | "trailing" | "top" | "bottom" | ["leading" | "trailing", "top" | "bottom"]`, default none.
 
-The side of the arrangement the primary pane takes. Pass one side, or a horizontal and a vertical one, in that order:
+Use `primaryEdge` to force the primary pane to take a side when arranging.
+
+Supply either a single value (`"leading"`), or an array (`["leading", "top"]`), in the `[horizontal, vertical]` order.
+
+- Horizontal values: `"leading"`, `"trailing"`
+- Vertical values: `"top"`, `"bottom"`
 
 | Value                     | Applies when                                       | Without it                                                                       |
 | ------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------- |
 | `"leading"`, `"trailing"` | The panes are side by side                         | A split's primary pane is on the leading side, an overlay's on the trailing side |
-| `"top"`, `"bottom"`       | An overlay's panes are stacked                     | An overlay's primary pane is below the hinge                                     |
+| `"top"`, `"bottom"`       | `arrangement="overlay"` and the panes are stacked (such as in Tabletop posture)                     | An overlay's primary pane is below the hinge                                     |
 | `["trailing", "top"]`     | Either: the first side by side, the second stacked | As above                                                                         |
 
 Stacked, a split's primary pane is always on top, so `"top"` and `"bottom"` only apply to overlays. Leading and trailing follow the layout direction: in a right-to-left app, leading is the right side.
 
-`"trailing"` suits a book-style foldable in a left-to-right app: closed, its cover display sits over the right half of the inner one, so the content on the cover stays in place as the device unfolds, and the secondary pane opens beside it.
+With `"trailing"`, you can keep the primary pane (that is visible when the device is closed) in the same position on the inner display when unfolding the device.
 
 Screen readers go through the panes in reading order, whichever is primary: with the primary pane on the trailing side, or below, the secondary pane is read first.
 
@@ -133,7 +136,7 @@ See [The primary pane's side](../guide/how-panes-are-arranged#the-primary-panes-
 
 `(layout: ArrangementLayout) => void`, default none.
 
-Called with the [`ArrangementLayout`](./use-arrangement-layout#arrangementlayout) once the panes are first laid out, and again whenever it changes: when the secondary pane comes on or off screen, or the panes change between side by side, stacked and overlapping. It is never called with `null`, and calling it doesn't render the arrangement again.
+Called with the [`ArrangementLayout`](./use-arrangement-layout#arrangementlayout) once the panes are first laid out, and again whenever it changes: when the secondary pane comes on or off screen, or the panes change between side by side, stacked and overlapping.
 
 Use it for UI outside the panes, such as a header button that opens the secondary pane's content in a sheet while that pane is off screen. Inside a pane, use [`useArrangementLayout`](./use-arrangement-layout) instead.
 
@@ -184,15 +187,13 @@ It doesn't affect the layout: the panes are arranged around the hinge either way
 
 `"avoidSeparating" | "alwaysAvoid" | "neverAvoid"`, default `"avoidSeparating"`. Android only, after Material's [`HingePolicy`](https://developer.android.com/reference/kotlin/androidx/compose/material3/adaptive/layout/HingePolicy).
 
-The hinges the panes keep clear of. An avoided hinge decides the axis, and the panes are separated by [`hingeGap`](#hingegap), centred on the crease.
+The rules for when to separate the panes on the hinge. The gap size is defined by [`hingeGap`](#hingegap).
 
-| Value               | Avoids                                                                                                                                                                    |
+| Value               | What it does                                                                                                                                                                    |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `"avoidSeparating"` | A separating hinge: one that is half-open, or that hides content, as between a dual-screen device's two screens. A flat fold is ignored, and the panes can meet across it |
-| `"alwaysAvoid"`     | Any hinge, flat ones too                                                                                                                                                  |
-| `"neverAvoid"`      | None. The window size alone decides the layout, and content can sit across a half-open hinge                                                                              |
-
-An avoided half-open hinge splits the panes whatever the window size. An avoided flat one only splits them where two panes fit anyway, as on a book-style foldable's inner display; elsewhere, a split shows its primary pane alone on one side of the hinge, and an overlay's panes keep overlapping.
+| `"avoidSeparating"` | Creates a gap between the two panes when there is a separating hinge (partially folded device) |
+| `"alwaysAvoid"`     | Always creates a gap between the two panes, even on a flat hinge (fully open device) |
+| `"neverAvoid"`      | Does not create a gap, and content can sit across a half-open hinge |
 
 iOS has no equivalent: SwiftUI always avoids a half-open hinge, as `"avoidSeparating"` does, and never a flat one.
 
