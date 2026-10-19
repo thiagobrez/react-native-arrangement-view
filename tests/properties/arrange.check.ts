@@ -6,6 +6,7 @@ import {
   type Geometry,
   type PaneFrames,
 } from '../harness/arrange.ts';
+import { untyped } from '../untyped.ts';
 
 const { describeLayout }: typeof import('../../src/layout.ts') = await import(
   process.env.LAYOUT_SOURCE ?? '../../src/layout.ts'
@@ -260,8 +261,7 @@ const PRIMARY_EDGES: ArrangeOptions['primaryEdge'][] = [
   ['leading', 'bottom'],
   ['trailing', 'top'],
   ['trailing', 'bottom'],
-  // Out of order, from a caller without type checking: ignored.
-  ['top', 'trailing'] as never,
+  untyped(['top', 'trailing']),
 ];
 const OPTIONS = (['split', 'overlay'] as const).flatMap((arrangement) =>
   (['both', 'horizontal', 'vertical'] as const).flatMap((axes) =>
