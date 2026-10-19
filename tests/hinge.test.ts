@@ -94,16 +94,16 @@ test('hook receives changes, uses the latest callback, and cleans up on unmount'
   assert.equal(second.length, 1);
 });
 
-test('an arrangement feeds native events to its store, and resets it when observation stops', async () => {
+test('an arrangement feeds native events to its store, and keeps it across renders', async () => {
   let store!: ReturnType<typeof createHingeStore>;
   let onHingeChange!: ReturnType<typeof useHingeStore>[1];
-  function Arrangement({ observeHinge }: { observeHinge: boolean }) {
-    [store, onHingeChange] = useHingeStore(observeHinge);
+  function Arrangement() {
+    [store, onHingeChange] = useHingeStore();
     return null;
   }
   let root!: ReactTestRenderer;
   await act(() => {
-    root = create(createElement(Arrangement, { observeHinge: true }));
+    root = create(createElement(Arrangement));
   });
   const initialStore = store;
   assert.equal(store.getSnapshot(), unavailableHinge);
@@ -113,10 +113,10 @@ test('an arrangement feeds native events to its store, and resets it when observ
   assert.deepEqual(store.getSnapshot(), nativeEvent);
 
   await act(() => {
-    root.update(createElement(Arrangement, { observeHinge: false }));
+    root.update(createElement(Arrangement));
   });
   assert.equal(store, initialStore);
-  assert.equal(store.getSnapshot(), unavailableHinge);
+  assert.deepEqual(store.getSnapshot(), nativeEvent);
 });
 
 test('the hook reads the nearest observer, and needs one', async () => {

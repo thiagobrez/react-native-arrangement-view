@@ -41,7 +41,6 @@ To adapt a pane's content to what the arrangement shows, such as whether the sec
 | [`axes`](#axes)                                                    | `"both"`            | The directions the panes may be placed in: `"both"`, `"horizontal"`, or `"vertical"`              |
 | [`primaryEdge`](#primaryedge)                                      | none                | The primary pane's side, such as `"trailing"`, `"top"`, or `["trailing", "top"]`                  |
 | [`onArrangementLayoutChange`](#onarrangementlayoutchange)          | none                | Called with the [`ArrangementLayout`](./use-arrangement-layout#arrangementlayout) when it changes |
-| [`observeHinge`](#observehinge)                                    | `true`              | Provides hinge state to the hooks inside the panes                                                |
 | [`hingePolicy`](#hingepolicy) <PlatformBadge platform="android" /> | `"avoidSeparating"` | The hinges the panes keep clear of                                                                |
 | [`hingeGap`](#hingegap) <PlatformBadge platform="android" />       | `24`                | The space in dp between the panes around an avoided hinge                                         |
 
@@ -176,16 +175,6 @@ function StepsScreen() {
   );
 }
 ```
-
-### `observeHinge`
-
-`boolean`, default `true`.
-
-An `ArrangementView` is also a [hinge observer](./hinge-observer): [`useHingeChange`](./use-hinge-change) and [`useHingeSelector`](./use-hinge-selector) inside its panes read the hinge state from it. `observeHinge={false}` stops the native view from observing the hinge, so it no longer sends an event for every angle while the hinge moves.
-
-The panes' hooks then report the hinge as unavailable, `{ available: false, angle: null, status: 'unknown' }`. They don't fall back to a `HingeObserver` above the arrangement, because the arrangement is still the nearer observer.
-
-It doesn't affect the layout: the panes are arranged around the hinge either way. Turn it off only when nothing inside the panes reads the hinge.
 
 ### `hingePolicy` <PlatformBadge platform="android" />
 

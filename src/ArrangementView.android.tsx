@@ -23,13 +23,12 @@ export function ArrangementView({
   arrangement = 'split',
   axes = 'both',
   primaryEdge,
-  observeHinge = true,
   onArrangementLayoutChange,
   hingePolicy,
   hingeGap,
   ...props
 }: ArrangementViewProps) {
-  const [store, onHingeChange] = useHingeStore(observeHinge);
+  const [store, onHingeChange] = useHingeStore();
   // Android has no system arrangement container. The native view reports its
   // content box, its window and the fold, and the panes stay hidden until it
   // has: arranging them any sooner would flash a layout that ignores the fold.
@@ -62,7 +61,6 @@ export function ArrangementView({
       <LayoutContext value={layoutStore}>
         <NativeArrangementView
           {...props}
-          observeHinge={observeHinge}
           onHingeChange={onHingeChange}
           onGeometryChange={onGeometryChange}
         >

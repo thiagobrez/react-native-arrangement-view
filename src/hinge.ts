@@ -59,16 +59,13 @@ export const HingeContext = createContext<ReturnType<
 > | null>(null);
 
 /** One observer's store, and the native event handler that feeds it. */
-export function useHingeStore(observeHinge: boolean) {
+export function useHingeStore() {
   const [store] = useState(createHingeStore);
   const onHingeChange = useCallback(
     (event: { nativeEvent: Parameters<typeof normalizeHinge>[0] }) =>
       store.update(normalizeHinge(event.nativeEvent)),
     [store]
   );
-  useEffect(() => {
-    if (!observeHinge) store.update(unavailableHinge);
-  }, [observeHinge, store]);
   return [store, onHingeChange] as const;
 }
 

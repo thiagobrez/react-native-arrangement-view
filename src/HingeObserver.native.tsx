@@ -9,7 +9,7 @@ import type { HingeObserverProps } from './types';
  * and no touches; it only tells the platform which window to observe.
  */
 export function HingeObserver({ children }: HingeObserverProps) {
-  const [store, onHingeChange] = useHingeStore(true);
+  const [store, onHingeChange] = useHingeStore();
   return (
     <HingeContext value={store}>
       <NativeHingeObserver

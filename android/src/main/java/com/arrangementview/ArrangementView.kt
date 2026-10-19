@@ -23,8 +23,6 @@ class ArrangementView(private val reactContext: ThemedReactContext) : ReactViewG
 
   private val hinge = HingeTracker(reactContext) { dispatchReactEvent(reactContext, HingeTracker.EVENT, it) }
 
-  var observeHinge by hinge::enabled
-
   private val windowInfo = WindowInfoTrackerCallbackAdapter(WindowInfoTracker.getOrCreate(reactContext))
 
   private var fold: FoldingFeature? = null

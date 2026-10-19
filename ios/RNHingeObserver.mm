@@ -56,6 +56,10 @@ using namespace facebook::react;
   return self;
 }
 - (void)emit:(RNHingeObserverEventEmitter::OnHingeChange)hinge {
+  // The interaction repeats equal updates as a fold settles. One held for the emitter isn't sent yet.
+  if (_eventEmitter && _hinge && _hinge->available == hinge.available && _hinge->angle == hinge.angle &&
+      _hinge->status == hinge.status)
+    return;
   _hinge = hinge;
   if (!_eventEmitter) return;
   std::static_pointer_cast<const RNHingeObserverEventEmitter>(_eventEmitter)->onHingeChange(hinge);
