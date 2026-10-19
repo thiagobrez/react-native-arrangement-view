@@ -1,10 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  describeDevice,
-  initialPose,
-  postures,
-  type Posture,
-} from './device.ts';
+import { describeDevice, logoPose, postures, type Posture } from './device.ts';
 import styles from './FoldableLogo.module.css';
 import type { FoldableScene } from './scene.ts';
 
@@ -19,8 +14,8 @@ export function FoldableLogo({ src, alt }: Props) {
   const [model, setModel] = useState<'loading' | 'ready' | 'unavailable'>(
     'loading'
   );
-  const [angle, setAngle] = useState(initialPose.angle);
-  const [device, setDevice] = useState(() => describeDevice(initialPose));
+  const [angle, setAngle] = useState(logoPose.degrees);
+  const [device, setDevice] = useState(() => describeDevice(logoPose));
   // A posture that was picked stays the current one while the device folds to
   // it, through the postures on the way. Folding by hand goes by the fold.
   const [picked, setPicked] = useState<Posture | null>(null);

@@ -26,13 +26,13 @@ import {
 } from 'three';
 import type { Frame } from '../../../src/layout.ts';
 import {
-  cover,
+  coverDp,
   describeDevice,
-  initialPose,
-  inner,
+  innerDp,
+  logoPose,
   postures,
   type DeviceState,
-  type Orientation,
+  type Hold,
   type Posture,
 } from './device.ts';
 
@@ -47,8 +47,8 @@ export interface FoldableScene {
 // The device, in world units. Each half is a display's half and a bezel wide.
 const DP = 1 / 300;
 const BEZEL = 36 * DP;
-const HALF_WIDTH = (inner.width / 2) * DP + BEZEL;
-const HEIGHT = inner.height * DP + 2 * BEZEL;
+const HALF_WIDTH = (innerDp.width / 2) * DP + BEZEL;
+const HEIGHT = innerDp.height * DP + 2 * BEZEL;
 const THICKNESS = 0.13;
 const CORNER = 0.26;
 const BEVEL = 0.022;
@@ -82,7 +82,7 @@ const views: Record<Posture, readonly [yaw: number, pitch: number]> = {
  * to the front.
  */
 const holds: Record<
-  Orientation,
+  Hold,
   { quaternion: Quaternion; share: number; turn: number }
 > = {
   upright: { quaternion: new Quaternion(), share: 0.5, turn: 1 },
@@ -182,7 +182,7 @@ interface Screen {
 }
 
 const separated = (state: DeviceState) =>
-  state.screen === 'inner' && state.status === 'partiallyOpen';
+  state.appDisplay === 'inner' && state.status === 'partiallyOpen';
 
 function createScreen(
   size: Screen['size'],
@@ -455,11 +455,11 @@ export function createFoldableScene(
   ground.receiveShadow = true;
   scene.add(ground);
 
-  let pose = initialPose;
+  let pose = logoPose;
   let state = describeDevice(pose);
   const screens = {
-    cover: createScreen(cover, state, state.screen === 'cover'),
-    inner: createScreen(inner, state, state.screen === 'inner'),
+    cover: createScreen(coverDp, state, state.appDisplay === 'cover'),
+    inner: createScreen(innerDp, state, state.appDisplay === 'inner'),
   };
   const bodyMaterial = new MeshStandardMaterial({
     color: BODY,
@@ -503,8 +503,8 @@ export function createFoldableScene(
   const right = half(1);
   const left = half(-1);
 
-  const coverWidth = cover.width * DP;
-  const coverHeight = cover.height * DP;
+  const coverWidth = coverDp.width * DP;
+  const coverHeight = coverDp.height * DP;
   const coverDisplay = display(
     displayGeometry(
       roundedRect(
@@ -547,11 +547,11 @@ export function createFoldableScene(
   device.add(right.group, left.group, spine);
   scene.add(device);
 
-  const angle = new Spring(pose.angle, 60, 0.05);
+  const angle = new Spring(pose.degrees, 60, 0.05);
   const yaw = new Spring(views[state.posture][0], 60, 0.01);
   const pitch = new Spring(views[state.posture][1], 60, 0.01);
   // A change of orientation eases from how the device was held to the new hold.
-  const hold = holds[pose.orientation];
+  const hold = holds[pose.hold];
   const held = { ...hold, quaternion: hold.quaternion.clone() };
   let from = { ...held, quaternion: held.quaternion.clone() };
   const progress = new Spring(1, 60);
@@ -564,7 +564,7 @@ export function createFoldableScene(
   let reported = '';
 
   function place() {
-    const to = holds[pose.orientation];
+    const to = holds[pose.hold];
     const eased = MathUtils.clamp(progress.value, 0, 1);
     held.quaternion.slerpQuaternions(from.quaternion, to.quaternion, eased);
     held.share = MathUtils.lerp(from.share, to.share, eased);
@@ -616,10 +616,10 @@ export function createFoldableScene(
     for (const spring of [angle, yaw, pitch, progress]) {
       if (advance(spring, dt)) moving = true;
     }
-    state = describeDevice({ ...pose, angle: angle.value });
+    state = describeDevice({ ...pose, degrees: angle.value });
     for (const name of ['cover', 'inner'] as const) {
       const screen = screens[name];
-      aim(screen, state, state.screen === name);
+      aim(screen, state, state.appDisplay === name);
       let changed = screen.stale;
       for (const spring of screen.springs) {
         if (advance(spring, dt)) changed = moving = true;
@@ -705,13 +705,13 @@ export function createFoldableScene(
   return {
     pose(posture) {
       const next = postures.find(({ id }) => id === posture)!.pose;
-      if (next.orientation !== pose.orientation) {
+      if (next.hold !== pose.hold) {
         from = { ...held, quaternion: held.quaternion.clone() };
         progress.jump(0);
         progress.target = 1;
       }
-      pose = { ...pose, orientation: next.orientation };
-      angle.target = next.angle;
+      pose = { ...pose, hold: next.hold };
+      angle.target = next.degrees;
       // Take the short way round to the posture's view.
       const [around, above] = views[posture];
       yaw.jump(MathUtils.euclideanModulo(yaw.value + 180, 360) - 180);
