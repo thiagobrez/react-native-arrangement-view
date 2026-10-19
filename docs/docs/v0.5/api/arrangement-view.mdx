@@ -209,7 +209,9 @@ Below, `"alwaysAvoid"` opens a gap around the flat fold, and with `"neverAvoid"`
 
 `number`, default `24`. Android only.
 
-The space in dp between the panes around an avoided hinge, centred on the crease. It is never narrower than the hinge itself, such as the physical hinge between a dual-screen device's two screens. `0` puts the panes against a fold that hides nothing. A primary pane showing alone stays clear of the same space.
+The space in dp between the panes around an avoided hinge, centred on the crease. A primary pane showing alone stays clear of the same space.
+
+On a dual-screen device, the hinge between the two screens covers part of the window. If that hinge is wider than `hingeGap`, the gap takes the hinge's width instead, so no content goes under it. A foldable screen's hinge covers nothing, so `0` puts the panes right against the fold.
 
 iOS keeps a fixed 20 pt clear on each side of the crease.
 
