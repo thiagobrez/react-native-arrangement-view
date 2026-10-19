@@ -104,13 +104,15 @@ Supply either a single value (`"leading"`), or an array (`["leading", "top"]`), 
 - Horizontal values: `"leading"`, `"trailing"`
 - Vertical values: `"top"`, `"bottom"`
 
-| Value                     | Applies when                                       | Without it                                                                       |
-| ------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `"leading"`, `"trailing"` | The panes are side by side                         | A split's primary pane is on the leading side, an overlay's on the trailing side |
-| `"top"`, `"bottom"`       | `arrangement="overlay"` and the panes are stacked (such as in Tabletop posture)                     | An overlay's primary pane is below the hinge                                     |
-| `["trailing", "top"]`     | Either: the first side by side, the second stacked | As above                                                                         |
+| Value                     | Applies when                                                                    | Result                                                                                                                                                            |
+| ------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `"leading"`, `"trailing"` | The panes are side by side                                                      | `"leading"` puts the primary pane on the left side (or right side in RTL). `"trailing"` puts the primary pane on the right side (or left side in RTL)             |
+| `"top"`, `"bottom"`       | `arrangement="overlay"` and the panes are stacked (such as in Tabletop posture) | `"top"` puts the primary pane above the hinge. `"bottom"` puts the primary pane below the hinge                                                                   |
+| `["trailing", "top"]`     | Either: the first side by side, the second stacked                              | `"trailing"` puts the primary pane on the right side (or left side in RTL) when the panes are side by side. `"top"` puts it above the hinge when they are stacked |
 
-Stacked, a split's primary pane is always on top, so `"top"` and `"bottom"` only apply to overlays. Leading and trailing follow the layout direction: in a right-to-left app, leading is the right side.
+By default, a split puts the primary pane on the leading side, and an overlay puts it on the trailing side, or below the hinge.
+
+Stacked, a split's primary pane is always on top, so `"top"` and `"bottom"` only apply to overlays.
 
 With `"trailing"`, you can keep the primary pane (that is visible when the device is closed) in the same position on the inner display when unfolding the device.
 
@@ -191,11 +193,11 @@ It doesn't affect the layout: the panes are arranged around the hinge either way
 
 The rules for when to separate the panes on the hinge. The gap size is defined by [`hingeGap`](#hingegap).
 
-| Value               | What it does                                                                                                                                                                    |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Value               | What it does                                                                                   |
+| ------------------- | ---------------------------------------------------------------------------------------------- |
 | `"avoidSeparating"` | Creates a gap between the two panes when there is a separating hinge (partially folded device) |
-| `"alwaysAvoid"`     | Always creates a gap between the two panes, even on a flat hinge (fully open device) |
-| `"neverAvoid"`      | Does not create a gap, and content can sit across a half-open hinge |
+| `"alwaysAvoid"`     | Always creates a gap between the two panes, even on a flat hinge (fully open device)           |
+| `"neverAvoid"`      | Does not create a gap, and content can sit across a half-open hinge                            |
 
 iOS has no equivalent: SwiftUI always avoids a half-open hinge, as `"avoidSeparating"` does, and never a flat one.
 
