@@ -24,14 +24,9 @@ export function SplitViewExample() {
   const [displayMode, setDisplayMode] = useState<string | null>(null);
   const trail = trails.find((item) => item.id === selectedId)!;
 
-  // Half-open, the split ends its sidebar on the hinge, which leaves the
-  // details on one half. Without the sidebar they span the hinge, and their
-  // panes split around it. The screen reads the hinge from the app's
-  // HingeObserver, as it is outside the details' ArrangementView.
-  //
   // An unfolding device still reads half-open when its inner display lights,
   // just short of flat, and hiding the sidebar then would flash.
-  const halfOpen = useHingeSelector(
+  const detailsSpanHinge = useHingeSelector(
     (hinge) =>
       hinge.status === 'partiallyOpen' && (hinge.angle ?? 0) < NEARLY_FLAT
   );
@@ -49,16 +44,20 @@ export function SplitViewExample() {
     navigation.setOptions({ headerBackVisible: !splitHasBackButton });
   }, [navigation, splitHasBackButton]);
 
+  // After a fold collapses the split, react-native-screens keeps the
+  // secondary column at its expanded size.
+  const remountOnCollapseChange = collapsed ? 'collapsed' : 'expanded';
+
   if (!pushed) return <View style={styles.placeholder} />;
 
   return (
     <Split.Host
-      // After a fold collapses the split, the secondary column keeps its
-      // expanded size, so start from a new split whenever it changes.
-      key={collapsed ? 'collapsed' : 'expanded'}
+      key={remountOnCollapseChange}
       ref={split}
       colorScheme="dark"
-      preferredDisplayMode={halfOpen ? 'secondaryOnly' : 'oneBesideSecondary'}
+      preferredDisplayMode={
+        detailsSpanHinge ? 'secondaryOnly' : 'oneBesideSecondary'
+      }
       preferredSplitBehavior="tile"
       topColumnForCollapsing="primary"
       onCollapse={() => {
