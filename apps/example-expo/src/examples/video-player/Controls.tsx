@@ -42,27 +42,26 @@ export function Controls({ player }: ControlsProps) {
   const separated = layout !== null && !layout.isOverlapping;
   const axis = layout?.axis ?? null;
 
-  // The video ignores the safe area to stay centred on the display; the
-  // controls keep clear of it, but not on the hinge side, away from the edge.
   const insets = useSafeAreaInsets();
-  const leadingHinge = axis === 'horizontal';
-  const padding = (base: number) => ({
+  const hingeOnLeadingSide = axis === 'horizontal';
+  const clearOfBarsExceptHinge = (base: number) => ({
     paddingTop: base + (axis === 'vertical' ? 0 : insets.top),
     paddingBottom: base + insets.bottom,
-    paddingLeft: base + (leadingHinge && !I18nManager.isRTL ? 0 : insets.left),
-    paddingRight: base + (leadingHinge && I18nManager.isRTL ? 0 : insets.right),
+    paddingLeft:
+      base + (hingeOnLeadingSide && !I18nManager.isRTL ? 0 : insets.left),
+    paddingRight:
+      base + (hingeOnLeadingSide && I18nManager.isRTL ? 0 : insets.right),
   });
 
   const [shown, setShown] = useState(true);
   const [scrubbing, setScrubbing] = useState(false);
-  // Bumped by every interaction to restart the hide timer.
-  const [interactions, setInteractions] = useState(0);
+  const [hideTimerRestarts, setHideTimerRestarts] = useState(0);
   const visible = separated || shown;
   useEffect(() => {
     if (!visible || separated || scrubbing || !isPlaying) return;
     const timer = setTimeout(() => setShown(false), HIDE_AFTER_MS);
     return () => clearTimeout(timer);
-  }, [visible, separated, scrubbing, isPlaying, interactions]);
+  }, [visible, separated, scrubbing, isPlaying, hideTimerRestarts]);
 
   const opacity = useRef(new Animated.Value(1)).current;
   useEffect(() => {
@@ -73,25 +72,26 @@ export function Controls({ player }: ControlsProps) {
     }).start();
   }, [opacity, visible]);
 
-  // Wraps an action so that it also keeps the controls on screen.
-  const act = (action: () => void) => () => {
+  const keepingShown = (action: () => void) => () => {
     action();
     setShown(true);
-    setInteractions((count) => count + 1);
+    setHideTimerRestarts((count) => count + 1);
   };
-  const togglePlaying = act(() => (isPlaying ? player.pause() : player.play()));
-  const close = act(() => navigation.goBack());
-  const back = act(() => player.seekBy(-10));
-  const forward = act(() => player.seekBy(10));
-  const toggleMuted = act(() => (player.muted = !muted));
-  const nextRate = act(
+  const togglePlaying = keepingShown(() =>
+    isPlaying ? player.pause() : player.play()
+  );
+  const close = keepingShown(() => navigation.goBack());
+  const back = keepingShown(() => player.seekBy(-10));
+  const forward = keepingShown(() => player.seekBy(10));
+  const toggleMuted = keepingShown(() => (player.muted = !muted));
+  const nextRate = keepingShown(
     () =>
       (player.playbackRate =
         RATES[(RATES.indexOf(playbackRate) + 1) % RATES.length]!)
   );
   const seek = (time: number) => {
     player.currentTime = Math.max(0, Math.min(player.duration, time));
-    setInteractions((count) => count + 1);
+    setHideTimerRestarts((count) => count + 1);
   };
 
   const title = (
@@ -175,7 +175,10 @@ export function Controls({ player }: ControlsProps) {
 
   if (separated) {
     return (
-      <View testID="controls-pane" style={[styles.remote, padding(28)]}>
+      <View
+        testID="controls-pane"
+        style={[styles.remote, clearOfBarsExceptHinge(28)]}
+      >
         <View style={styles.remoteHeader}>
           {title}
           {closeButton}
@@ -208,7 +211,10 @@ export function Controls({ player }: ControlsProps) {
         <View pointerEvents="box-none" style={styles.centred}>
           {transport}
         </View>
-        <View pointerEvents="box-none" style={[styles.edges, padding(20)]}>
+        <View
+          pointerEvents="box-none"
+          style={[styles.edges, clearOfBarsExceptHinge(20)]}
+        >
           <View style={styles.overlayHeader}>
             {closeButton}
             {title}

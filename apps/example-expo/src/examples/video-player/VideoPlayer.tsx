@@ -4,15 +4,15 @@ import { ArrangementView } from 'react-native-arrangement-view';
 import { Controls } from './Controls';
 
 // Big Buck Bunny (CC BY 3.0, Blender Foundation): the 720p rendition of an HLS
-// test stream. A single rendition keeps the resolution fixed while the panes
-// resize; the Android emulator's decoder garbles frames after a switch.
-const source = {
+// test stream. The Android emulator's decoder garbles frames after a
+// resolution switch.
+const fixed720pRendition = {
   uri: 'https://test-streams.mux.dev/x36xhzz/url_0/193039199_mp4_h264_aac_hd_7.m3u8',
   metadata: { title: 'Big Buck Bunny', artist: 'Blender Foundation' },
 };
 
 export function VideoPlayer() {
-  const player = useVideoPlayer(source, (created) => {
+  const player = useVideoPlayer(fixed720pRendition, (created) => {
     created.loop = true;
     created.timeUpdateEventInterval = 0.25;
     created.play();
