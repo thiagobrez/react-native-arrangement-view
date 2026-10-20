@@ -12,12 +12,12 @@ import {
   GOAL,
   halfHours,
   longDate,
+  mondayToSaturday,
   sameDay,
   shortWeekday,
   STREAK,
-  week,
 } from './data';
-import { HourlyChart } from './HourlyChart';
+import { HalfHourChart } from './HalfHourChart';
 
 type IconName = ComponentProps<typeof MaterialDesignIcons>['name'];
 
@@ -30,7 +30,7 @@ export function Dashboard({ selected, onSelect }: DashboardProps) {
   const layout = useArrangementLayout();
   const selectedDay = day(selected);
   const steps = selectedDay.steps ?? 0;
-  const besideCalendar = layout?.secondaryVisible === true;
+  const besideCalendar = layout?.secondaryVisible ?? null;
   return (
     <View
       testID="step-dashboard"
@@ -126,10 +126,7 @@ export function Dashboard({ selected, onSelect }: DashboardProps) {
             : `${formatSteps(GOAL - steps)} steps to your ${formatSteps(GOAL)} goal`}
         </Text>
 
-        {/* Unknown until the panes are laid out: show neither, rather than flash one. */}
-        {layout && besideCalendar && (
-          <HourlyChart values={halfHours(selectedDay)} />
-        )}
+        {besideCalendar && <HalfHourChart values={halfHours(selectedDay)} />}
 
         <View style={styles.spacer} />
 
@@ -138,7 +135,7 @@ export function Dashboard({ selected, onSelect }: DashboardProps) {
           <Text style={styles.creditLink}>GetSteps.app</Text>, to showcase
           features of the library
         </Text>
-        {layout && !besideCalendar && (
+        {besideCalendar === false && (
           <WeekStrip selected={selected} onSelect={onSelect} />
         )}
       </ScrollView>
@@ -208,7 +205,7 @@ function WeekStrip({
 }) {
   return (
     <View testID="week-strip" style={styles.week}>
-      {week(selected).map((entry) => {
+      {mondayToSaturday(selected).map((entry) => {
         const isSelected = sameDay(entry.date, selected);
         return (
           <Pressable

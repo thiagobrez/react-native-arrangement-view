@@ -3,16 +3,14 @@ import { colors, formatSteps } from './data';
 
 const SLOTS = 48;
 
-/** The smallest of 3, 6, 9 or 15 times a power of ten that fits `peak`, so the thirds are round. */
-function scale(peak: number) {
+function roundMaxForThirds(peak: number) {
   for (let power = 1; ; power *= 10)
     for (const step of [3, 6, 9, 15])
       if (step * power >= peak) return step * power;
 }
 const HEIGHT = 110;
 
-/** A value per half hour across the day, with a scale on the trailing side. */
-export function HourlyChart({
+export function HalfHourChart({
   values,
   color = colors.green,
 }: {
@@ -20,10 +18,10 @@ export function HourlyChart({
   color?: string;
 }) {
   const peak = Math.max(...values, 1);
-  const max = scale(peak);
+  const max = roundMaxForThirds(peak);
   const ticks = [max, (max * 2) / 3, max / 3, 0];
   return (
-    <View testID="hourly-chart" style={styles.chart}>
+    <View testID="half-hour-chart" style={styles.chart}>
       <View style={styles.plot}>
         <View style={styles.bars}>
           {[0, 6, 12, 18].map((hour) => (

@@ -13,11 +13,11 @@ import { MaterialDesignIcons } from '@react-native-vector-icons/material-design-
 import {
   colors,
   families,
+  FIXED_TODAY,
   longDate,
   month,
   monthYear,
   time,
-  today,
   totals,
   workoutKinds,
   workouts,
@@ -37,14 +37,27 @@ export function ActivitiesTab() {
         options={{
           title: 'All Activities',
           ...headerButtons([
-            { label: 'Add', symbol: 'plus', icon: 'plus', tint: '#ff9500' },
-            { label: 'Search', symbol: 'magnifyingglass', icon: 'magnify' },
+            {
+              label: 'Add',
+              sfSymbol: 'plus',
+              materialIcon: 'plus',
+              tint: '#ff9500',
+            },
+            {
+              label: 'Search',
+              sfSymbol: 'magnifyingglass',
+              materialIcon: 'magnify',
+            },
             {
               label: 'Filter',
-              symbol: 'line.3.horizontal.decrease',
-              icon: 'filter-variant',
+              sfSymbol: 'line.3.horizontal.decrease',
+              materialIcon: 'filter-variant',
             },
-            { label: 'Settings', symbol: 'gearshape', icon: 'cog-outline' },
+            {
+              label: 'Settings',
+              sfSymbol: 'gearshape',
+              materialIcon: 'cog-outline',
+            },
           ]),
         }}
       />
@@ -52,14 +65,13 @@ export function ActivitiesTab() {
   );
 }
 
-// Room for the month beside a two-column list: a phone in landscape is wide
-// but too short, as the library's own pane rules have it.
-const WIDE = 640;
-const TALL = 480;
+const MONTH_COLUMN_MIN_WIDTH = 640;
+const COMPACT_HEIGHT = 480;
 
 function ActivitiesScreen() {
   const window = useWindowDimensions();
-  const wide = window.width >= WIDE && window.height >= TALL;
+  const wide =
+    window.width >= MONTH_COLUMN_MIN_WIDTH && window.height >= COMPACT_HEIGHT;
   return (
     <SafeAreaView style={styles.screen} edges={['left', 'right', 'bottom']}>
       {wide ? (
@@ -103,7 +115,7 @@ function WorkoutList({
     >
       {summary && (
         <View style={styles.listHeader}>
-          <Text style={styles.month}>{monthYear(today)}</Text>
+          <Text style={styles.month}>{monthYear(FIXED_TODAY)}</Text>
           <View style={styles.counts}>
             {families.map((family, index) => {
               const kind = workoutKinds[familyIcons[family]];
@@ -150,9 +162,9 @@ function WorkoutCard({
 }) {
   const kind = workoutKinds[workout.type];
   const [value, unit] =
-    workout.distance === null
+    workout.distanceKm === null
       ? [String(workout.kcal), 'cal']
-      : [workout.distance.toFixed(2), 'km'];
+      : [workout.distanceKm.toFixed(2), 'km'];
   const icon = (
     <View style={[styles.workoutIcon, { backgroundColor: `${kind.tint}33` }]}>
       <MaterialDesignIcons name={kind.icon} size={22} color={kind.tint} />
@@ -208,12 +220,12 @@ function WorkoutCard({
 }
 
 function MonthGrid() {
-  const days = month(today.getFullYear(), today.getMonth());
+  const days = month(FIXED_TODAY.getFullYear(), FIXED_TODAY.getMonth());
   const cells = [...Array<null>(days[0]!.date.getDay()).fill(null), ...days];
   const { count, detail } = totals(workouts);
   return (
     <View testID="month-summary">
-      <Text style={styles.month}>{monthYear(today)}</Text>
+      <Text style={styles.month}>{monthYear(FIXED_TODAY)}</Text>
       <View style={styles.grid}>
         {Array.from({ length: Math.ceil(cells.length / 7) }, (_, row) => (
           <View key={row} style={styles.gridRow}>
