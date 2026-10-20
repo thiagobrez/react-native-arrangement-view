@@ -34,7 +34,6 @@ internal class HingeTracker(context: Context, private val emit: (WritableMap) ->
     } else {
       null
     }
-  private var attached = false
   private var awaitingLayout = false
   private var awaitingSensor = false
   private var degrees: Float? = null
@@ -42,23 +41,16 @@ internal class HingeTracker(context: Context, private val emit: (WritableMap) ->
 
   /** Pass whether the owner will report its window's layout, which it can't without an activity. */
   fun attach(awaitLayout: Boolean) {
-    attached = true
     awaitingLayout = awaitLayout
-    updateSensor()
-  }
-
-  fun detach() {
-    attached = false
-    sensorManager.unregisterListener(this)
-  }
-
-  private fun updateSensor() {
-    sensorManager.unregisterListener(this)
-    if (attached && sensor != null) {
+    if (sensor != null) {
       // A sensor that has reported reports again when registered.
       awaitingSensor = degrees != null
       sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL)
     }
+  }
+
+  fun detach() {
+    sensorManager.unregisterListener(this)
   }
 
   override fun onSensorChanged(event: SensorEvent) {
