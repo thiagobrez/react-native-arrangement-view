@@ -37,13 +37,11 @@ using namespace facebook::react;
       event.secondaryVisible = secondaryVisible;
       emitter->onPanesChange(event);
     };
-    _host.onPaneLayout = ^(UIView *pane, CGRect nativeFrame) {
+    _host.onPaneLayout = ^(UIView *pane, CGRect frameInHost) {
       RNArrangementView *strongSelf = weakSelf;
       if (strongSelf && [pane isKindOfClass:RNArrangementPane.class]) {
-        // The host occupies our content frame, inset by padding and borders.
-        CGRect frame = [strongSelf->_host convertRect:nativeFrame toView:strongSelf];
-        // SwiftUI's layout pass, outside any mount: lay the content out now.
-        [(RNArrangementPane *)pane updateNativeFrame:frame immediate:YES];
+        CGRect frame = [strongSelf->_host convertRect:frameInHost toView:strongSelf];
+        [(RNArrangementPane *)pane applySwiftUIFrameOutsideMount:frame];
       }
     };
   }
@@ -52,11 +50,12 @@ using namespace facebook::react;
 - (void)updateLayoutMetrics:(LayoutMetrics const &)metrics oldLayoutMetrics:(LayoutMetrics const &)oldMetrics {
   [super updateLayoutMetrics:metrics oldLayoutMetrics:oldMetrics];
   if (metrics.contentInsets == oldMetrics.contentInsets) return;
-  // Moving padding from one edge to another can move the host without resizing
-  // its panes. Refresh their origins even if SwiftUI has no new layout to report.
+  [self refreshPaneOriginsAfterHostMoved];
+}
+- (void)refreshPaneOriginsAfterHostMoved {
   for (UIView *pane in _panes) {
     if ([pane isKindOfClass:RNArrangementPane.class] && [pane isDescendantOfView:_host]) {
-      [(RNArrangementPane *)pane updateNativeFrame:[pane convertRect:pane.bounds toView:self] immediate:NO];
+      [(RNArrangementPane *)pane applySwiftUIFrameDuringMount:[pane convertRect:pane.bounds toView:self]];
     }
   }
 }

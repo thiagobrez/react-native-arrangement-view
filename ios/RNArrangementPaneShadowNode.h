@@ -7,7 +7,7 @@
 namespace facebook::react {
 struct ArrangementPaneState {
   Size size{};
-  Point origin{};
+  Point physicalOrigin{};
   bool measured{false};
 };
 inline constexpr char ArrangementPaneName[] = "RNArrangementPane";
@@ -20,11 +20,10 @@ class ArrangementPaneShadowNode final : public ArrangementPaneShadowBase {
   void layout(LayoutContext layoutContext) override {
     const auto &data = getStateData();
     if (data.measured) {
-      // SwiftUI supplies a physical origin in the ArrangementView's coordinates.
       // Apply it after Yoga's directional layout: putting it in left/start would
       // mirror it in RTL.
       auto metrics = getLayoutMetrics();
-      metrics.frame.origin = data.origin;
+      metrics.frame.origin = data.physicalOrigin;
       setLayoutMetrics(metrics);
     }
     ArrangementPaneShadowBase::layout(layoutContext);
