@@ -1,9 +1,8 @@
-import { useCallback } from 'react';
 import { StyleSheet } from 'react-native';
 import NativeArrangementView from './ArrangementViewNativeComponent';
 import NativePane from './ArrangementPaneNativeComponent';
 import { HingeContext, useHingeStore } from './hinge';
-import { describeLayout, LayoutContext, useLayoutStore } from './layout';
+import { LayoutContext, useLayoutStore, usePanesChange } from './layout';
 import { resolvePrimaryEdge } from './primaryEdge';
 import {
   ArrangementPrimary,
@@ -12,7 +11,6 @@ import {
   warnOnce,
 } from './slots';
 import type { ArrangementViewProps } from './types';
-import type { NativeProps, NativeRect } from './ArrangementViewNativeComponent';
 
 export function ArrangementView({
   children,
@@ -27,18 +25,7 @@ export function ArrangementView({
 }: ArrangementViewProps) {
   const [store, onHingeChange] = useHingeStore();
   const layoutStore = useLayoutStore(onArrangementLayoutChange);
-  const onPanesChange = useCallback<NonNullable<NativeProps['onPanesChange']>>(
-    ({
-      nativeEvent: { primary: first, secondary: second, secondaryVisible },
-    }) =>
-      layoutStore.update(
-        describeLayout({
-          primary: frame(first),
-          secondary: secondaryVisible ? frame(second) : null,
-        })
-      ),
-    [layoutStore]
-  );
+  const onPanesChange = usePanesChange(layoutStore);
   const { primary, secondary, problems } = resolveSlots(children);
   warnOnce(problems);
   const edge = resolvePrimaryEdge(primaryEdge);
@@ -77,13 +64,6 @@ export function ArrangementView({
 }
 ArrangementView.Primary = ArrangementPrimary;
 ArrangementView.Secondary = ArrangementSecondary;
-
-const frame = ({ x, y, width, height }: NativeRect) => ({
-  left: x,
-  top: y,
-  width,
-  height,
-});
 
 const styles = StyleSheet.create({
   pane: {

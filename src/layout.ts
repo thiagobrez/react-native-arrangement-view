@@ -1,11 +1,13 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useRef,
   useState,
   useSyncExternalStore,
 } from 'react';
+import type { NativeProps, NativeRect } from './ArrangementViewNativeComponent';
 import type { ArrangementLayout, ArrangementLayoutHandler } from './types';
 
 export interface Frame {
@@ -85,6 +87,26 @@ export function createLayoutStore() {
 export const LayoutContext = createContext<ReturnType<
   typeof createLayoutStore
 > | null>(null);
+
+export function usePanesChange(store: ReturnType<typeof createLayoutStore>) {
+  return useCallback<NonNullable<NativeProps['onPanesChange']>>(
+    ({ nativeEvent: { primary, secondary, secondaryVisible } }) =>
+      store.update(
+        describeLayout({
+          primary: frame(primary),
+          secondary: secondaryVisible ? frame(secondary) : null,
+        })
+      ),
+    [store]
+  );
+}
+
+const frame = ({ x, y, width, height }: NativeRect): Frame => ({
+  left: x,
+  top: y,
+  width,
+  height,
+});
 
 /**
  * One arrangement's store. It reports changes to `onChange` without

@@ -29,44 +29,32 @@ type PanesEvent = Readonly<{
 }>;
 export type NativeRect = PanesEvent['primary'];
 
-type GeometryEvent = Readonly<{
-  width: CodegenTypes.Double;
-  height: CodegenTypes.Double;
-  window: Readonly<{
-    width: CodegenTypes.Double;
-    height: CodegenTypes.Double;
-  }>;
-  fold?: Readonly<{
-    x: CodegenTypes.Double;
-    y: CodegenTypes.Double;
-    width: CodegenTypes.Double;
-    height: CodegenTypes.Double;
-    orientation: string;
-    separating: boolean;
-    halfOpened: boolean;
-  }>;
-}>;
-
 export interface NativeProps extends ViewProps {
-  /** iOS only: SwiftUI arranges the panes. On Android, arrange.ts does. */
+  /**
+   * SwiftUI arranges the panes on iOS. On Android, the view's shadow node does,
+   * with the policy in cpp/arrange.h.
+   */
   arrangement?: CodegenTypes.WithDefault<'split' | 'overlay', 'split'>;
-  /** iOS only, as above. */
   axes?: CodegenTypes.WithDefault<'both' | 'horizontal' | 'vertical', 'both'>;
-  /** iOS only, as above. `auto` keeps SwiftUI's placement. */
   primaryEdge?: CodegenTypes.WithDefault<
     'auto' | 'leading' | 'trailing',
     'auto'
   >;
-  /** iOS only, as above: `primaryEdge`'s side for an overlay's stacked panes. */
+  /** `primaryEdge`'s side for an overlay's stacked panes. */
   primaryVerticalEdge?: CodegenTypes.WithDefault<
     'auto' | 'top' | 'bottom',
     'auto'
   >;
+  /** Android only: which hinges the panes keep clear of. */
+  hingePolicy?: CodegenTypes.WithDefault<
+    'avoidSeparating' | 'alwaysAvoid' | 'neverAvoid',
+    'avoidSeparating'
+  >;
+  /** Android only: the space in dp between the panes around an avoided hinge. */
+  hingeGap?: CodegenTypes.WithDefault<CodegenTypes.Double, 24>;
   onHingeChange?: CodegenTypes.DirectEventHandler<HingeEvent>;
-  /** iOS only: where SwiftUI put the panes. On Android, arrange.ts knows. */
+  /** Where the native view put the panes, in dp, relative to its content box on Android. */
   onPanesChange?: CodegenTypes.DirectEventHandler<PanesEvent>;
-  /** Android only: the sizes and fold that arrange.ts lays the panes out by. */
-  onGeometryChange?: CodegenTypes.DirectEventHandler<GeometryEvent>;
 }
 
 export default codegenNativeComponent<NativeProps>('RNArrangementView');

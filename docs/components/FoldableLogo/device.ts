@@ -1,6 +1,6 @@
-import { arrange, type Geometry } from '../../../src/arrange.ts';
 import type { Frame } from '../../../src/layout.ts';
 import type { HingeStatus } from '../../../src/types.ts';
+import { PANES } from './panes.ts';
 
 /** How the device is held: standing like a book, laid on a table, or stood up as a tent. */
 export type Orientation = 'upright' | 'tabletop' | 'tent';
@@ -40,6 +40,50 @@ export const inner = { width: 1012, height: 920 };
 const HANDOVER_DEGREES = 30;
 const FLAT_DEGREES = 160;
 
+export interface Display {
+  screen: 'cover' | 'inner';
+  landscape: boolean;
+  halfOpened: boolean;
+}
+
+export const displayKey = ({ screen, landscape, halfOpened }: Display) =>
+  `${screen}${landscape ? ' landscape' : ''}${
+    screen === 'inner' && halfOpened ? ' half-open' : ''
+  }` as keyof typeof PANES;
+
+export function arrangeInput({ screen, landscape, halfOpened }: Display) {
+  const display = screen === 'cover' ? cover : inner;
+  const window = landscape
+    ? { width: display.height, height: display.width }
+    : display;
+  const fold =
+    screen === 'cover'
+      ? undefined
+      : landscape
+        ? {
+            x: 0,
+            y: window.height / 2,
+            width: window.width,
+            height: 0,
+            orientation: 'horizontal' as const,
+            separating: halfOpened,
+            halfOpened,
+          }
+        : {
+            x: window.width / 2,
+            y: 0,
+            width: 0,
+            height: window.height,
+            orientation: 'vertical' as const,
+            separating: halfOpened,
+            halfOpened,
+          };
+  return {
+    geometry: { ...window, window, fold },
+    options: { arrangement: 'split', axes: 'both' } as const,
+  };
+}
+
 export interface DeviceState {
   posture: Posture;
   status: HingeStatus;
@@ -47,17 +91,13 @@ export interface DeviceState {
   screen: 'cover' | 'inner';
   /** The app is turned a quarter, its top at the upright display's left. */
   landscape: boolean;
-  /** The panes on that display, upright: `arrange` places them in the window. */
+  /** The panes on that display, upright, where Android's policy puts them. */
   primary: Frame;
   secondary: Frame | null;
   /** The layout in words, as the example app's panes put it. */
   panes: 'Primary only' | 'Side by side' | 'Stacked';
 }
 
-/**
- * What the device shows in a pose. The panes are placed by the library's own
- * `arrange`, the policy it applies on Android.
- */
 export function describeDevice({ orientation, angle }: Pose): DeviceState {
   const status: HingeStatus =
     angle < HANDOVER_DEGREES
@@ -78,39 +118,13 @@ export function describeDevice({ orientation, angle }: Pose): DeviceState {
   const screen =
     orientation === 'tent' || status === 'closed' ? 'cover' : 'inner';
   const landscape = orientation !== 'upright';
-  const display = screen === 'cover' ? cover : inner;
-  const window = landscape
-    ? { width: display.height, height: display.width }
-    : display;
-
-  const halfOpened = status === 'partiallyOpen';
-  const fold: Geometry['fold'] =
-    screen === 'cover'
-      ? undefined
-      : landscape
-        ? {
-            x: 0,
-            y: window.height / 2,
-            width: window.width,
-            height: 0,
-            orientation: 'horizontal',
-            separating: halfOpened,
-            halfOpened,
-          }
-        : {
-            x: window.width / 2,
-            y: 0,
-            width: 0,
-            height: window.height,
-            orientation: 'vertical',
-            separating: halfOpened,
-            halfOpened,
-          };
-
-  const frames = arrange(
-    { ...window, window, fold },
-    { arrangement: 'split', axes: 'both' }
-  );
+  const shown: Display = {
+    screen,
+    landscape,
+    halfOpened: status === 'partiallyOpen',
+  };
+  const { window } = arrangeInput(shown).geometry;
+  const frames = PANES[displayKey(shown)];
   // A window turned a quarter has its top at the display's left.
   const upright = (frame: Frame): Frame =>
     landscape

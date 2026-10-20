@@ -9,6 +9,7 @@ import {
   LayoutContext,
   useArrangementLayout,
   useLayoutStore,
+  usePanesChange,
 } from '../src/layout.ts';
 import type { ArrangementLayout } from '../src/types.ts';
 
@@ -136,5 +137,45 @@ test('the hook and the arrangement callback receive each known layout', async ()
   ]);
   assert.deepEqual(fromHook, fromPane.slice(1));
   assert.deepEqual(fromProp, fromPane.slice(1));
+  await act(() => root.unmount());
+});
+
+test("the native view's report of the panes becomes the layout they show", async () => {
+  const store = createLayoutStore();
+  let onPanesChange!: ReturnType<typeof usePanesChange>;
+  function Arrangement() {
+    onPanesChange = usePanesChange(store);
+    return null;
+  }
+  let root!: ReactTestRenderer;
+  await act(() => {
+    root = create(createElement(Arrangement));
+  });
+  const report = (
+    primary: { x: number; y: number; width: number; height: number },
+    secondary: typeof primary | null
+  ) =>
+    onPanesChange({
+      nativeEvent: {
+        primary,
+        secondary: secondary ?? { x: 0, y: 0, width: 0, height: 0 },
+        secondaryVisible: secondary !== null,
+      },
+    } as Parameters<typeof onPanesChange>[0]);
+  report(
+    { x: 0, y: 0, width: 413, height: 880 },
+    { x: 437, y: 0, width: 413, height: 880 }
+  );
+  assert.deepEqual(store.getSnapshot(), {
+    secondaryVisible: true,
+    axis: 'horizontal',
+    isOverlapping: false,
+  });
+  report({ x: 0, y: 0, width: 850, height: 880 }, null);
+  assert.deepEqual(store.getSnapshot(), {
+    secondaryVisible: false,
+    axis: null,
+    isOverlapping: false,
+  });
   await act(() => root.unmount());
 });
