@@ -1,5 +1,3 @@
-/** A step tracker's history, fixed so screenshots are repeatable. */
-
 export type Activity = 'walk' | 'run' | 'bike' | 'swim';
 
 export interface Day {
@@ -10,35 +8,68 @@ export interface Day {
 
 export const GOAL = 5000;
 export const STREAK = 14;
-export const today = new Date(2026, 8, 26);
+export const FIXED_TODAY = new Date(2026, 8, 26);
 
-// Steps in thousands, from August 1, 2026; a letter marks the day's workout.
-const history =
-  '8 ' +
-  '12w 9 7 11r 13 6 5 ' +
-  '10 9b 12 14r 7 5 11 ' +
-  '13w 9 4 10 12r 8 6 ' +
-  '4 9 7 6 10 8 2 ' +
-  '6 10 ' +
-  '11 6 12w 15 15s ' +
-  '6w 7 11 14 10r 13 3 ' +
-  '5b 8w 16r 13r 14r 14 15w ' +
-  '9 13b 11r 9 13 15b 10.282';
-
-const activities: Record<string, Activity> = {
-  w: 'walk',
-  r: 'run',
-  b: 'bike',
-  s: 'swim',
-};
-
-const recorded = history.split(' ').map((entry) => {
-  const match = /^([\d.]+)([wrbs])?$/.exec(entry)!;
-  return {
-    steps: Math.round(Number(match[1]) * 1000),
-    activity: match[2] ? activities[match[2]] : undefined,
-  };
-});
+const HISTORY_START = new Date(2026, 7, 1);
+const history: { steps: number; activity?: Activity }[] = [
+  { steps: 8_000 },
+  { steps: 12_000, activity: 'walk' },
+  { steps: 9_000 },
+  { steps: 7_000 },
+  { steps: 11_000, activity: 'run' },
+  { steps: 13_000 },
+  { steps: 6_000 },
+  { steps: 5_000 },
+  { steps: 10_000 },
+  { steps: 9_000, activity: 'bike' },
+  { steps: 12_000 },
+  { steps: 14_000, activity: 'run' },
+  { steps: 7_000 },
+  { steps: 5_000 },
+  { steps: 11_000 },
+  { steps: 13_000, activity: 'walk' },
+  { steps: 9_000 },
+  { steps: 4_000 },
+  { steps: 10_000 },
+  { steps: 12_000, activity: 'run' },
+  { steps: 8_000 },
+  { steps: 6_000 },
+  { steps: 4_000 },
+  { steps: 9_000 },
+  { steps: 7_000 },
+  { steps: 6_000 },
+  { steps: 10_000 },
+  { steps: 8_000 },
+  { steps: 2_000 },
+  { steps: 6_000 },
+  { steps: 10_000 },
+  { steps: 11_000 },
+  { steps: 6_000 },
+  { steps: 12_000, activity: 'walk' },
+  { steps: 15_000 },
+  { steps: 15_000, activity: 'swim' },
+  { steps: 6_000, activity: 'walk' },
+  { steps: 7_000 },
+  { steps: 11_000 },
+  { steps: 14_000 },
+  { steps: 10_000, activity: 'run' },
+  { steps: 13_000 },
+  { steps: 3_000 },
+  { steps: 5_000, activity: 'bike' },
+  { steps: 8_000, activity: 'walk' },
+  { steps: 16_000, activity: 'run' },
+  { steps: 13_000, activity: 'run' },
+  { steps: 14_000, activity: 'run' },
+  { steps: 14_000 },
+  { steps: 15_000, activity: 'walk' },
+  { steps: 9_000 },
+  { steps: 13_000, activity: 'bike' },
+  { steps: 11_000, activity: 'run' },
+  { steps: 9_000 },
+  { steps: 13_000 },
+  { steps: 15_000, activity: 'bike' },
+  { steps: 10_282 },
+];
 
 export const sameDay = (a: Date, b: Date) =>
   a.getFullYear() === b.getFullYear() &&
@@ -50,9 +81,9 @@ export function month(year: number, index: number): Day[] {
   return Array.from({ length }, (_, offset) => {
     const date = new Date(year, index, offset + 1);
     const recordIndex = Math.round(
-      (date.getTime() - new Date(2026, 7, 1).getTime()) / 86_400_000
+      (date.getTime() - HISTORY_START.getTime()) / 86_400_000
     );
-    const record = date <= today ? recorded[recordIndex] : undefined;
+    const record = date <= FIXED_TODAY ? history[recordIndex] : undefined;
     return { date, steps: record?.steps ?? null, activity: record?.activity };
   });
 }
@@ -68,8 +99,7 @@ export function day(date: Date): Day {
   );
 }
 
-/** The Monday-to-Saturday stretch shown under the dashboard, ending at `date`'s week. */
-export function week(date: Date): Day[] {
+export function mondayToSaturday(date: Date): Day[] {
   const monday = new Date(date);
   monday.setDate(date.getDate() - ((date.getDay() + 6) % 7));
   return Array.from({ length: 6 }, (_, offset) => {
@@ -79,10 +109,12 @@ export function week(date: Date): Day[] {
   });
 }
 
-/** Steps per half hour. Today stops at the last half hour so far. */
+const TODAY_SO_FAR = [
+  60, 75, 55, 40, 50, 65, 45, 80, 70, 95, 160, 690, 1310, 1120, 1060,
+];
+
 export function halfHours(of: Day): number[] {
-  if (sameDay(of.date, today))
-    return [60, 75, 55, 40, 50, 65, 45, 80, 70, 95, 160, 690, 1310, 1120, 1060];
+  if (sameDay(of.date, FIXED_TODAY)) return TODAY_SO_FAR;
   if (of.steps === null) return [];
   let seed = of.date.getDate() * 7919 + of.date.getMonth() * 104729;
   const random = () => {
@@ -141,8 +173,7 @@ export type WorkoutType =
 export interface Workout {
   type: WorkoutType;
   start: Date;
-  /** Kilometres; null for a workout measured in calories, such as HIIT. */
-  distance: number | null;
+  distanceKm: number | null;
   kcal: number;
   minutes: number;
 }
@@ -204,91 +235,91 @@ export const workouts: Workout[] = [
   {
     type: 'outdoorCycle',
     start: at(25, 18, 43),
-    distance: 54.05,
+    distanceKm: 54.05,
     kcal: 1220,
     minutes: 116,
   },
   {
     type: 'hiit',
     start: at(22, 17, 11),
-    distance: null,
+    distanceKm: null,
     kcal: 462,
     minutes: 41,
   },
   {
     type: 'outdoorCycle',
     start: at(21, 7, 47),
-    distance: 32.15,
+    distanceKm: 32.15,
     kcal: 880,
     minutes: 79,
   },
   {
     type: 'outdoorWalk',
     start: at(19, 9, 1),
-    distance: 8.06,
+    distanceKm: 8.06,
     kcal: 410,
     minutes: 70,
   },
   {
     type: 'indoorRun',
     start: at(17, 17, 30),
-    distance: 6.86,
+    distanceKm: 6.86,
     kcal: 520,
     minutes: 39,
   },
   {
     type: 'hiit',
     start: at(16, 18, 33),
-    distance: null,
+    distanceKm: null,
     kcal: 396,
     minutes: 35,
   },
   {
     type: 'indoorRun',
     start: at(15, 7, 4),
-    distance: 6.32,
+    distanceKm: 6.32,
     kcal: 480,
     minutes: 36,
   },
   {
     type: 'outdoorWalk',
     start: at(14, 19, 1),
-    distance: 1.93,
+    distanceKm: 1.93,
     kcal: 105,
     minutes: 24,
   },
   {
     type: 'outdoorCycle',
     start: at(13, 8, 38),
-    distance: 34.68,
+    distanceKm: 34.68,
     kcal: 910,
     minutes: 86,
   },
   {
     type: 'outdoorRun',
     start: at(10, 7, 13),
-    distance: 6.92,
+    distanceKm: 6.92,
     kcal: 530,
     minutes: 38,
   },
   {
     type: 'indoorWalk',
     start: at(6, 8, 31),
-    distance: 4.12,
+    distanceKm: 4.12,
     kcal: 230,
     minutes: 52,
   },
   {
     type: 'outdoorSwim',
     start: at(5, 17, 32),
-    distance: 1.88,
+    distanceKm: 1.88,
     kcal: 340,
     minutes: 44,
   },
   {
     type: 'indoorWalk',
     start: at(3, 6, 48),
-    distance: 6.43,
+    distanceKm: 6.43,
     kcal: 330,
     minutes: 52,
   },
@@ -305,7 +336,7 @@ export const families: WorkoutFamily[] = [
 export function totals(of: Workout[]) {
   const minutes = of.reduce((sum, workout) => sum + workout.minutes, 0);
   const kcal = of.reduce((sum, workout) => sum + workout.kcal, 0);
-  const km = of.reduce((sum, workout) => sum + (workout.distance ?? 0), 0);
+  const km = of.reduce((sum, workout) => sum + (workout.distanceKm ?? 0), 0);
   const days = new Set(of.map((workout) => workout.start.getDate())).size;
   return {
     count: `${of.length} workouts over ${days} days`,

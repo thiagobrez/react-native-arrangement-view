@@ -2,12 +2,12 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { MaterialDesignIcons } from '@react-native-vector-icons/material-design-icons';
 import {
   colors,
+  FIXED_TODAY,
   GOAL,
   monthName,
   months,
   sameDay,
   thousands,
-  today,
   weekdayNames,
   type Day,
 } from './data';
@@ -120,7 +120,9 @@ function Cell({
       onPress={() => onSelect(day.date)}
       style={[styles.cell, selected && styles.selected]}
     >
-      <Text style={[styles.date, sameDay(day.date, today) && styles.today]}>
+      <Text
+        style={[styles.date, sameDay(day.date, FIXED_TODAY) && styles.today]}
+      >
         {date}
       </Text>
       <Text
