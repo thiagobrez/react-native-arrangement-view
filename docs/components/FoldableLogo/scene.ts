@@ -58,9 +58,10 @@ const PRIMARY = ['#7c6cf2', '#5a4bd1'] as const;
 const SECONDARY = ['#2dc2b4', '#1d958f'] as const;
 
 const FIELD_OF_VIEW = 30;
-// The space the camera keeps in view, enough for the device open flat.
-const VIEW_WIDTH = 4.5;
-const VIEW_HEIGHT = 3.9;
+const VIEW_MARGIN_X = 133 * WORLD_UNITS_PER_DP;
+const VIEW_MARGIN_Y = 89 * WORLD_UNITS_PER_DP;
+const VIEW_WIDTH = 2 * HALF_WIDTH + 2 * VIEW_MARGIN_X;
+const VIEW_HEIGHT = HEIGHT + 2 * VIEW_MARGIN_Y;
 
 const views: Record<Posture, readonly [yaw: number, pitch: number]> = {
   closed: [24, 10],
