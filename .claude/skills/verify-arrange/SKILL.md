@@ -1,13 +1,13 @@
 ---
 name: verify-arrange
-description: Check Android's pane layout, arrange() in src/arrange.ts and describeLayout() in src/layout.ts, against its promises (panes stay inside the arrangement, never overlap, keep clear of an avoided hinge, split at a separating hinge, show both panes in tabletop, honour axes and primaryEdge, and report the layout they show) on every input in a bounded grid plus 500,000 seeded random cases. Use whenever a change touches arrange(), describeLayout(), their option types in src/types.ts, or how ArrangementView.android.tsx calls them, and before releasing a change to hinge or window size class handling.
+description: Check Android's pane layout, arrange() in cpp/arrange.h and describeLayout() in src/layout.ts, against its promises (panes stay inside the arrangement, never overlap, keep clear of an avoided hinge, split at a separating hinge, show both panes in tabletop, honour axes and primaryEdge, and report the layout they show) on every input in a bounded grid plus 500,000 seeded random cases. Use whenever a change touches cpp/arrange.h, describeLayout(), resolvePrimaryEdge() in src/primaryEdge.ts, their option types in src/types.ts, or how the Android shadow node (android/src/main/jni/ArrangementShadowNodes.cpp) calls arrange(), and before releasing a change to hinge or window size class handling.
 ---
 
 # Verify arrange()
 
-On Android, `src/ArrangementView.android.tsx` hands the native view's geometry (the arrangement's size, its window, the fold) to `arrange()`, positions the two panes at the frames it returns, and reports `describeLayout()` of those frames through `useArrangementLayout` and `onArrangementLayoutChange`. iOS doesn't use either function: SwiftUI lays out its panes.
+On Android, the ArrangementView's shadow node (`android/src/main/jni/ArrangementShadowNodes.cpp`) hands the geometry the native view measured (the arrangement's content box, its window, the fold) and the props to `arrange()` in `cpp/arrange.h`, and places the two panes at the frames it returns. It reports those frames through `onPanesChange`, and JS reports `describeLayout()` of them through `useArrangementLayout` and `onArrangementLayoutChange`. JS resolves `primaryEdge` with `resolvePrimaryEdge()` before it reaches the native view. iOS doesn't use `arrange()`: SwiftUI lays out its panes.
 
-The unit tests in `tests/arrange.test.ts` and `tests/primary-edge.test.ts` pin hand-picked layouts. This check runs the real functions on every combination of options and on every fold position, fold width, hinge gap and window size class in a grid, then on 500,000 random layouts in realistic dp. It checks every result against the properties below.
+The unit tests in `tests/arrange.test.ts` and `tests/primary-edge.test.ts` pin hand-picked layouts. This check runs the real functions on every combination of options and on every fold position, fold width, hinge gap and window size class in a grid, then on 500,000 random layouts in realistic dp. It checks every result against the properties below. It runs the C++ the app ships: `verification/native/arrange.ts` compiles `verification/native/harness.cpp` with `cpp/arrange.h` on the host and passes the program the cases in batches.
 
 ## Properties
 
@@ -29,11 +29,11 @@ Each property is one entry in `PROPERTIES` in `verification/arrange.check.ts`. B
 ## Run it
 
 ```sh
-yarn verify:arrange           # about 30 s; checks the current src
-yarn verify:arrange:mutants   # about 70 s on 10 cores; proves each property can still fail
+yarn verify:arrange           # about 45 s; checks the current cpp/arrange.h and src
+yarn verify:arrange:mutants   # about 3.5 min on 10 cores; proves each property can still fail
 ```
 
-Both commands run with the repo's own Node and have no dependencies. The check exits 0 when every property passes, or when a property fails only because of a finding in `KNOWN_FINDINGS`. For each failing property it prints the number of failing cases and the first one: the geometry, the options and the frames `arrange()` returned.
+Both commands run with the repo's own Node and need a C++20 compiler: `c++`, or the one `CXX` names. The harness is built once per source and kept in the system's temporary directory. The check exits 0 when every property passes, or when a property fails only because of a finding in `KNOWN_FINDINGS`. For each failing property it prints the number of failing cases and the first one: the geometry, the options and the frames `arrange()` returned.
 
 Run `yarn verify:arrange` on every change that touches the covered code. Also run `yarn verify:arrange:mutants` when you change the check itself, or when the covered code changed enough that a mutant may no longer apply. The mutant runner prints `STALE` for a mutant whose line is gone.
 
@@ -45,15 +45,15 @@ Run `yarn verify:arrange` on every change that touches the covered code. Also ru
 
   With `axes: 'vertical'` it is worse: the only pane is 0 dp wide, so the arrangement shows nothing. A little further from the edge, the pane is a sliver: at 20.5 dp it is 8.5 dp wide.
 
-  The cause is the clamp in `const before = Math.max(0, middle - half)` and `const after = Math.min(extent, middle + half)`, together with the check `start > 0 && end < extent`, which treats such a fold as dividing the arrangement.
+  The cause is the clamp in `const double before = jsMax(0, middle - half)` and `const double after = jsMin(extent, middle + half)` in `cpp/arrange.h`, together with the check `start > 0 && end < extent`, which treats such a fold as dividing the arrangement.
 
-  Found on 2026-10-19 and not fixed. A fix belongs in `arrange()`, for example treating a fold that leaves no room on one side like a fold along the edge. Once the fix lands, the check prints `was a known finding` and exits 1. Remove the entry from `KNOWN_FINDINGS`, and add a mutant to `verification/arrange.mutants.ts` that reintroduces the clamp, so this property is proven able to fail too.
+  Found on 2026-10-19 and not fixed. A fix belongs in `arrange()` in `cpp/arrange.h`, for example treating a fold that leaves no room on one side like a fold along the edge. Once the fix lands, the check prints `was a known finding` and exits 1. Remove the entry from `KNOWN_FINDINGS`, and add a mutant to `verification/arrange.mutants.ts` that reintroduces the clamp, so this property is proven able to fail too.
 
 ## Reading a failure
 
 A FAIL means either `arrange()` or `describeLayout()` broke a promise, or the check models the promise wrongly. To tell which:
 
-1. Take the printed geometry and options, and call `arrange()` on them yourself (`node --no-warnings -e` with an import of `./src/arrange.ts`, or add a case to `tests/arrange.test.ts`). Confirm the frames.
+1. Take the printed geometry and options, and call `arrange()` on them yourself (`node --no-warnings --input-type=module -e` with an import of `./verification/native/arrange.ts`, or add a case to `tests/arrange.test.ts`). Confirm the frames.
 2. Draw the frames against the arrangement and the fold, and ask whether a user would see the harm in the table. If they would, it is a real bug: report it with that case, in dp, and do not change the property to make it pass.
 3. If the frames are right and the property is wrong, the property needs updating. That can happen because the change is intended (see below), or because the check misreads a layout. Examples of a misread: overlay's two full-size panes read as a split, or float rounding. All the comparisons allow `EPS = 1e-6` dp for rounding. Never raise `EPS` to hide a failure larger than rounding.
 
@@ -82,24 +82,24 @@ Assumptions: the arrangement and window sizes are positive, the fold's width and
 
 Not covered:
 
-- The native side: how `android/src/main/java/com/arrangementview/ArrangementView.kt` and `HingeTracker.kt` measure the geometry and fold.
-- RTL mirroring in `paneStyle()` in `ArrangementView.android.tsx`.
-- Whether React re-renders when the layout changes.
+- How `android/src/main/java/com/arrangementview/ArrangementView.kt` and `HingeTracker.kt` measure the geometry and fold.
+- How the shadow node maps the props to `ArrangeOptions` (`optionsFrom()`) and turns a frame into a pane's Yoga style, including the `end` edge it writes for a swapped right-to-left layout (`applyPlacement()` in `ArrangementShadowNodes.cpp`).
+- Whether a placement reaches the screen: the state update, commit, layout and mount.
 - iOS, where SwiftUI decides the layout.
 
 ## Coverage record
 
 | Check | Covers |
 | --- | --- |
-| `verification/arrange.check.ts` | `arrange()`, `resolvePrimaryEdge()` (as `arrange()` calls it; its `problems` messages are not checked), `Fold`, `Geometry`, `ArrangeOptions` in `src/arrange.ts`; `describeLayout()` in `src/layout.ts`; `Arrangement`, `ArrangementAxes`, `HingePolicy`, `PrimaryEdge`, `HorizontalEdge`, `VerticalEdge`, `ArrangementLayout` in `src/types.ts` |
+| `verification/arrange.check.ts` | `arrange()`, `Geometry`, `Fold`, `ArrangeOptions` in `cpp/arrange.h`, through the TS shapes and encoding in `verification/native/arrange.ts`; `resolvePrimaryEdge()` in `src/primaryEdge.ts` (as `ArrangementView.android.tsx` calls it; its `problems` messages are not checked); `describeLayout()` in `src/layout.ts`; `Arrangement`, `ArrangementAxes`, `HingePolicy`, `PrimaryEdge`, `HorizontalEdge`, `VerticalEdge`, `ArrangementLayout` in `src/types.ts` |
 | `verification/arrange.mutants.ts` | The same lines, by exact text; a `STALE` mutant means its line changed |
 
-Last confirmed in sync at commit `0267aea`.
+Last confirmed in sync at commit `<pending>`.
 
 To see whether the covered code has changed since then, run:
 
 ```sh
-git diff 0267aea -- src/arrange.ts src/layout.ts src/types.ts
+git diff <pending> -- cpp/arrange.h src/primaryEdge.ts src/layout.ts src/types.ts verification/native
 ```
 
 If it has, read the diff against the properties and the grid, run both commands, and update the check as described above. Move the commit forward only after you have confirmed that the check describes the code at the new commit: update both the hash in this section and the one in the `git diff` command.
