@@ -1,9 +1,9 @@
 import type { PaneFrames } from '../../../src/layout.ts';
 
 /**
- * Where Android's pane policy, cpp/arrange.h, puts the panes on each display,
- * for arrangeInput() in device.ts. tests/foldable-logo.test.ts recomputes them
- * and prints the table to paste here when it is stale.
+ * Where Android's pane policy, cpp/arrange.h, puts the panes on each display
+ * the logo shows. The docs site can't run the C++, so these are copies of its
+ * results.
  */
 export const PANES = {
   'cover': {

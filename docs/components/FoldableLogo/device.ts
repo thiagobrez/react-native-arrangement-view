@@ -40,49 +40,14 @@ export const inner = { width: 1012, height: 920 };
 const HANDOVER_DEGREES = 30;
 const FLAT_DEGREES = 160;
 
-export interface Display {
-  screen: 'cover' | 'inner';
-  landscape: boolean;
-  halfOpened: boolean;
-}
-
-export const displayKey = ({ screen, landscape, halfOpened }: Display) =>
+const displayKey = (
+  screen: 'cover' | 'inner',
+  landscape: boolean,
+  halfOpened: boolean
+) =>
   `${screen}${landscape ? ' landscape' : ''}${
     screen === 'inner' && halfOpened ? ' half-open' : ''
   }` as keyof typeof PANES;
-
-export function arrangeInput({ screen, landscape, halfOpened }: Display) {
-  const display = screen === 'cover' ? cover : inner;
-  const window = landscape
-    ? { width: display.height, height: display.width }
-    : display;
-  const fold =
-    screen === 'cover'
-      ? undefined
-      : landscape
-        ? {
-            x: 0,
-            y: window.height / 2,
-            width: window.width,
-            height: 0,
-            orientation: 'horizontal' as const,
-            separating: halfOpened,
-            halfOpened,
-          }
-        : {
-            x: window.width / 2,
-            y: 0,
-            width: 0,
-            height: window.height,
-            orientation: 'vertical' as const,
-            separating: halfOpened,
-            halfOpened,
-          };
-  return {
-    geometry: { ...window, window, fold },
-    options: { arrangement: 'split', axes: 'both' } as const,
-  };
-}
 
 export interface DeviceState {
   posture: Posture;
@@ -118,13 +83,12 @@ export function describeDevice({ orientation, angle }: Pose): DeviceState {
   const screen =
     orientation === 'tent' || status === 'closed' ? 'cover' : 'inner';
   const landscape = orientation !== 'upright';
-  const shown: Display = {
-    screen,
-    landscape,
-    halfOpened: status === 'partiallyOpen',
-  };
-  const { window } = arrangeInput(shown).geometry;
-  const frames = PANES[displayKey(shown)];
+  const display = screen === 'cover' ? cover : inner;
+  const window = landscape
+    ? { width: display.height, height: display.width }
+    : display;
+  const frames =
+    PANES[displayKey(screen, landscape, status === 'partiallyOpen')];
   // A window turned a quarter has its top at the display's left.
   const upright = (frame: Frame): Frame =>
     landscape
