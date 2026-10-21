@@ -1,0 +1,16 @@
+.light,
+.dark {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 16px 0 24px;
+}
+
+.dark,
+:global(.dark) .light {
+  display: none;
+}
+
+:global(.dark) .dark {
+  display: block;
+}
