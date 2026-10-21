@@ -71,51 +71,43 @@ Android has no fallback mode: a device without a fold is arranged as flat, and i
 
 ## Under the hood
 
-The rules above run in different places on each platform. These diagrams follow an `ArrangementView` from your JavaScript to the native views, file by file. Steps with a purple number run once, when the view first renders. Steps with a teal number follow them, and run again whenever the view's size, the window or the hinge changes. The TypeScript files are in `src/`, `arrange.h` is in `cpp/`, and the native files are in `ios/` and `android/src/main/`. Click a diagram to enlarge it.
+The rules above run in different places on each platform. These diagrams follow an `ArrangementView` from your JavaScript to the native views, through its main files. Steps with a purple number run once, when the view first renders. Steps with a teal number follow them, and run again whenever the view's size, the window or the hinge changes. The TypeScript files are in `src/`, `arrange.h` is in `cpp/`, and the native files are in `ios/` and `android/src/main/`. Click a diagram to enlarge it.
 
 ### iOS
 
 <ThemedImage
   src="guide/arrangement-ios"
-  alt="The files an ArrangementView goes through on iOS: ArrangementView.ios.tsx and layout.ts in JavaScript, RNArrangementPaneShadowNode.h in the C++ shadow tree, RNArrangementView.mm and RNArrangementPane.mm in Objective-C++, and ArrangementHost.swift and SwiftUI's ArrangementView, with numbered arrows for the steps below."
+  alt="An ArrangementView on iOS: ArrangementView.ios.tsx and layout.ts in JavaScript, RNArrangementView.mm and RNArrangementPane.mm in Objective-C++, and ArrangementHost.swift in Swift, with numbered arrows for the steps below."
   width={760}
-  height={770}
+  height={576}
 />
 
 1. Your app renders `<ArrangementView>`. `ArrangementView.ios.tsx` renders the native view with the two panes, primary first.
-2. React commits. SwiftUI hasn't placed the panes yet, so each pane's shadow node, from `RNArrangementPaneShadowNode.h`, keeps the full-size style the pane was rendered with.
-3. Fabric mounts the native view, `RNArrangementView.mm`, whose shadow node codegen generates, and the panes, `RNArrangementPane.mm`, on the main thread.
-4. `RNArrangementView.mm` creates the SwiftUI host in `ArrangementHost.swift`, and passes it the panes and the props.
-5. The host puts the panes in SwiftUI's `ArrangementView`, in the split or overlay style. Before iOS 27.1, or with an older SDK, it uses the [fallback](#fallback) instead.
-6. When the view appears, and whenever its size, the window or the hinge changes, SwiftUI's `ArrangementView` places the panes. The library doesn't choose their frames.
-7. SwiftUI lays out each pane's container in `ArrangementHost.swift`, which reports the frame the pane got.
-8. `ArrangementHost.swift` hands that frame to `RNArrangementView.mm`.
-9. `RNArrangementView.mm` converts it to its own coordinates and passes it to the pane.
-10. `RNArrangementPane.mm` updates its shadow node's state with the new size and origin, as an immediate update.
-11. Fabric commits at once on the main thread. The shadow node takes that size and origin, Yoga lays out the pane's React content, and the mount applies it, all within SwiftUI's layout pass.
-12. After the layout pass, `ArrangementHost.swift` reports where the panes ended up, and `RNArrangementView.mm` sends them to `layout.ts` as `onPanesChange`. `layout.ts` turns the frames into a layout and, only if that changed, calls `onArrangementLayoutChange` and updates `useArrangementLayout()`.
+2. React commits, and Fabric mounts the native view, `RNArrangementView.mm`, and the panes, `RNArrangementPane.mm`, on the main thread.
+3. `RNArrangementView.mm` hosts SwiftUI through `ArrangementHost.swift`, which puts the panes in SwiftUI's `ArrangementView`, in the split or overlay style. Before iOS 27.1, or with an older SDK, it uses the [fallback](#fallback) instead.
+4. When the view appears, and whenever its size, the window or the hinge changes, SwiftUI's `ArrangementView` places the panes. The library doesn't choose their frames.
+5. `ArrangementHost.swift` hands each pane's new frame to `RNArrangementView.mm`.
+6. `RNArrangementView.mm` passes the frame to its pane. `RNArrangementPane.mm` updates the pane's shadow node at once, so Yoga lays its React content out at that size and Fabric mounts it, all within SwiftUI's layout pass.
+7. After the layout pass, `ArrangementHost.swift` reports where the panes ended up, and `RNArrangementView.mm` sends them to `layout.ts` as `onPanesChange`. `layout.ts` turns the frames into a layout and, only if that changed, calls `onArrangementLayoutChange` and updates `useArrangementLayout()`.
 
-When a prop such as `arrangement` changes, `RNArrangementView.mm` passes it to the host, and SwiftUI places the panes again from step 6.
+When a prop such as `arrangement` changes, `RNArrangementView.mm` passes it to the host, and SwiftUI places the panes again from step 4.
 
 ### Android
 
 <ThemedImage
   src="guide/arrangement-android"
-  alt="The files an ArrangementView goes through on Android: ArrangementView.android.tsx and layout.ts in JavaScript, ArrangementShadowNodes.cpp, arrange.h and ArrangementStateBridge.cpp in the C++ shadow tree, and ArrangementViewManager.kt, ArrangementPaneManager.kt, ArrangementView.kt and ArrangementStateBridge.kt in Kotlin, with numbered arrows for the steps below."
+  alt="An ArrangementView on Android: ArrangementView.android.tsx and layout.ts in JavaScript, ArrangementShadowNodes.cpp and arrange.h in the C++ shadow tree, and ArrangementView.kt in Kotlin, with numbered arrows for the steps below."
   width={760}
-  height={652}
+  height={576}
 />
 
 1. Your app renders `<ArrangementView>`. `ArrangementView.android.tsx` renders the native view, a view that fills its content box, and the two panes.
 2. React commits. The view's shadow node, in `ArrangementShadowNodes.cpp`, places the panes, but nothing has been measured yet, so both are hidden.
-3. Fabric mounts the views on the UI thread. `ArrangementViewManager.kt` creates the `ArrangementView`, and `ArrangementPaneManager.kt` creates the panes.
-4. The view manager hands the view its shadow node's state. Once attached, the view listens for window layout changes and rechecks its size and position before each draw.
-5. When Jetpack WindowManager reports a new window layout, or the view's size or position changes, `ArrangementView.kt` measures its content box, its window and the fold.
-6. If any of them changed, it passes them to `ArrangementStateBridge.kt`.
-7. `ArrangementStateBridge.kt` calls `ArrangementStateBridge.cpp` over JNI, which updates the view's state as an immediate update.
-8. Fabric commits at once on the UI thread, and rebuilds the view's shadow node with the new measurement.
-9. The shadow node runs the pane policy in `arrange.h`, and writes each pane's frame into its Yoga style.
-10. Yoga lays out the panes, and Fabric mounts their new frames before the call in step 7 returns. The next frame shows them.
-11. The shadow node sends the frames to `layout.ts` as `onPanesChange`. `layout.ts` turns the frames into a layout and, only if that changed, calls `onArrangementLayoutChange` and updates `useArrangementLayout()`.
+3. Fabric mounts the native view, `ArrangementView.kt`, and its panes on the UI thread.
+4. When Jetpack WindowManager reports a new window layout, or the view's size or position changes, `ArrangementView.kt` measures its content box, its window and the fold.
+5. If any of them changed, it passes them over JNI to its shadow node, as an immediate state update. Fabric commits it at once, on the UI thread.
+6. The shadow node runs the pane policy in `arrange.h`, and writes each pane's frame into its Yoga style.
+7. Yoga lays out the panes, and Fabric mounts their new frames before step 5's update returns. The next frame shows them.
+8. The shadow node sends the frames to `layout.ts` as `onPanesChange`. `layout.ts` turns the frames into a layout and, only if that changed, calls `onArrangementLayoutChange` and updates `useArrangementLayout()`.
 
-When a prop such as `arrangement` changes, React's commit rebuilds the view's shadow node with the new props. Steps 9 and 11 run in that commit, and Fabric mounts the new frames on the UI thread afterwards.
+When a prop such as `arrangement` changes, React's commit rebuilds the view's shadow node with the new props. Steps 6 and 8 run in that commit, and Fabric mounts the new frames on the UI thread afterwards.
