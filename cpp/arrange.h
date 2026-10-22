@@ -119,17 +119,17 @@ inline PaneFrames arrange(const Geometry &geometry, const ArrangeOptions &option
     return allows(axis) && (axis == Axis::Horizontal ? twoColumns : twoRows);
   };
 
-  // Stacked, a split's primary pane goes first whatever primaryVerticalEdge says, as on iOS.
-  const auto split = [&](Axis axis, double start, double end, bool primaryAfter = false) -> PaneFrames {
+  const bool overlay = arrangement == Arrangement::Overlay;
+  // An overlay's primary pane defaults to after the hinge, as in SwiftUI.
+  const HorizontalEdge horizontalEdge = primaryEdge != HorizontalEdge::Auto ? primaryEdge
+      : overlay ? HorizontalEdge::Trailing : HorizontalEdge::Leading;
+  const bool primaryAfterSideBySide = (horizontalEdge == HorizontalEdge::Trailing) != rtl;
+  const bool primaryAfterStacked = overlay && primaryVerticalEdge != VerticalEdge::Top;
+  const auto split = [&](Axis axis, double start, double end) -> PaneFrames {
     const Frame before = axis == Axis::Horizontal ? Frame{0, 0, start, height} : Frame{0, 0, width, start};
     const Frame after = axis == Axis::Horizontal ? Frame{end, 0, width - end, height}
                                                  : Frame{0, end, width, height - end};
-    const bool primaryIsAfter = axis == Axis::Horizontal
-        ? (primaryEdge != HorizontalEdge::Auto ? (primaryEdge == HorizontalEdge::Trailing) != rtl
-                                               : rtl != primaryAfter)
-        : (arrangement == Arrangement::Overlay && primaryVerticalEdge != VerticalEdge::Auto
-               ? primaryVerticalEdge == VerticalEdge::Bottom
-               : primaryAfter);
+    const bool primaryIsAfter = axis == Axis::Horizontal ? primaryAfterSideBySide : primaryAfterStacked;
     return primaryIsAfter ? PaneFrames{after, before} : PaneFrames{before, after};
   };
 
@@ -146,15 +146,13 @@ inline PaneFrames arrange(const Geometry &geometry, const ArrangeOptions &option
     const double before = middle - half;
     const double after = middle + half;
     if (before > 0 && after < extent) {
-      // Overlay's primary pane goes after the hinge, as SwiftUI puts it.
-      if (fold->separating ? allows(axis) : fits(axis))
-        return split(axis, before, after, arrangement == Arrangement::Overlay);
-      if (arrangement == Arrangement::Overlay) return {full, full};
+      if (fold->separating ? allows(axis) : fits(axis)) return split(axis, before, after);
+      if (overlay) return {full, full};
       return {split(axis, before, after).primary, std::nullopt};
     }
   }
 
-  if (arrangement == Arrangement::Overlay) return {full, full};
+  if (overlay) return {full, full};
   if (!fits(Axis::Horizontal) && !fits(Axis::Vertical)) return {full, std::nullopt};
   const Axis axis = fits(Axis::Horizontal) ? Axis::Horizontal : Axis::Vertical;
   const double middle = (axis == Axis::Horizontal ? width : height) / 2;
