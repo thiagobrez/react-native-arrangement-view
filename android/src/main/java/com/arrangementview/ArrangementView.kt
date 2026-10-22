@@ -1,5 +1,6 @@
 package com.arrangementview
 
+import android.graphics.Point
 import android.graphics.Rect
 import android.view.View
 import android.view.ViewTreeObserver
@@ -102,21 +103,9 @@ class ArrangementView(private val reactContext: ThemedReactContext) : ReactViewG
     val stateWrapper = stateWrapper ?: return
     val fold = fold
     if (fold != null) {
-      // Fold bounds are in window coordinates. Use this view's layout position rather than
-      // getLocationInWindow so a screen transition's transform doesn't drag the fold along.
-      var x = 0
-      var y = 0
-      var view: View = this
-      while (true) {
-        x += view.left
-        y += view.top
-        val parent = view.parent as? View ?: break
-        x -= parent.scrollX
-        y -= parent.scrollY
-        view = parent
-      }
+      val position = untransformedPositionInWindow()
       foldInView.set(fold.bounds)
-      foldInView.offset(-x - contentInsets.left, -y - contentInsets.top)
+      foldInView.offset(-position.x - contentInsets.left, -position.y - contentInsets.top)
     } else {
       foldInView.setEmpty()
     }
@@ -154,4 +143,14 @@ class ArrangementView(private val reactContext: ThemedReactContext) : ReactViewG
   }
 
   private fun dp(pixels: Int): Double = PixelUtil.toDIPFromPixel(pixels.toFloat()).toDouble()
+}
+
+private fun View.untransformedPositionInWindow(): Point {
+  val position = Point(left, top)
+  var ancestor = parent as? View
+  while (ancestor != null) {
+    position.offset(ancestor.left - ancestor.scrollX, ancestor.top - ancestor.scrollY)
+    ancestor = ancestor.parent as? View
+  }
+  return position
 }
