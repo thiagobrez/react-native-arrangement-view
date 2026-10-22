@@ -147,8 +147,7 @@ inline PaneFrames arrange(const Geometry &geometry, const ArrangeOptions &option
     const double after = middle + half;
     if (before > 0 && after < extent) {
       if (fold->separating ? allows(axis) : fits(axis)) return split(axis, before, after);
-      if (overlay) return {full, full};
-      return {split(axis, before, after).primary, std::nullopt};
+      if (!overlay) return {split(axis, before, after).primary, std::nullopt};
     }
   }
 
