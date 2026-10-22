@@ -107,7 +107,7 @@ const MUTANTS: Mutant[] = [
 const source = (file: Mutant['file']) =>
   fileURLToPath(
     new URL(
-      `../${file === 'arrange.h' ? 'cpp' : 'src'}/${file}`,
+      `../../${file === 'arrange.h' ? 'cpp' : 'src'}/${file}`,
       import.meta.url
     )
   );

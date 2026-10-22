@@ -7,11 +7,11 @@ description: Check Android's pane layout, arrange() in cpp/arrange.h and describ
 
 On Android, the ArrangementView's shadow node (`android/src/main/jni/ArrangementShadowNodes.cpp`) hands the geometry the native view measured (the arrangement's content box, its window, the fold) and the props to `arrange()` in `cpp/arrange.h`, and places the two panes at the frames it returns. It reports those frames through `onPanesChange`, and JS reports `describeLayout()` of them through `useArrangementLayout` and `onArrangementLayoutChange`. JS resolves `primaryEdge` with `resolvePrimaryEdge()` before it reaches the native view. iOS doesn't use `arrange()`: SwiftUI lays out its panes.
 
-The unit tests in `tests/arrange.test.ts` and `tests/primary-edge.test.ts` pin hand-picked layouts. This check runs the real functions on every combination of options and on every fold position, fold width, hinge gap and window size class in a grid, then on 500,000 random layouts in realistic dp. It checks every result against the properties below. It runs the C++ the app ships: `verification/native/arrange.ts` compiles `verification/native/harness.cpp` with `cpp/arrange.h` on the host and passes the program the cases in batches.
+The unit tests in `tests/arrange.test.ts` and `tests/primary-edge.test.ts` pin hand-picked layouts. This check runs the real functions on every combination of options and on every fold position, fold width, hinge gap and window size class in a grid, then on 500,000 random layouts in realistic dp. It checks every result against the properties below. It runs the C++ the app ships: `tests/harness/arrange.ts` compiles `tests/harness/harness.cpp` with `cpp/arrange.h` on the host and passes the program the cases in batches.
 
 ## Properties
 
-Each property is one entry in `PROPERTIES` in `verification/arrange.check.ts`. Below, each gets the promise, then the harm if it breaks.
+Each property is one entry in `PROPERTIES` in `tests/properties/arrange.check.ts`. Below, each gets the promise, then the harm if it breaks.
 
 | Property | The promise | The harm if it breaks |
 | --- | --- | --- |
@@ -47,13 +47,13 @@ Run `yarn verify:arrange` on every change that touches the covered code. Also ru
 
   The cause is the clamp in `const double before = jsMax(0, middle - half)` and `const double after = jsMin(extent, middle + half)` in `cpp/arrange.h`, together with the check `start > 0 && end < extent`, which treats such a fold as dividing the arrangement.
 
-  Found on 2026-10-19 and not fixed. A fix belongs in `arrange()` in `cpp/arrange.h`, for example treating a fold that leaves no room on one side like a fold along the edge. Once the fix lands, the check prints `was a known finding` and exits 1. Remove the entry from `KNOWN_FINDINGS`, and add a mutant to `verification/arrange.mutants.ts` that reintroduces the clamp, so this property is proven able to fail too.
+  Found on 2026-10-19 and not fixed. A fix belongs in `arrange()` in `cpp/arrange.h`, for example treating a fold that leaves no room on one side like a fold along the edge. Once the fix lands, the check prints `was a known finding` and exits 1. Remove the entry from `KNOWN_FINDINGS`, and add a mutant to `tests/properties/arrange.mutants.ts` that reintroduces the clamp, so this property is proven able to fail too.
 
 ## Reading a failure
 
 A FAIL means either `arrange()` or `describeLayout()` broke a promise, or the check models the promise wrongly. To tell which:
 
-1. Take the printed geometry and options, and call `arrange()` on them yourself (`node --no-warnings --input-type=module -e` with an import of `./verification/native/arrange.ts`, or add a case to `tests/arrange.test.ts`). Confirm the frames.
+1. Take the printed geometry and options, and call `arrange()` on them yourself (`node --no-warnings --input-type=module -e` with an import of `./tests/harness/arrange.ts`, or add a case to `tests/arrange.test.ts`). Confirm the frames.
 2. Draw the frames against the arrangement and the fold, and ask whether a user would see the harm in the table. If they would, it is a real bug: report it with that case, in dp, and do not change the property to make it pass.
 3. If the frames are right and the property is wrong, the property needs updating. That can happen because the change is intended (see below), or because the check misreads a layout. Examples of a misread: overlay's two full-size panes read as a split, or float rounding. All the comparisons allow `EPS = 1e-6` dp for rounding. Never raise `EPS` to hide a failure larger than rounding.
 
@@ -63,7 +63,7 @@ When you deliberately change what `arrange()` promises, such as a new option, a 
 
 - Update or add the property in `PROPERTIES`, and the row in the table above.
 - Add the new option values to `OPTIONS`, new breakpoints to `WINDOWS`, and anything else the code now compares to the grid. Every constant the code compares against needs a value on each side of it in the grid.
-- Add a mutant to `verification/arrange.mutants.ts` that breaks the new behaviour, and confirm `yarn verify:arrange:mutants` catches it.
+- Add a mutant to `tests/properties/arrange.mutants.ts` that breaks the new behaviour, and confirm `yarn verify:arrange:mutants` catches it.
 - Update `tests/arrange.test.ts` as usual. The check doesn't replace the exact layouts pinned there.
 
 ## Scope
@@ -91,15 +91,15 @@ Not covered:
 
 | Check | Covers |
 | --- | --- |
-| `verification/arrange.check.ts` | `arrange()`, `Geometry`, `Fold`, `ArrangeOptions` in `cpp/arrange.h`, through the TS shapes and encoding in `verification/native/arrange.ts`; `resolvePrimaryEdge()` in `src/primaryEdge.ts` (as `ArrangementView.android.tsx` calls it; its `problems` messages are not checked); `describeLayout()` in `src/layout.ts`; `Arrangement`, `ArrangementAxes`, `HingePolicy`, `PrimaryEdge`, `HorizontalEdge`, `VerticalEdge`, `ArrangementLayout` in `src/types.ts` |
-| `verification/arrange.mutants.ts` | The same lines, by exact text; a `STALE` mutant means its line changed |
+| `tests/properties/arrange.check.ts` | `arrange()`, `Geometry`, `Fold`, `ArrangeOptions` in `cpp/arrange.h`, through the TS shapes and encoding in `tests/harness/arrange.ts`; `resolvePrimaryEdge()` in `src/primaryEdge.ts` (as `ArrangementView.android.tsx` calls it; its `problems` messages are not checked); `describeLayout()` in `src/layout.ts`; `Arrangement`, `ArrangementAxes`, `HingePolicy`, `PrimaryEdge`, `HorizontalEdge`, `VerticalEdge`, `ArrangementLayout` in `src/types.ts` |
+| `tests/properties/arrange.mutants.ts` | The same lines, by exact text; a `STALE` mutant means its line changed |
 
 Last confirmed in sync at commit `<pending>`.
 
 To see whether the covered code has changed since then, run:
 
 ```sh
-git diff <pending> -- cpp/arrange.h src/primaryEdge.ts src/layout.ts src/types.ts verification/native
+git diff <pending> -- cpp/arrange.h src/primaryEdge.ts src/layout.ts src/types.ts tests/harness
 ```
 
 If it has, read the diff against the properties and the grid, run both commands, and update the check as described above. Move the commit forward only after you have confirmed that the check describes the code at the new commit: update both the hash in this section and the one in the `git diff` command.

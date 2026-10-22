@@ -40,8 +40,8 @@
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "build": "bob build",
     "test": "node --test tests/*.test.ts",
-    "verify:arrange": "node --no-warnings verification/arrange.check.ts",
-    "verify:arrange:mutants": "node --no-warnings verification/arrange.mutants.ts",
+    "verify:arrange": "node --no-warnings tests/properties/arrange.check.ts",
+    "verify:arrange:mutants": "node --no-warnings tests/properties/arrange.mutants.ts",
     "version-packages": "changeset version && yarn install --no-immutable",
     "publish-packages": "yarn lint && yarn typecheck && yarn test && yarn build && changeset publish"
   },

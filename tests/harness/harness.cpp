@@ -1,5 +1,5 @@
 // Runs cpp/arrange.h on cases read from stdin and writes the frames to
-// stdout, for verification/native/arrange.ts. Each case is IN doubles and each
+// stdout, for tests/harness/arrange.ts. Each case is IN doubles and each
 // result OUT doubles, in the order arrange.ts packs and unpacks them.
 #include <arrange.h>
 

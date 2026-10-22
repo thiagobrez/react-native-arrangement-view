@@ -5,10 +5,10 @@ import {
   type Frame,
   type Geometry,
   type PaneFrames,
-} from './native/arrange.ts';
+} from '../harness/arrange.ts';
 
-const { describeLayout }: typeof import('../src/layout.ts') = await import(
-  process.env.LAYOUT_SOURCE ?? '../src/layout.ts'
+const { describeLayout }: typeof import('../../src/layout.ts') = await import(
+  process.env.LAYOUT_SOURCE ?? '../../src/layout.ts'
 );
 
 type Axis = 'horizontal' | 'vertical';
