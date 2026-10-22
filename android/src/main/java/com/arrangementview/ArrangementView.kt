@@ -4,13 +4,9 @@ import android.graphics.Point
 import android.graphics.Rect
 import android.view.View
 import android.view.ViewTreeObserver
-import androidx.core.content.ContextCompat
-import androidx.core.util.Consumer
 import androidx.window.WindowSdkExtensions
-import androidx.window.java.layout.WindowInfoTrackerCallbackAdapter
 import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
-import androidx.window.layout.WindowLayoutInfo
 import com.facebook.react.modules.i18nmanager.I18nUtil
 import com.facebook.react.uimanager.PixelUtil
 import com.facebook.react.uimanager.StateWrapper
@@ -19,9 +15,12 @@ import com.facebook.react.views.view.ReactViewGroup
 
 class ArrangementView(private val reactContext: ThemedReactContext) : ReactViewGroup(reactContext) {
 
-  private val hinge = HingeTracker(reactContext) { dispatchReactEvent(reactContext, HingeTracker.EVENT, it) }
-
-  private val windowInfo = WindowInfoTrackerCallbackAdapter(WindowInfoTracker.getOrCreate(reactContext))
+  private val hinge =
+    HingeTracker(this, reactContext) {
+      fold = it
+      hasWindowLayout = true
+      pushEnvironment()
+    }
 
   private var fold: FoldingFeature? = null
 
@@ -41,13 +40,6 @@ class ArrangementView(private val reactContext: ThemedReactContext) : ReactViewG
   private var hasWindowLayout = false
   private var pushedEnvironment: List<Any?>? = null
 
-  private val onWindowLayout = Consumer<WindowLayoutInfo> { info ->
-    fold = info.displayFeatures.filterIsInstance<FoldingFeature>().firstOrNull()
-    hasWindowLayout = true
-    pushEnvironment()
-    hinge.fold = fold
-  }
-
   // Fabric positions views without a layout pass, so ancestors can move this view without any
   // callback reaching it.
   private val onPreDraw = ViewTreeObserver.OnPreDrawListener {
@@ -58,12 +50,10 @@ class ArrangementView(private val reactContext: ThemedReactContext) : ReactViewG
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
     val activity = reactContext.currentActivity
-    hinge.attach(awaitLayout = activity != null)
+    hinge.attach()
     if (activity != null) {
-      windowInfo.addWindowLayoutInfoListener(
-        activity, ContextCompat.getMainExecutor(reactContext), onWindowLayout)
-      // The listener first hears from WindowManager after the first frame, which would draw the
-      // panes hidden.
+      // HingeTracker's listener first hears from WindowManager after the first frame, which
+      // would draw the panes hidden.
       if (WindowSdkExtensions.getInstance().extensionVersion >= 9) {
         fold =
           WindowInfoTracker.getOrCreate(activity)
@@ -81,7 +71,6 @@ class ArrangementView(private val reactContext: ThemedReactContext) : ReactViewG
 
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
-    windowInfo.removeWindowLayoutInfoListener(onWindowLayout)
     viewTreeObserver.removeOnPreDrawListener(onPreDraw)
     hinge.detach()
   }
