@@ -30,7 +30,7 @@ Each property is one entry in `PROPERTIES` in `tests/properties/arrange.check.ts
 ## Run it
 
 ```sh
-yarn verify:arrange           # about 45 s; checks the current cpp/arrange.h and src
+yarn verify:arrange           # about 60 s; checks the current cpp/arrange.h and src
 yarn verify:arrange:mutants   # about 3.5 min on 10 cores; proves each property can still fail
 ```
 

@@ -16,15 +16,12 @@ interface Mutant {
 
 const MUTANTS: Mutant[] = [
   {
-    // A hinge within hingeGap / 2 of the edge still splits, leaving a pane
-    // with no room.
     file: 'arrange.h',
     find: 'if (before > 0 && after < extent) {',
     replace: 'if (start > 0 && end < extent) {',
     breaks: 'no empty pane',
   },
   {
-    // A hinge exactly hingeGap / 2 from the edge splits off a 0 dp pane.
     file: 'arrange.h',
     find: 'if (before > 0 && after < extent) {',
     replace: 'if (before >= 0 && after <= extent) {',
@@ -99,7 +96,6 @@ const MUTANTS: Mutant[] = [
     breaks: 'primary on its edge',
   },
   {
-    // The pane after the span runs on past the arrangement's end.
     file: 'arrange.h',
     find: 'Frame{end, 0, width - end, height}',
     replace: 'Frame{end, 0, width - start, height}',

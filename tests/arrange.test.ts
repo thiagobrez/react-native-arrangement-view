@@ -215,26 +215,23 @@ test('a fold that does not cross the arrangement separates nothing', () => {
 });
 
 test('a fold too close to the edge for hingeGap separates nothing, as on iOS', () => {
-  // An arrangement in a column beside a sidebar, with the crease 6.5 dp
-  // inside its leading edge: half of the 24 dp gap would leave the primary
-  // pane no room.
+  const hingeGap = 24;
   const column = { width: 431.5, height: 880, window: inner.window };
-  const nearLeading = { ...column, fold: { ...bookFold, x: 6.5 } };
-  const nearTrailing = { ...column, fold: { ...bookFold, x: 425 } };
-  for (const geometry of [nearLeading, nearTrailing]) {
-    for (const options of [
-      split,
-      { ...split, axes: 'vertical' },
-      overlay,
-    ] as const) {
-      assert.deepEqual(arrange(geometry, options), arrange(column, options));
-    }
+  const options = [
+    { ...split, hingeGap },
+    { ...split, hingeGap, axes: 'vertical' },
+    { ...overlay, hingeGap },
+  ] as const;
+  for (const x of [6.5, hingeGap / 2, column.width - hingeGap / 2]) {
+    const geometry = { ...column, fold: { ...bookFold, x } };
+    for (const o of options)
+      assert.deepEqual(arrange(geometry, o), arrange(column, o));
   }
-  // From 12 dp in, half the gap fits, and the hinge splits the panes.
-  const atGap = { ...column, fold: { ...bookFold, x: 12 } };
-  assert.deepEqual(arrange(atGap, split), arrange(column, split));
-  const pastGap = { ...column, fold: { ...bookFold, x: 12.5 } };
-  assert.deepEqual(arrange(pastGap, split), {
+  const pastHalfGap = {
+    ...column,
+    fold: { ...bookFold, x: hingeGap / 2 + 0.5 },
+  };
+  assert.deepEqual(arrange(pastHalfGap, options[0]), {
     primary: { left: 0, top: 0, width: 0.5, height: 880 },
     secondary: { left: 24.5, top: 0, width: 407, height: 880 },
   });
