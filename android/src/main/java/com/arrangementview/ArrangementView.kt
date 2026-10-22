@@ -34,23 +34,17 @@ class ArrangementView(private val reactContext: ThemedReactContext) : ReactViewG
   private val rtl = I18nUtil.instance.isRTL(reactContext)
   private val swapLeftAndRight = I18nUtil.instance.doLeftAndRightSwapInRTL(reactContext)
 
-  /**
-   * Yoga's padding and border for this view. Fabric does not apply them to the Android view,
-   * because Yoga has already positioned the descendants. The panes are placed inside a View that
-   * fills the content box, so geometry is measured in that box.
-   */
-  val contentInsets = Rect()
+  private val paddingAndBorder = Rect()
 
   internal var stateWrapper: StateWrapper? = null
 
   // Called during a mount, so it only records; the next pre-draw pushes what moved.
-  fun setContentInsets(left: Int, top: Int, right: Int, bottom: Int) {
-    contentInsets.set(left, top, right, bottom)
+  fun setPaddingAndBorder(left: Int, top: Int, right: Int, bottom: Int) {
+    paddingAndBorder.set(left, top, right, bottom)
     invalidate()
   }
 
   private var hasWindowLayout = false
-  private val foldInView = Rect()
   private var pushedGeometry: List<Any?>? = null
 
   private val onWindowLayout = Consumer<WindowLayoutInfo> { info ->
@@ -102,23 +96,29 @@ class ArrangementView(private val reactContext: ThemedReactContext) : ReactViewG
     if (!hasWindowLayout) return
     val stateWrapper = stateWrapper ?: return
     val fold = fold
-    if (fold != null) {
-      val position = untransformedPositionInWindow()
-      foldInView.set(fold.bounds)
-      foldInView.offset(-position.x - contentInsets.left, -position.y - contentInsets.top)
-    } else {
-      foldInView.setEmpty()
-    }
-    val width = width - contentInsets.left - contentInsets.right
-    val height = height - contentInsets.top - contentInsets.bottom
+    val contentBox =
+      Rect(
+        paddingAndBorder.left,
+        paddingAndBorder.top,
+        width - paddingAndBorder.right,
+        height - paddingAndBorder.bottom)
+    val foldInContent =
+      if (fold != null) {
+        val position = untransformedPositionInWindow()
+        Rect(fold.bounds).apply {
+          offset(-position.x - contentBox.left, -position.y - contentBox.top)
+        }
+      } else {
+        Rect()
+      }
     val window = rootView
     val geometry =
       listOf(
-        width,
-        height,
+        contentBox.width(),
+        contentBox.height(),
         window.width,
         window.height,
-        Rect(foldInView),
+        foldInContent,
         fold?.orientation,
         fold?.isSeparating,
         fold?.state)
@@ -126,15 +126,15 @@ class ArrangementView(private val reactContext: ThemedReactContext) : ReactViewG
     pushedGeometry = geometry
     ArrangementStateBridge.update(
       stateWrapper,
-      dp(width),
-      dp(height),
+      dp(contentBox.width()),
+      dp(contentBox.height()),
       dp(window.width),
       dp(window.height),
       hasFold = fold != null,
-      foldX = dp(foldInView.left),
-      foldY = dp(foldInView.top),
-      foldWidth = dp(foldInView.width()),
-      foldHeight = dp(foldInView.height()),
+      foldX = dp(foldInContent.left),
+      foldY = dp(foldInContent.top),
+      foldWidth = dp(foldInContent.width()),
+      foldHeight = dp(foldInContent.height()),
       foldVertical = fold?.orientation == FoldingFeature.Orientation.VERTICAL,
       foldSeparating = fold?.isSeparating == true,
       foldHalfOpened = fold?.state == FoldingFeature.State.HALF_OPENED,

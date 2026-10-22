@@ -16,7 +16,7 @@ class ArrangementViewManager : ReactViewManager() {
     ArrangementView(context)
 
   override fun setPadding(view: ReactViewGroup, left: Int, top: Int, right: Int, bottom: Int) {
-    (view as ArrangementView).setContentInsets(left, top, right, bottom)
+    (view as ArrangementView).setPaddingAndBorder(left, top, right, bottom)
   }
 
   override fun updateState(
