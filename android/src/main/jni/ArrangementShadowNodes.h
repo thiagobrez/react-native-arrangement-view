@@ -33,7 +33,7 @@ struct ArrangementViewState {
 
   ArrangementViewState() = default;
   explicit ArrangementViewState(ArrangementEnvironment environment) : environment(std::move(environment)) {}
-  /** Required on Android. */
+  /** Required on Android. The environment arrives only through the bridge, so this keeps `previous`. */
   ArrangementViewState(const ArrangementViewState &previous, const folly::dynamic &data);
   folly::dynamic getDynamic() const;
 };

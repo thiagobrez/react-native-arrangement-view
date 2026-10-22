@@ -18,6 +18,7 @@ export function Sidebar({
   onSelect,
 }: SidebarProps) {
   const [width, setWidth] = useState(0);
+  // Collapsed on the iPhone Duo, the column runs under the navigation items.
   const insets = useSafeAreaInsets();
   return (
     <ScrollView
@@ -74,6 +75,7 @@ export function Sidebar({
   );
 }
 
+/** Its own component, so only this line renders again as the angle changes. */
 function HingeReading() {
   const hinge = useHingeChange();
   const degrees =

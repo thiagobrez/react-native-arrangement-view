@@ -83,6 +83,8 @@ inline constexpr double EXPANDED_HEIGHT = 900;
 } // namespace detail
 
 /**
+ * Android's layout policy; iOS delegates the same decisions to SwiftUI.
+ *
  * It follows Material's pane scaffold (calculatePaneScaffoldDirective). The
  * window, not the arrangement, decides how many panes fit: two side by side
  * from an expanded width, and two stacked in tabletop or in a single-column
