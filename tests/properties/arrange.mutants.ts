@@ -72,17 +72,18 @@ const MUTANTS: Mutant[] = [
     breaks: 'axes is respected',
   },
   {
-    bug: 'primaryEdge ignores RTL.',
+    bug: "The primary pane's side ignores RTL.",
     file: 'arrange.h',
-    find: '(primaryEdge == HorizontalEdge::Trailing) != rtl',
-    replace: 'primaryEdge == HorizontalEdge::Trailing',
+    find: '(horizontalEdge == HorizontalEdge::Trailing) != rtl',
+    replace: 'horizontalEdge == HorizontalEdge::Trailing',
     breaks: 'primary on its edge',
   },
   {
     bug: "A vertical primaryEdge reaches split's stacked panes too.",
     file: 'arrange.h',
-    find: 'arrangement == Arrangement::Overlay && primaryVerticalEdge',
-    replace: 'primaryVerticalEdge',
+    find: 'overlay && primaryVerticalEdge != VerticalEdge::Top',
+    replace:
+      'overlay ? primaryVerticalEdge != VerticalEdge::Top : primaryVerticalEdge == VerticalEdge::Bottom',
     breaks: 'primary on its edge',
   },
   {
@@ -93,10 +94,17 @@ const MUTANTS: Mutant[] = [
     breaks: 'primary on its edge',
   },
   {
-    bug: "Overlay's primary pane goes before the hinge.",
+    bug: "Overlay's primary pane goes before the hinge when the panes are side by side.",
     file: 'arrange.h',
-    find: 'split(axis, before, after, arrangement == Arrangement::Overlay)',
-    replace: 'split(axis, before, after)',
+    find: 'overlay ? HorizontalEdge::Trailing : HorizontalEdge::Leading',
+    replace: 'HorizontalEdge::Leading',
+    breaks: 'primary on its edge',
+  },
+  {
+    bug: "Overlay's primary pane goes above the hinge when the panes are stacked.",
+    file: 'arrange.h',
+    find: 'overlay && primaryVerticalEdge != VerticalEdge::Top',
+    replace: 'overlay && primaryVerticalEdge == VerticalEdge::Bottom',
     breaks: 'primary on its edge',
   },
   {
