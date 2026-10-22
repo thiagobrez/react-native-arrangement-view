@@ -5,6 +5,7 @@ import android.view.View
 import android.view.ViewTreeObserver
 import androidx.core.content.ContextCompat
 import androidx.core.util.Consumer
+import androidx.window.WindowSdkExtensions
 import androidx.window.java.layout.WindowInfoTrackerCallbackAdapter
 import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
@@ -72,6 +73,17 @@ class ArrangementView(private val reactContext: ThemedReactContext) : ReactViewG
     if (activity != null) {
       windowInfo.addWindowLayoutInfoListener(
         activity, ContextCompat.getMainExecutor(reactContext), onWindowLayout)
+      // The listener first hears from WindowManager after the first frame, which would draw the
+      // panes hidden. Reading the layout now lets the first pre-draw place them.
+      if (WindowSdkExtensions.getInstance().extensionVersion >= 9) {
+        fold =
+          WindowInfoTracker.getOrCreate(activity)
+            .getCurrentWindowLayoutInfo(activity)
+            .displayFeatures
+            .filterIsInstance<FoldingFeature>()
+            .firstOrNull()
+        hasWindowLayout = true
+      }
     } else {
       hasWindowLayout = true
     }
