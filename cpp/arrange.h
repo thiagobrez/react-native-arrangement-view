@@ -72,10 +72,9 @@ inline double jsMax(double a, double b) noexcept {
   return a > b ? a : b;
 }
 
-// Material's window size class breakpoints.
-inline constexpr double COMPACT_HEIGHT = 480;
-inline constexpr double EXPANDED_WIDTH = 840;
-inline constexpr double EXPANDED_HEIGHT = 900;
+inline constexpr double HEIGHT_DP_MEDIUM_LOWER_BOUND = 480;
+inline constexpr double WIDTH_DP_EXPANDED_LOWER_BOUND = 840;
+inline constexpr double HEIGHT_DP_EXPANDED_LOWER_BOUND = 900;
 } // namespace detail
 
 /**
@@ -112,8 +111,9 @@ inline PaneFrames arrange(const Geometry &geometry, const ArrangeOptions &option
 
   const Frame full{0, 0, width, height};
   const bool tabletop = fold && fold->halfOpened && fold->orientation == FoldOrientation::Horizontal;
-  const bool twoColumns = window.height >= detail::COMPACT_HEIGHT && window.width >= detail::EXPANDED_WIDTH;
-  const bool twoRows = tabletop || (!twoColumns && window.height >= detail::EXPANDED_HEIGHT);
+  const bool twoColumns = window.height >= detail::HEIGHT_DP_MEDIUM_LOWER_BOUND &&
+      window.width >= detail::WIDTH_DP_EXPANDED_LOWER_BOUND;
+  const bool twoRows = tabletop || (!twoColumns && window.height >= detail::HEIGHT_DP_EXPANDED_LOWER_BOUND);
   const auto allows = [&](Axis axis) { return axes == Axes::Both || axes == axis; };
   const auto fits = [&](Axis axis) {
     return allows(axis) && (axis == Axis::Horizontal ? twoColumns : twoRows);
