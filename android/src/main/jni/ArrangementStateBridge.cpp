@@ -6,13 +6,12 @@
 using namespace facebook;
 using namespace facebook::react;
 
-// ArrangementStateBridge.update in Kotlin. StateWrapper.updateState would commit on the JS thread a
-// frame or more later; an immediate update from the UI thread commits, lays out and mounts the new
-// pane frames before this returns, so the next frame drawn shows them. Call it on the UI thread and
-// never inside a mount, which would defer that mount a frame and nest the shadow tree's lock.
+// StateWrapper.updateState would commit on the JS thread a frame or more later; an immediate update
+// from the UI thread commits, lays out and mounts the new pane frames before this returns, so the
+// next frame drawn shows them.
 extern "C" JNIEXPORT void JNICALL Java_com_arrangementview_ArrangementStateBridge_update(
-    JNIEnv * /*env*/,
-    jclass /*bridge*/,
+    JNIEnv *,
+    jclass,
     jobject stateWrapper,
     jdouble width,
     jdouble height,

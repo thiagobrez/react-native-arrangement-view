@@ -74,7 +74,7 @@ class ArrangementView(private val reactContext: ThemedReactContext) : ReactViewG
       windowInfo.addWindowLayoutInfoListener(
         activity, ContextCompat.getMainExecutor(reactContext), onWindowLayout)
       // The listener first hears from WindowManager after the first frame, which would draw the
-      // panes hidden. Reading the layout now lets the first pre-draw place them.
+      // panes hidden.
       if (WindowSdkExtensions.getInstance().extensionVersion >= 9) {
         fold =
           WindowInfoTracker.getOrCreate(activity)

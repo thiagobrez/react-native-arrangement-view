@@ -1,5 +1,3 @@
-# Replaces the CMakeLists.txt codegen writes for this library (see react-native.config.js), so the
-# app's native build also compiles the Android shadow nodes and the pane policy in cpp/arrange.h.
 cmake_minimum_required(VERSION 3.13)
 
 set(LIB_TARGET react_codegen_RNArrangementViewSpec)

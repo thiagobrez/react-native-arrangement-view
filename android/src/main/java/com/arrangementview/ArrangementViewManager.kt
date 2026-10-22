@@ -36,7 +36,6 @@ class ArrangementViewManager : ReactViewManager() {
 
   companion object {
     const val NAME = "RNArrangementView"
-    // The shadow node sends it (ArrangementShadowNodes.cpp).
     private const val PANES_EVENT = "topPanesChange"
   }
 }

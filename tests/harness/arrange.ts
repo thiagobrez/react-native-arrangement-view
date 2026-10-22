@@ -34,7 +34,6 @@ export interface Fold {
   width: number;
   height: number;
   orientation: 'vertical' | 'horizontal';
-  /** Half-open, or a hinge that hides content. */
   separating: boolean;
   halfOpened: boolean;
 }
@@ -101,10 +100,6 @@ const code = {
   vertical: { auto: 0, top: 1, bottom: 2 },
 } as const;
 
-/**
- * Many cases in one run of the C++. Options pass through resolvePrimaryEdge
- * first, as ArrangementView.android.tsx passes them to the native view.
- */
 export function arrangeAll(cases: readonly Case[]): PaneFrames[] {
   const input = new Float64Array(cases.length * IN);
   cases.forEach(({ geometry: g, options: o }, i) => {

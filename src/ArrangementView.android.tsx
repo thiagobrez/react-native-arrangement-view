@@ -39,9 +39,6 @@ export function ArrangementView({
           onHingeChange={onHingeChange}
           onPanesChange={onPanesChange}
         >
-          {/* Android has no system arrangement container: the native view's
-            shadow node places the panes in this View, which fills the content
-            box. It finds them by position, so keep exactly these two. */}
           <View style={styles.content}>
             {/* Primary renders last so that it is in front when the panes overlay. */}
             <NativePane

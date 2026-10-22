@@ -2,14 +2,12 @@ import { withBase } from '@rspress/core/runtime';
 import styles from './ThemedImage.module.css';
 
 type Props = {
-  /** A path in public/, without the -light.png or -dark.png ending. */
   src: string;
   alt: string;
   width: number;
   height: number;
 };
 
-/** An image drawn once for the light theme and once for the dark one. */
 export function ThemedImage({ src, alt, width, height }: Props) {
   return (
     <>

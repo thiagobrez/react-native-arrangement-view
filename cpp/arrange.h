@@ -9,7 +9,6 @@ namespace arrangementview {
 enum class Arrangement : uint8_t { Split, Overlay };
 enum class Axes : uint8_t { Both, Horizontal, Vertical };
 using Axis = Axes;
-/** Which hinges the panes keep clear of, after Material's `HingePolicy`. */
 enum class HingePolicy : uint8_t { AvoidSeparating, AlwaysAvoid, NeverAvoid };
 enum class HorizontalEdge : uint8_t { Auto, Leading, Trailing };
 enum class VerticalEdge : uint8_t { Auto, Top, Bottom };
@@ -49,7 +48,6 @@ struct Geometry {
   bool operator==(const Geometry &) const = default;
 };
 
-/** The props, with `primaryEdge` already split into a side per axis. */
 struct ArrangeOptions {
   Arrangement arrangement{Arrangement::Split};
   Axes axes{Axes::Both};
@@ -85,8 +83,6 @@ inline constexpr double EXPANDED_HEIGHT = 900;
 } // namespace detail
 
 /**
- * Android's layout policy; iOS delegates the same decisions to SwiftUI.
- *
  * It follows Material's pane scaffold (calculatePaneScaffoldDirective). The
  * window, not the arrangement, decides how many panes fit: two side by side
  * from an expanded width, and two stacked in tabletop or in a single-column
@@ -94,12 +90,8 @@ inline constexpr double EXPANDED_HEIGHT = 900;
  * landscape, gets no columns: Android's window size class guidance calls two
  * panes impractical there, though Material's scaffold checks only the width.
  *
- * A hinge the policy avoids decides the axis and separates the panes by
- * `hingeGap` around it. A separating hinge always splits, whatever the window
- * size, as it does on iOS. A split that doesn't fit, or that `axes` excludes,
- * shows only the primary pane. `primaryEdge` puts the primary pane on the
- * leading or trailing side of panes placed side by side, and an overlay's
- * above or below panes that are stacked.
+ * A separating hinge always splits, whatever the window size, as it does on
+ * iOS.
  *
  * Compile with -ffp-contract=off, so the frames are the same bits on every
  * compiler and device.

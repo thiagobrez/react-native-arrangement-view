@@ -6,16 +6,12 @@ namespace facebook::react {
 
 using arrangementview::PaneFrames;
 
-#pragma mark - ArrangementViewState
-
-ArrangementViewState::ArrangementViewState(const ArrangementViewState &previous, const folly::dynamic & /*data*/)
+ArrangementViewState::ArrangementViewState(const ArrangementViewState &previous, const folly::dynamic &)
     : ArrangementViewState(previous) {}
 
 folly::dynamic ArrangementViewState::getDynamic() const {
   return folly::dynamic::object("measured", environment.has_value());
 }
-
-#pragma mark - ArrangementPaneShadowNode
 
 ArrangementPaneShadowNode::ArrangementPaneShadowNode(
     const ShadowNodeFragment &fragment,
@@ -69,8 +65,6 @@ void ArrangementPaneShadowNode::applyPlacement() {
   }
 }
 
-#pragma mark - ArrangementViewEventEmitter
-
 void ArrangementViewEventEmitter::reportPanes(const PaneFrames &frames) const {
   {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -87,8 +81,6 @@ void ArrangementViewEventEmitter::reportPanes(const PaneFrames &frames) const {
       .secondaryVisible = frames.secondary.has_value(),
   });
 }
-
-#pragma mark - ArrangementViewShadowNode
 
 namespace {
 
@@ -157,7 +149,6 @@ void ArrangementViewShadowNode::placePanes() {
   if (children.empty()) {
     return;
   }
-  // A strong reference: replacing the content View below may drop the last other one.
   const auto content = children.front();
   const auto &panes = content->getChildren();
   react_native_assert(
