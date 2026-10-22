@@ -6,7 +6,11 @@ import { ThemedImage } from '../../../components/ThemedImage';
 
 # Under the hood
 
-These diagrams follow an `ArrangementView` from your JavaScript to the native views, through its main files. Steps with a purple number run once, when the view first renders. Steps with a teal number follow them, and run again whenever the view's size, the window or the hinge changes.
+iOS is straightforward: its Fabric Native Component hosts SwiftUI's `ArrangementView`, and delegates the pane placement to it.
+
+Android doesn't have an equivalent API, so we created custom shadow nodes that interface with a native Kotlin view to arrange the panes in the shadow tree. A fold or a resize moves the panes without a React render.
+
+These diagrams follow the lifecycle of an `ArrangementView` starting from your JavaScript to the native views. Steps numbered in **purple** run once, when the view first renders. Steps numbered in **teal** follow them, and run again whenever the view's size, the window or the hinge changes.
 
 ## iOS
 
