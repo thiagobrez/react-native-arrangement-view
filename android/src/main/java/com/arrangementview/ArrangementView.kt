@@ -17,12 +17,6 @@ import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.views.view.ReactViewGroup
 
-/**
- * Android has no system arrangement container, so this view measures what the pane policy in
- * cpp/arrange.h needs: its content box, its window's size, the fold crossing it, and the writing
- * direction. Its shadow node places the panes from that, without a React render. It also reports
- * the hinge.
- */
 class ArrangementView(private val reactContext: ThemedReactContext) : ReactViewGroup(reactContext) {
 
   private val hinge = HingeTracker(reactContext) { dispatchReactEvent(reactContext, HingeTracker.EVENT, it) }
@@ -45,19 +39,19 @@ class ArrangementView(private val reactContext: ThemedReactContext) : ReactViewG
   }
 
   private var hasWindowLayout = false
-  private var pushedGeometry: List<Any?>? = null
+  private var pushedEnvironment: List<Any?>? = null
 
   private val onWindowLayout = Consumer<WindowLayoutInfo> { info ->
     fold = info.displayFeatures.filterIsInstance<FoldingFeature>().firstOrNull()
     hasWindowLayout = true
-    pushGeometry()
+    pushEnvironment()
     hinge.fold = fold
   }
 
   // Fabric positions views without a layout pass, so ancestors can move this view without any
   // callback reaching it.
   private val onPreDraw = ViewTreeObserver.OnPreDrawListener {
-    pushGeometry()
+    pushEnvironment()
     true
   }
 
@@ -92,7 +86,7 @@ class ArrangementView(private val reactContext: ThemedReactContext) : ReactViewG
     hinge.detach()
   }
 
-  private fun pushGeometry() {
+  private fun pushEnvironment() {
     if (!hasWindowLayout) return
     val stateWrapper = stateWrapper ?: return
     val fold = fold
@@ -112,7 +106,7 @@ class ArrangementView(private val reactContext: ThemedReactContext) : ReactViewG
         Rect()
       }
     val window = rootView
-    val geometry =
+    val environment =
       listOf(
         contentBox.width(),
         contentBox.height(),
@@ -122,8 +116,8 @@ class ArrangementView(private val reactContext: ThemedReactContext) : ReactViewG
         fold?.orientation,
         fold?.isSeparating,
         fold?.state)
-    if (geometry == pushedGeometry) return
-    pushedGeometry = geometry
+    if (environment == pushedEnvironment) return
+    pushedEnvironment = environment
     ArrangementStateBridge.update(
       stateWrapper,
       dp(contentBox.width()),
