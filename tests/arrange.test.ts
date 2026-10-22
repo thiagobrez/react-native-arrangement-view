@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import { arrange, type Fold, type Geometry } from '../src/arrange.ts';
+import { arrange, type Fold, type Geometry } from './harness/arrange.ts';
 
 // Windows named for the Pixel 10 Pro Fold, in dp. The arrangement fills each.
 const window = (width: number, height: number): Geometry => ({

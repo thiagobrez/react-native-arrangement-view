@@ -89,5 +89,5 @@ apps/example-expo/ios/
 apps/example-expo/android/
 .artifacts/
 
-# Scratch copies made by verification/arrange.mutants.ts
-verification/.mutants/
+# Scratch copies made by tests/properties/arrange.mutants.ts
+tests/properties/.mutants/
