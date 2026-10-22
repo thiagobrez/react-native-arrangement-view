@@ -1,21 +1,14 @@
-// Bounded exhaustive check of arrange() and describeLayout(), Android's pane
-// layout. It runs the real functions on every input in the grid below, then on
-// seeded random dp values, and checks each property in PROPERTIES on every
-// result. Run with `yarn verify:arrange`. See .claude/skills/verify-arrange.
-import type {
-  ArrangeOptions,
-  Fold,
-  Frame,
-  Geometry,
-  PaneFrames,
-} from '../src/arrange.ts';
+import {
+  arrangeAll,
+  type ArrangeOptions,
+  type Fold,
+  type Frame,
+  type Geometry,
+  type PaneFrames,
+} from '../harness/arrange.ts';
 
-// arrange.mutants.ts points these at broken copies, to see each property fail.
-const { arrange }: typeof import('../src/arrange.ts') = await import(
-  process.env.ARRANGE_SOURCE ?? '../src/arrange.ts'
-);
-const { describeLayout }: typeof import('../src/layout.ts') = await import(
-  process.env.LAYOUT_SOURCE ?? '../src/layout.ts'
+const { describeLayout }: typeof import('../../src/layout.ts') = await import(
+  process.env.LAYOUT_SOURCE ?? '../../src/layout.ts'
 );
 
 type Axis = 'horizontal' | 'vertical';
@@ -97,7 +90,15 @@ function edges(value: ArrangeOptions['primaryEdge']) {
     : [undefined, undefined];
 }
 
-type Property = (c: Case, r: PaneFrames) => string | null;
+/**
+ * `ignoring` is the result with `hingePolicy: 'neverAvoid'`, for a case whose
+ * avoided hinge has no room for the gap around it.
+ */
+type Property = (
+  c: Case,
+  r: PaneFrames,
+  ignoring: PaneFrames | undefined
+) => string | null;
 
 const PROPERTIES: Record<string, Property> = {
   // Every shown pane lies inside the arrangement.
@@ -178,16 +179,10 @@ const PROPERTIES: Record<string, Property> = {
   // A hinge the policy avoids, but too close to the edge, or too far outside,
   // for the gap around it to fit, is treated like one the policy ignores, as
   // on iOS. Without this, a pane on its near side gets no room.
-  'a hinge without room for the gap is ignored': (c, r) => {
-    const hinge = policyFold(c);
-    if (!hinge || hinge.fits) return null;
-    const ignored = arrange(c.geometry, {
-      ...c.options,
-      hingePolicy: 'neverAvoid',
-    });
-    return JSON.stringify(r) === JSON.stringify(ignored)
-      ? null
-      : `${JSON.stringify(r)} differs from the layout that ignores the hinge, ${JSON.stringify(ignored)}`;
+  'a hinge without room for the gap is ignored': (_, r, ignoring) => {
+    if (!ignoring || JSON.stringify(r) === JSON.stringify(ignoring))
+      return null;
+    return `${JSON.stringify(r)} differs from the layout that ignores the hinge, ${JSON.stringify(ignoring)}`;
   },
 
   // A separating hinge splits the panes along it whatever the window size,
@@ -411,17 +406,35 @@ const cases = function* () {
   yield* grid();
   yield* sampled(500_000);
 };
+const CASES_PER_HARNESS_RUN = 65_536;
+let batch: Case[] = [];
+const checkBatch = () => {
+  const ignoring = batch.map((c) =>
+    policyFold(c)?.fits === false
+      ? { ...c, options: { ...c.options, hingePolicy: 'neverAvoid' as const } }
+      : null
+  );
+  const results = arrangeAll([...batch, ...ignoring.filter((c) => c !== null)]);
+  let nextIgnoring = batch.length;
+  batch.forEach((c, i) => {
+    const result = results[i]!;
+    const ignored = ignoring[i] ? results[nextIgnoring++] : undefined;
+    checked++;
+    for (const [name, property] of Object.entries(PROPERTIES)) {
+      const why = property(c, result, ignored);
+      if (!why) continue;
+      const seen = failures.get(name);
+      if (seen) seen.count++;
+      else failures.set(name, { case: c, result, why, count: 1 });
+    }
+  });
+  batch = [];
+};
 for (const c of cases()) {
-  const result = arrange(c.geometry, c.options);
-  checked++;
-  for (const [name, property] of Object.entries(PROPERTIES)) {
-    const why = property(c, result);
-    if (!why) continue;
-    const seen = failures.get(name);
-    if (seen) seen.count++;
-    else failures.set(name, { case: c, result, why, count: 1 });
-  }
+  batch.push(c);
+  if (batch.length === CASES_PER_HARNESS_RUN) checkBatch();
 }
+checkBatch();
 
 const seconds = ((Date.now() - started) / 1000).toFixed(1);
 console.log(`Checked ${checked.toLocaleString('en')} cases in ${seconds}s.`);

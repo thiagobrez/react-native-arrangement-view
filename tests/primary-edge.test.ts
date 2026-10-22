@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import { resolvePrimaryEdge } from '../src/arrange.ts';
+import { resolvePrimaryEdge } from '../src/primaryEdge.ts';
 
 test('one side sets its own axis only', () => {
   assert.deepEqual(resolvePrimaryEdge('trailing'), {

@@ -24,7 +24,7 @@ import {
   WebGLRenderer,
   type BufferGeometry,
 } from 'three';
-import type { Frame } from '../../../src/arrange.ts';
+import type { Frame } from '../../../src/layout.ts';
 import {
   cover,
   describeDevice,

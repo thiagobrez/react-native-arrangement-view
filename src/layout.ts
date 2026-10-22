@@ -1,13 +1,27 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useRef,
   useState,
   useSyncExternalStore,
 } from 'react';
-import type { PaneFrames } from './arrange';
+import type { NativeProps, NativeRect } from './ArrangementViewNativeComponent';
 import type { ArrangementLayout, ArrangementLayoutHandler } from './types';
+
+export interface Frame {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+export interface PaneFrames {
+  primary: Frame;
+  /** Null when only the primary pane is shown. */
+  secondary: Frame | null;
+}
 
 /**
  * What the panes' frames show. Panes that overlap, as in overlay, have no
@@ -73,6 +87,26 @@ export function createLayoutStore() {
 export const LayoutContext = createContext<ReturnType<
   typeof createLayoutStore
 > | null>(null);
+
+export function usePanesChange(store: ReturnType<typeof createLayoutStore>) {
+  return useCallback<NonNullable<NativeProps['onPanesChange']>>(
+    ({ nativeEvent: { primary, secondary, secondaryVisible } }) =>
+      store.update(
+        describeLayout({
+          primary: frame(primary),
+          secondary: secondaryVisible ? frame(secondary) : null,
+        })
+      ),
+    [store]
+  );
+}
+
+const frame = ({ x, y, width, height }: NativeRect): Frame => ({
+  left: x,
+  top: y,
+  width,
+  height,
+});
 
 /**
  * One arrangement's store. It reports changes to `onChange` without

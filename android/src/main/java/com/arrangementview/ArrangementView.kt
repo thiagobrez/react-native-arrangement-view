@@ -5,19 +5,22 @@ import android.view.View
 import android.view.ViewTreeObserver
 import androidx.core.content.ContextCompat
 import androidx.core.util.Consumer
+import androidx.window.WindowSdkExtensions
 import androidx.window.java.layout.WindowInfoTrackerCallbackAdapter
 import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
 import androidx.window.layout.WindowLayoutInfo
-import com.facebook.react.bridge.Arguments
+import com.facebook.react.modules.i18nmanager.I18nUtil
 import com.facebook.react.uimanager.PixelUtil
+import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.views.view.ReactViewGroup
 
 /**
- * Android has no system arrangement container, so this view only reports what the layout policy
- * in src/arrange.ts needs: its size, its window's size, the fold crossing it, and the hinge. React
- * lays out the panes.
+ * Android has no system arrangement container, so this view measures what the pane policy in
+ * cpp/arrange.h needs: its content box, its window's size, the fold crossing it, and the writing
+ * direction. Its shadow node places the panes from that, without a React render. It also reports
+ * the hinge.
  */
 class ArrangementView(private val reactContext: ThemedReactContext) : ReactViewGroup(reactContext) {
 
@@ -27,35 +30,39 @@ class ArrangementView(private val reactContext: ThemedReactContext) : ReactViewG
 
   private var fold: FoldingFeature? = null
 
+  private val rtl = I18nUtil.instance.isRTL(reactContext)
+  private val swapLeftAndRight = I18nUtil.instance.doLeftAndRightSwapInRTL(reactContext)
+
   /**
    * Yoga's padding and border for this view. Fabric does not apply them to the Android view,
-   * because Yoga has already positioned the descendants. JS lays the panes out inside a wrapper
-   * that fills the content box, so geometry is reported in that box.
+   * because Yoga has already positioned the descendants. The panes are placed inside a View that
+   * fills the content box, so geometry is measured in that box.
    */
   val contentInsets = Rect()
 
+  internal var stateWrapper: StateWrapper? = null
+
+  // Called during a mount, so it only records; the next pre-draw pushes what moved.
   fun setContentInsets(left: Int, top: Int, right: Int, bottom: Int) {
     contentInsets.set(left, top, right, bottom)
-    // Moving padding from one edge to another keeps the size and moves the fold.
-    emitGeometry()
+    invalidate()
   }
 
-  // Geometry is withheld until the first WindowLayoutInfo so JS never arranges without the fold.
   private var hasWindowLayout = false
   private val foldInView = Rect()
-  private var lastGeometry: List<Any?>? = null
+  private var pushedGeometry: List<Any?>? = null
 
   private val onWindowLayout = Consumer<WindowLayoutInfo> { info ->
     fold = info.displayFeatures.filterIsInstance<FoldingFeature>().firstOrNull()
     hasWindowLayout = true
-    emitGeometry()
+    pushGeometry()
     hinge.fold = fold
   }
 
   // Fabric positions views without a layout pass, so ancestors can move this view without any
   // callback reaching it. Checking before each draw is cheap and sees every such change.
   private val onPreDraw = ViewTreeObserver.OnPreDrawListener {
-    emitGeometry()
+    pushGeometry()
     true
   }
 
@@ -66,6 +73,17 @@ class ArrangementView(private val reactContext: ThemedReactContext) : ReactViewG
     if (activity != null) {
       windowInfo.addWindowLayoutInfoListener(
         activity, ContextCompat.getMainExecutor(reactContext), onWindowLayout)
+      // The listener first hears from WindowManager after the first frame, which would draw the
+      // panes hidden. Reading the layout now lets the first pre-draw place them.
+      if (WindowSdkExtensions.getInstance().extensionVersion >= 9) {
+        fold =
+          WindowInfoTracker.getOrCreate(activity)
+            .getCurrentWindowLayoutInfo(activity)
+            .displayFeatures
+            .filterIsInstance<FoldingFeature>()
+            .firstOrNull()
+        hasWindowLayout = true
+      }
     } else {
       hasWindowLayout = true
     }
@@ -79,8 +97,9 @@ class ArrangementView(private val reactContext: ThemedReactContext) : ReactViewG
     hinge.detach()
   }
 
-  private fun emitGeometry() {
+  private fun pushGeometry() {
     if (!hasWindowLayout) return
+    val stateWrapper = stateWrapper ?: return
     val fold = fold
     if (fold != null) {
       // Fold bounds are in window coordinates. Use this view's layout position rather than
@@ -115,42 +134,25 @@ class ArrangementView(private val reactContext: ThemedReactContext) : ReactViewG
         fold?.orientation,
         fold?.isSeparating,
         fold?.state)
-    if (geometry == lastGeometry) return
-    lastGeometry = geometry
-    dispatchReactEvent(
-      reactContext,
-      GEOMETRY_EVENT,
-      Arguments.createMap().apply {
-        putDouble("width", dp(width))
-        putDouble("height", dp(height))
-        putMap(
-          "window",
-          Arguments.createMap().apply {
-            putDouble("width", dp(window.width))
-            putDouble("height", dp(window.height))
-          })
-        if (fold != null) {
-          putMap(
-            "fold",
-            Arguments.createMap().apply {
-              putDouble("x", dp(foldInView.left))
-              putDouble("y", dp(foldInView.top))
-              putDouble("width", dp(foldInView.width()))
-              putDouble("height", dp(foldInView.height()))
-              putString(
-                "orientation",
-                if (fold.orientation == FoldingFeature.Orientation.VERTICAL) "vertical"
-                else "horizontal")
-              putBoolean("separating", fold.isSeparating)
-              putBoolean("halfOpened", fold.state == FoldingFeature.State.HALF_OPENED)
-            })
-        }
-      })
+    if (geometry == pushedGeometry) return
+    pushedGeometry = geometry
+    ArrangementStateBridge.update(
+      stateWrapper,
+      dp(width),
+      dp(height),
+      dp(window.width),
+      dp(window.height),
+      hasFold = fold != null,
+      foldX = dp(foldInView.left),
+      foldY = dp(foldInView.top),
+      foldWidth = dp(foldInView.width()),
+      foldHeight = dp(foldInView.height()),
+      foldVertical = fold?.orientation == FoldingFeature.Orientation.VERTICAL,
+      foldSeparating = fold?.isSeparating == true,
+      foldHalfOpened = fold?.state == FoldingFeature.State.HALF_OPENED,
+      rtl = rtl,
+      swapLeftAndRight = swapLeftAndRight)
   }
 
   private fun dp(pixels: Int): Double = PixelUtil.toDIPFromPixel(pixels.toFloat()).toDouble()
-
-  companion object {
-    const val GEOMETRY_EVENT = "topGeometryChange"
-  }
 }
