@@ -34,7 +34,7 @@ internal data class HingeReading(
  * the window's layout to a new listener and the sensor reports its value when registered; nothing
  * is reported until both have, so a fresh angle never pairs with a stale fold or the reverse.
  */
-internal class HingeTracker(context: Context, private val emit: (HingeReading) -> Unit) :
+internal class HingeTracker(private val context: Context, private val emit: (HingeReading) -> Unit) :
   SensorEventListener {
 
   var fold: FoldingFeature? = null
@@ -60,6 +60,7 @@ internal class HingeTracker(context: Context, private val emit: (HingeReading) -
 
   /** Pass whether the owner will report its window's layout, which it can't without an activity. */
   fun attach(awaitLayout: Boolean) {
+    HingeBenchProbe.attach((context as? com.facebook.react.bridge.ReactContext)?.currentActivity)
     attached = true
     awaitingLayout = awaitLayout
     updateSensor()
@@ -106,6 +107,7 @@ internal class HingeTracker(context: Context, private val emit: (HingeReading) -
     val hinge = Triple(available, radians, status)
     if (hinge == last) return
     last = hinge
+    HingeBenchProbe.emitted(degrees, t)
     emit(HingeReading(available, radians, status, t))
   }
 

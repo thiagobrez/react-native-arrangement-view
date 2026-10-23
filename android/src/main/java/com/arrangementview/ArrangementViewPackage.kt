@@ -3,6 +3,7 @@ package com.arrangementview
 import com.facebook.react.BaseReactPackage
 import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.module.model.ReactModuleInfo
 import com.facebook.react.module.model.ReactModuleInfoProvider
 import com.facebook.react.uimanager.ViewManager
 import com.margelo.nitro.arrangementview.NitroArrangementViewOnLoad
@@ -18,9 +19,14 @@ class ArrangementViewPackage : BaseReactPackage() {
     HybridNitroPaneHostManager(),
   )
 
-  override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? = null
+  override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? =
+    if (name == HingeModule.NAME) HingeModule(reactContext) else null
 
-  override fun getReactModuleInfoProvider() = ReactModuleInfoProvider { emptyMap() }
+  override fun getReactModuleInfoProvider() = ReactModuleInfoProvider {
+    mapOf(
+      HingeModule.NAME to
+        ReactModuleInfo(HingeModule.NAME, HingeModule::class.java.name, false, false, false, true))
+  }
 
   companion object {
     init {

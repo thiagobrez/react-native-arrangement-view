@@ -141,7 +141,7 @@
   },
   "codegenConfig": {
     "name": "RNArrangementViewSpec",
-    "type": "components",
+    "type": "all",
     "jsSrcsDir": "src",
     "ios": {
       "components": {

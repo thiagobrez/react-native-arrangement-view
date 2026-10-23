@@ -5,8 +5,9 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import NativeHingeObserver from '../../../src/HingeObserverNativeComponent';
 import { getHinge, NitroPaneHost, type HingeSample } from '../../../src/nitro';
+import NativeHingeModule from '../../../src/NativeHingeModule';
 
-type Mode = 'fabric' | 'nitro' | 'none';
+type Mode = 'fabric' | 'nitro' | 'turbo' | 'none';
 const LOADS = [0, 200];
 
 function busy(ms: number) {
@@ -54,6 +55,16 @@ export function HingeBench() {
   }, [mode]);
 
   useEffect(() => {
+    if (mode !== 'turbo') return;
+    const subscription = NativeHingeModule.onHinge(onSample);
+    NativeHingeModule.start();
+    return () => {
+      NativeHingeModule.stop();
+      subscription.remove();
+    };
+  }, [mode]);
+
+  useEffect(() => {
     if (!load) return;
     let running = true;
     const tick = () => {
@@ -66,16 +77,6 @@ export function HingeBench() {
       running = false;
     };
   }, [load]);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      const l = latencies.current;
-      setStatus(
-        `Current: ${mode}, count ${l.length}, last ${round(l[l.length - 1]) ?? '-'} ms`
-      );
-    }, 500);
-    return () => clearInterval(id);
-  }, [mode]);
 
   const report = () => {
     const l = latencies.current;
@@ -99,6 +100,10 @@ export function HingeBench() {
           offsetMs: round(offsetMs),
         })
     );
+    // Updated here rather than live, so no status commits land inside a timed sweep.
+    setStatus(
+      `Current: ${mode}, count ${l.length}, p50 ${round(percentile(sorted, 50)) ?? '-'} ms`
+    );
     latencies.current = [];
     lastSample.current = null;
   };
@@ -114,9 +119,18 @@ export function HingeBench() {
       <Text style={styles.angle}>
         {angle == null ? '--' : `${angle.toFixed(1)}°`}
       </Text>
+      {/* HingeBenchProbe.kt reads this bar's width on each drawn frame: 2 dp per degree. */}
+      <View
+        nativeID="bench-bar"
+        collapsable={false}
+        style={[
+          styles.bar,
+          { width: angle == null ? 0 : Math.round(angle) * 2 },
+        ]}
+      />
       <Text style={styles.status}>{status}</Text>
       <View style={styles.row}>
-        {(['fabric', 'nitro', 'none'] as const).map((m) => (
+        {(['fabric', 'nitro', 'turbo', 'none'] as const).map((m) => (
           <Button
             key={m}
             label={`Mode ${m}`}
@@ -198,6 +212,7 @@ const styles = StyleSheet.create({
   observer: { position: 'absolute', width: 0, height: 0 },
   angle: { color: 'white', fontSize: 72, fontWeight: '700' },
   status: { color: '#c7cbe0', fontSize: 18 },
+  bar: { height: 24, borderRadius: 12, backgroundColor: '#7c8cff' },
   row: {
     flexDirection: 'row',
     flexWrap: 'wrap',
