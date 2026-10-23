@@ -1,5 +1,21 @@
 # react-native-arrangement-view
 
+## 0.5.0
+
+### Minor Changes
+
+- [#54](https://github.com/thiagobrez/react-native-arrangement-view/pull/54) [`cb90324`](https://github.com/thiagobrez/react-native-arrangement-view/commit/cb90324ed2a53345c8320f5359126468ef6dce12) Thanks [@thiagobrez](https://github.com/thiagobrez)! - On Android, `ArrangementView` now places its panes in React Native's native shadow tree instead of in JavaScript. Folding, unfolding, resizing or moving the arrangement no longer renders it, and the panes move without waiting for the JavaScript thread.
+
+- [#38](https://github.com/thiagobrez/react-native-arrangement-view/pull/38) [`173f611`](https://github.com/thiagobrez/react-native-arrangement-view/commit/173f611f122b29f6b1877ba1c93e2e2220ac42d0) Thanks [@thiagobrez](https://github.com/thiagobrez)! - `primaryEdge` also takes `top` or `bottom`, or a horizontal and a vertical side in that order, such as `['trailing', 'top']`, to put an overlay's primary pane above or below the hinge when the panes are stacked, as in tabletop posture.
+
+- [#42](https://github.com/thiagobrez/react-native-arrangement-view/pull/42) [`1645975`](https://github.com/thiagobrez/react-native-arrangement-view/commit/1645975a672f77e6ddde6e3fed6290cbf2cc1ab3) Thanks [@thiagobrez](https://github.com/thiagobrez)! - Remove `ArrangementView`'s `observeHinge` prop. Observing the hinge was always cheap, since both platforms report only changes, and the prop never affected layout: turning it off only made `useHingeChange` and `useHingeSelector` inside the arrangement report no hinge on a device that has one. Delete the prop where you set it.
+
+### Patch Changes
+
+- [#40](https://github.com/thiagobrez/react-native-arrangement-view/pull/40) [`0267aea`](https://github.com/thiagobrez/react-native-arrangement-view/commit/0267aea7bcc825178b3640fe856233a55022573a) Thanks [@thiagobrez](https://github.com/thiagobrez)! - On iOS, `ArrangementView` and `HingeObserver` no longer send JavaScript the same hinge again each time the system repeats it as a fold settles.
+
+- [#37](https://github.com/thiagobrez/react-native-arrangement-view/pull/37) [`12f38cd`](https://github.com/thiagobrez/react-native-arrangement-view/commit/12f38cdf45e2e1910032b58b3fe7d904d14ef67a) Thanks [@thiagobrez](https://github.com/thiagobrez)! - Check for the iOS 27.1 SDK when compiling instead of during `pod install`, so switching Xcode after installing pods no longer builds the wrong arrangement.
+
 ## 0.4.0
 
 ### Minor Changes
