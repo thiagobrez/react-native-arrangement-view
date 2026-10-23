@@ -17,7 +17,6 @@ import type { Fold, HingeState } from '../src/types.ts';
   globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
 ).IS_REACT_ACT_ENVIRONMENT = true;
 
-/** What a native view sends for a fold at this rect; the only way to make one. */
 type NativeHinge = Parameters<typeof normalizeHinge>[0];
 
 const nativeFold = (
@@ -33,7 +32,6 @@ const nativeFold = (
   fold: { x, y, width, height },
 });
 
-/** A Fold a test builds by hand needs the same cast the store makes. */
 const fold = (x: number, y: number, width: number, height: number): Fold =>
   normalizeHinge(nativeFold(x, y, width, height)).fold!;
 
@@ -91,13 +89,10 @@ test('the fold a native event describes becomes a Fold, and its absence is null'
 });
 
 test('orientation follows the rect, not which platform sent it', () => {
-  // A Pixel's fold is a line: 0 wide in book posture, 0 tall in tabletop.
   assert.equal(fold(426, 0, 0, 2152).orientation, 'vertical');
   assert.equal(fold(0, 426, 2152, 0).orientation, 'horizontal');
-  // The Duo's division is a band about 40 pt wide, and a horizontal one.
   assert.equal(fold(170, 0, 40, 750).orientation, 'vertical');
   assert.equal(fold(0, 170, 750, 40).orientation, 'horizontal');
-  // Square reserves vertically, as FoldingFeature's rule does.
   assert.equal(fold(0, 0, 40, 40).orientation, 'vertical');
 });
 
@@ -115,7 +110,6 @@ test('a rect that is not a fold parses as no fold', () => {
       `${JSON.stringify(rect)}`
     );
   }
-  // A zeroed rect with no fold is no fold; a zero-size rect that is one still is.
   assert.equal(normalizeHinge(noFold).fold, null);
   assert.deepEqual(normalizeHinge(nativeFold(0, 0, 0, 0)).fold, {
     x: 0,
@@ -127,14 +121,10 @@ test('a rect that is not a fold parses as no fold', () => {
 });
 
 test('a closed hinge reports no fold, whatever the native event says', () => {
-  // The rule is encoded here rather than left to each platform: on the Duo the app
-  // moves to the outer panel when the hinge closes, and Android reports no fold on
-  // the cover display, so no window is divided at a closed hinge.
   const closed = { ...nativeFold(170, 0, 40, 750), angle: 0, status: 'closed' };
   assert.equal(normalizeHinge(closed).fold, null);
   assert.equal(normalizeHinge(closed).status, 'closed');
   assert.equal(normalizeHinge(closed).angle, 0);
-  // The band comes back with the posture that divides the window again.
   assert.deepEqual(
     normalizeHinge({ ...closed, status: 'partiallyOpen' }).fold,
     fold(170, 0, 40, 750)
@@ -150,16 +140,13 @@ test('the store keeps one fold object while its rect is unchanged', () => {
   store.update(normalizeHinge(nativeFold(426, 0, 0, 2152)));
   const first = store.getSnapshot().fold;
   assert.ok(first);
-  // The same rect at a new angle, and from an event that repeats the rect.
   store.update(normalizeHinge({ ...nativeFold(426, 0, 0, 2152), angle: 2.1 }));
   assert.equal(store.getSnapshot().fold, first);
   assert.equal(store.getSnapshot().angle, 2.1);
-  // Moved by a pixel: a new object.
   store.update(normalizeHinge(nativeFold(427, 0, 0, 2152)));
   const moved = store.getSnapshot().fold;
   assert.notEqual(moved, first);
   assert.equal(moved?.x, 427);
-  // Back to the first rect: a third object, because the last one described 427.
   store.update(normalizeHinge(nativeFold(426, 0, 0, 2152)));
   assert.notEqual(store.getSnapshot().fold, moved);
   assert.equal(store.getSnapshot().fold?.x, 426);
@@ -396,7 +383,6 @@ test('a selector that returns the fold renders when it moves, not at every angle
   assert.equal(renders, 1);
   assert.equal(selections[0], null);
 
-  // The fold arrives: one render.
   await act(() => {
     store.update(normalizeHinge(nativeFold(426, 0, 0, 2152)));
   });
@@ -404,8 +390,6 @@ test('a selector that returns the fold renders when it moves, not at every angle
   const landed = selections[1];
   assert.equal(landed?.x, 426);
 
-  // Sweeping the angle at the same rect never renders again, and the fold the
-  // selector returns stays the same object.
   for (const angle of [1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5]) {
     await act(() => {
       store.update(normalizeHinge({ ...nativeFold(426, 0, 0, 2152), angle }));
@@ -415,7 +399,6 @@ test('a selector that returns the fold renders when it moves, not at every angle
   assert.equal(selections[1], landed);
   assert.equal(store.getSnapshot().angle, 2.5);
 
-  // The fold moves: it renders, and returns a different object.
   await act(() => {
     store.update(normalizeHinge(nativeFold(426, 0, 0, 2150)));
   });
@@ -423,7 +406,6 @@ test('a selector that returns the fold renders when it moves, not at every angle
   assert.notEqual(selections[2], landed);
   assert.equal(root.root.findByType('div').children[0], '426');
 
-  // The fold goes away.
   await act(() => {
     store.update(normalizeHinge(noFold));
   });
@@ -449,7 +431,6 @@ test('a selector can return one number of the fold, or the fold for one posture'
   });
   assert.deepEqual([xs.at(-1), books.at(-1)], [null, null]);
 
-  // A horizontal fold has an x, and is not a book fold.
   await act(() => {
     store.update(normalizeHinge(nativeFold(0, 170, 750, 40)));
   });

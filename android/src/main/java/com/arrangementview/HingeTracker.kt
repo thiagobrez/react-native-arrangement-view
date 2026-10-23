@@ -21,14 +21,10 @@ import com.facebook.react.uimanager.RootViewUtil
  * Detaching keeps the last state. Reattaching replays the current one, since WindowManager reports
  * the window's layout to a new listener and the sensor reports its value when registered; nothing
  * is reported until both have, so a fresh angle never pairs with a stale fold or the reverse.
- *
- * [fold] is the window's fold as WindowManager reports it. What goes out to JS is that fold only
- * while it separates the window, converted to the coordinates React Native measures in.
  */
 internal class HingeTracker(private val view: View, private val emit: (WritableMap) -> Unit) :
   SensorEventListener {
 
-  /** The window's fold, as WindowManager reports it. Owners set it from their window's layout. */
   var fold: FoldingFeature? = null
     set(value) {
       field = value
@@ -50,8 +46,6 @@ internal class HingeTracker(private val view: View, private val emit: (WritableM
   private var last: Sent? = null
   private var root: View? = null
 
-  // React Native's window space moves with the root only when edge-to-edge is off, which is when
-  // the insets it subtracts change.
   private val onRootLayout = View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> emitHinge() }
 
   /** Pass whether the owner will report its window's layout, which it can't without an activity. */
@@ -87,11 +81,6 @@ internal class HingeTracker(private val view: View, private val emit: (WritableM
 
   override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) = Unit
 
-  /**
-   * The fold while it divides the window, in dp, in the coordinates `measureInWindow` and
-   * `getBoundingClientRect()` use. WindowManager reports bounds in the window, and React Native
-   * measures from its root's position in that window less the insets it doesn't cover.
-   */
   private fun foldInReactWindow(): RectF? {
     val feature = fold?.takeIf { it.isSeparating } ?: return null
     val root = root ?: return null
@@ -129,7 +118,6 @@ internal class HingeTracker(private val view: View, private val emit: (WritableM
       }
     val available = fold != null || sensor != null
     val radians = if (degrees != null) Math.toRadians(degrees.toDouble()) else Double.NaN
-    // Codegen has no optional objects, so a fold that divides nothing is flagged and zeroed.
     val windowFold = foldInReactWindow()?.let { toDp(it) }
     val hinge = Sent(available, radians, status, windowFold)
     if (hinge == last) return

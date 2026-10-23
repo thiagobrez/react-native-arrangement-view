@@ -25,8 +25,6 @@ using namespace facebook::react;
       RNArrangementView *strongSelf = weakSelf;
       if (!strongSelf || !strongSelf->_eventEmitter) return;
       auto emitter = std::static_pointer_cast<const RNArrangementViewEventEmitter>(strongSelf->_eventEmitter);
-      // Codegen has no optional objects, so a fold that divides nothing goes out
-      // flagged and zeroed; CGRectNull's own size is {-1, -1}.
       CGRect zeroed = CGRectIsNull(fold) ? CGRectZero : fold;
       RNArrangementViewEventEmitter::OnHingeChange event{
         (bool)available, angle, std::string(status.UTF8String), !CGRectIsNull(fold),

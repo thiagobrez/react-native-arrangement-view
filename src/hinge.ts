@@ -14,13 +14,10 @@ import type {
   HingeStatus,
 } from './types';
 
-/** What both native views send in onHingeChange. Parsed here, and nowhere else. */
 type NativeHinge = Readonly<{
   available: boolean;
   angle: number;
   status: string;
-  // Codegen has no optional objects, so a missing fold is flagged, and its rect
-  // is zeroed.
   hasFold: boolean;
   fold: Readonly<{ x: number; y: number; width: number; height: number }>;
 }>;
@@ -42,16 +39,10 @@ export function normalizeHinge(event: NativeHinge): HingeState {
     available: true,
     angle: Number.isFinite(event.angle) ? event.angle : null,
     status,
-    // A closed hinge divides no window: a folding screen moves the app to its
-    // outer or cover display, so neither platform's fold is where the window is.
     fold: status === 'closed' || !event.hasFold ? null : parseFold(event.fold),
   };
 }
 
-/**
- * The only place a Fold is made. A rect with a non-finite or negative value is
- * no fold. Orientation follows FoldingFeature's rule: vertical unless wider than tall.
- */
 function parseFold(rect: NativeHinge['fold']): Fold | null {
   const { x, y, width, height } = rect;
   if (
@@ -83,11 +74,6 @@ export function createHingeStore() {
         listeners.delete(listener);
       };
     },
-    /**
-     * Keeps the fold's identity while its rect is unchanged, so a selector that
-     * returns `hinge.fold` stays equal across angle updates. Idempotent: an equal
-     * state notifies nobody.
-     */
     update(next: HingeState) {
       const fold = sameRect(next.fold, current.fold) ? current.fold : next.fold;
       if (
@@ -154,7 +140,6 @@ export function useHingeChange(onChange?: HingeChangeHandler): HingeState {
   return hinge;
 }
 
-/** What a selector may return: a primitive, or the store's own fold. */
 type HingeSelection = string | number | boolean | null | undefined | Fold;
 
 /**

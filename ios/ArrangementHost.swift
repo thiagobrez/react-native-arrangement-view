@@ -19,13 +19,10 @@ private final class ArrangementModel: ObservableObject {
   private var reportScheduled = false
   private var sentHinge: (Bool, Double, String, CGRect)?
 
-  /// The fold as the host's window sees it, which SwiftUI's `onHingeChange`
-  /// doesn't carry. `.null` when nothing divides the window.
   private var fold: CGRect = .null
 
   /// SwiftUI repeats `onHingeChange` with equal contexts while a fold
   /// relayouts, so only a hinge that differs from the last one sent goes out.
-  /// A window with no hinge reports no fold either.
   func sendHinge(_ available: Bool, _ angle: Double, _ status: String) {
     let fold = available ? self.fold : .null
     let next = (available, angle, status, fold)
@@ -34,10 +31,6 @@ private final class ArrangementModel: ObservableObject {
     hingeChanged?(available, angle, status, fold)
   }
 
-  /// UIKit sends no notification for a reserved region, so the fold is re-read
-  /// whenever the host's layout or its window's geometry gives a chance to.
-  /// Until the first hinge arrives there is nothing to report, so the fold is
-  /// only recorded; the hinge that follows carries it.
   func refreshFold() {
     let next = host.map(RNFold.division(in:)) ?? .null
     guard next != fold else { return }

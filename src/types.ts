@@ -16,7 +16,6 @@ export type PrimaryEdge = HorizontalEdge | VerticalEdge;
 export type HingePolicy = 'avoidSeparating' | 'alwaysAvoid' | 'neverAvoid';
 export type HingeStatus = 'unknown' | 'closed' | 'partiallyOpen' | 'fullyOpen';
 
-/** Only the hinge store makes folds; see `useHingeSelector`. Not exported. */
 declare const fromHingeStore: unique symbol;
 
 /**
