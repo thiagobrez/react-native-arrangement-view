@@ -1,0 +1,56 @@
+arrangementview.example.base fold -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-base-fold-1.log (44 lines)
+arrangementview.example.native fold -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-native-fold-1.log (44 lines)
+arrangementview.example.base fold-load -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-base-fold-load-1.log (45 lines)
+arrangementview.example.native fold-load -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-native-fold-load-1.log (45 lines)
+arrangementview.example.base remount -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-base-remount-1.log (55 lines)
+arrangementview.example.native remount -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-native-remount-1.log (55 lines)
+arrangementview.example.base unfold -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-base-unfold-1.log (24 lines)
+arrangementview.example.native unfold -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-native-unfold-1.log (24 lines)
+arrangementview.example.native fold -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-native-fold-2.log (44 lines)
+arrangementview.example.base fold -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-base-fold-2.log (44 lines)
+arrangementview.example.native fold-load -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-native-fold-load-2.log (45 lines)
+arrangementview.example.base fold-load -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-base-fold-load-2.log (45 lines)
+arrangementview.example.native remount -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-native-remount-2.log (55 lines)
+arrangementview.example.base remount -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-base-remount-2.log (55 lines)
+arrangementview.example.native unfold -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-native-unfold-2.log (24 lines)
+arrangementview.example.base unfold -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-base-unfold-2.log (24 lines)
+arrangementview.example.base fold -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-base-fold-3.log (44 lines)
+arrangementview.example.native fold -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-native-fold-3.log (44 lines)
+arrangementview.example.base fold-load -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-base-fold-load-3.log (45 lines)
+arrangementview.example.native fold-load -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-native-fold-load-3.log (45 lines)
+arrangementview.example.base remount -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-base-remount-3.log (55 lines)
+arrangementview.example.native remount -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-native-remount-3.log (55 lines)
+arrangementview.example.base unfold -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-base-unfold-3.log (24 lines)
+arrangementview.example.native unfold -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-native-unfold-3.log (24 lines)
+arrangementview.example.native fold -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-native-fold-4.log (44 lines)
+arrangementview.example.base fold -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-base-fold-4.log (44 lines)
+arrangementview.example.native fold-load -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-native-fold-load-4.log (45 lines)
+arrangementview.example.base fold-load -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-base-fold-load-4.log (45 lines)
+arrangementview.example.native remount -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-native-remount-4.log (55 lines)
+arrangementview.example.base remount -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-base-remount-4.log (55 lines)
+arrangementview.example.native unfold -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-native-unfold-4.log (24 lines)
+arrangementview.example.base unfold -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-base-unfold-4.log (24 lines)
+arrangementview.example.base fold -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-base-fold-5.log (44 lines)
+arrangementview.example.native fold -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-native-fold-5.log (44 lines)
+arrangementview.example.base fold-load -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-base-fold-load-5.log (45 lines)
+arrangementview.example.native fold-load -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-native-fold-load-5.log (45 lines)
+arrangementview.example.base remount -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-base-remount-5.log (55 lines)
+arrangementview.example.native remount -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-native-remount-5.log (55 lines)
+arrangementview.example.base unfold -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-base-unfold-5.log (24 lines)
+arrangementview.example.native unfold -> /Users/thiagobrez/.t3/worktrees/react-native-arrangement-view/t3-5927d5de/.artifacts/bench/runs/nitro-native-unfold-5.log (24 lines)
+
+fold
+  base   n=100 median=   9.2ms p90=  15.2ms max= 129.5ms  rounds=[9.2, 11.3, 9.0, 9.8, 7.7]  stale/hidden frames: total=0 max=0  renders/event median=0.0 unsettled=0
+  native n=100 median=   9.2ms p90=  14.7ms max= 127.8ms  rounds=[7.7, 11.4, 6.9, 10.5, 9.2]  stale/hidden frames: total=0 max=0  renders/event median=0.0 unsettled=0
+
+fold-load
+  base   n=100 median=   9.5ms p90=  15.5ms max= 122.1ms  rounds=[9.7, 8.2, 8.6, 8.7, 12.2]  stale/hidden frames: total=0 max=0  renders/event median=0.0 unsettled=0
+  native n=100 median=   9.7ms p90=  15.6ms max= 127.7ms  rounds=[8.4, 11.0, 8.2, 10.0, 10.6]  stale/hidden frames: total=0 max=0  renders/event median=0.0 unsettled=0
+
+remount
+  base   n= 55 median=   4.1ms p90=   6.0ms max=   7.6ms  rounds=[4.0, 4.8, 4.1, 4.3, 4.1]  stale/hidden frames: total=0 max=0  renders/event median=0
+  native n= 55 median=   4.3ms p90=   5.6ms max=   6.2ms  rounds=[4.4, 3.6, 4.4, 4.4, 4.6]  stale/hidden frames: total=0 max=0  renders/event median=0
+
+unfold
+  base   n= 50 median=   0.0ms p90=   0.0ms max=   0.0ms  rounds=[0.0, 0.0, 0.0, 0.0, 0.0]  stale/hidden frames: total=0 max=0  renders/event median=0.0
+  native n= 50 median=   0.0ms p90=   0.0ms max=   0.0ms  rounds=[0.0, 0.0, 0.0, 0.0, 0.0]  stale/hidden frames: total=0 max=0  renders/event median=0.0

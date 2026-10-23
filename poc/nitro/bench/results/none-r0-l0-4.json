@@ -1,0 +1,1 @@
+{"mode": "none", "render": false, "load": 0, "count": 0, "badT": 0, "p50": null, "p90": null, "p99": null, "first5": [], "last5": [], "lastSample": null, "offsetMs": -0.008, "package": "arrangementview.example.hinge", "sent": 732, "sweepS": 12.2, "jsCpuMs": 0.0, "mainCpuMs": 71.743, "hostLoad": "1.98 2.20 2.27", "e2e": null}
