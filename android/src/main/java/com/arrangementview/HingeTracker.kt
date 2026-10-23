@@ -10,6 +10,23 @@ import androidx.window.layout.FoldingFeature
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.WritableMap
 
+/** One hinge reading, for any transport. A null angle means the sensor hasn't reported. */
+internal data class HingeReading(
+  val available: Boolean,
+  val radians: Double?,
+  val status: String,
+  /** System.nanoTime() when the sensor or the fold reported. */
+  val t: Long,
+) {
+  fun toWritableMap(): WritableMap =
+    Arguments.createMap().apply {
+      putBoolean("available", available)
+      putDouble("angle", radians ?: Double.NaN)
+      putString("status", status)
+      putDouble("t", t.toDouble())
+    }
+}
+
 /**
  * The hinge as one view's window sees it. The owner passes in the fold from its window's layout,
  * and reports when it is attached; the angle comes from the hinge angle sensor (Android 11+).
@@ -17,14 +34,15 @@ import com.facebook.react.bridge.WritableMap
  * the window's layout to a new listener and the sensor reports its value when registered; nothing
  * is reported until both have, so a fresh angle never pairs with a stale fold or the reverse.
  */
-internal class HingeTracker(context: Context, private val emit: (WritableMap) -> Unit) :
+internal class HingeTracker(context: Context, private val emit: (HingeReading) -> Unit) :
   SensorEventListener {
 
   var fold: FoldingFeature? = null
     set(value) {
+      val t = System.nanoTime()
       field = value
       awaitingLayout = false
-      emitHinge()
+      emitHinge(t)
     }
 
   private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -38,7 +56,7 @@ internal class HingeTracker(context: Context, private val emit: (WritableMap) ->
   private var awaitingLayout = false
   private var awaitingSensor = false
   private var degrees: Float? = null
-  private var last: Triple<Boolean, Double, String>? = null
+  private var last: Triple<Boolean, Double?, String>? = null
 
   /** Pass whether the owner will report its window's layout, which it can't without an activity. */
   fun attach(awaitLayout: Boolean) {
@@ -62,14 +80,15 @@ internal class HingeTracker(context: Context, private val emit: (WritableMap) ->
   }
 
   override fun onSensorChanged(event: SensorEvent) {
+    val t = System.nanoTime()
     degrees = event.values[0]
     awaitingSensor = false
-    emitHinge()
+    emitHinge(t)
   }
 
   override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) = Unit
 
-  private fun emitHinge() {
+  private fun emitHinge(t: Long) {
     if (awaitingLayout || awaitingSensor) return
     val degrees = degrees
     val fold = fold
@@ -83,16 +102,11 @@ internal class HingeTracker(context: Context, private val emit: (WritableMap) ->
         else -> "unknown"
       }
     val available = fold != null || sensor != null
-    val radians = if (degrees != null) Math.toRadians(degrees.toDouble()) else Double.NaN
+    val radians = degrees?.let { Math.toRadians(it.toDouble()) }
     val hinge = Triple(available, radians, status)
     if (hinge == last) return
     last = hinge
-    emit(
-      Arguments.createMap().apply {
-        putBoolean("available", available)
-        putDouble("angle", radians)
-        putString("status", status)
-      })
+    emit(HingeReading(available, radians, status, t))
   }
 
   companion object {

@@ -82,9 +82,6 @@ docs/doc_build/
 ios/generated
 android/generated
 
-# React Native Nitro Modules
-nitrogen/
-
 apps/example-expo/ios/
 apps/example-expo/android/
 .artifacts/
