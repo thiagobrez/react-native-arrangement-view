@@ -27,7 +27,6 @@ for path in sys.argv[1:]:
     side, scenario, rnd = m.group(1), m.group(2), int(m.group(3))
     events = analyze(path)[KIND[scenario]]
     rows[scenario][side].append((rnd, events))
-    # A posture change toggles the fold state; count the ones the app saw.
     folds = [e for e in parse(path) if e['kind'] == 'fold']
     changes = sum(1 for a, b in zip(folds, folds[1:]) if a['state'] != b['state'])
     expected[scenario][side] += changes if scenario.startswith('fold') else 0

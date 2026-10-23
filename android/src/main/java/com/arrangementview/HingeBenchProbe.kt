@@ -9,12 +9,6 @@ import com.facebook.react.uimanager.util.ReactFindViewUtil
 import java.lang.ref.WeakReference
 import kotlin.math.roundToInt
 
-/**
- * Throwaway POC probe, the same for both transports. HingeTracker records when it emitted each
- * whole-degree angle; the bench screen draws a bar `2 * degrees` dp wide (nativeID bench-bar). On
- * each drawn frame whose bar width changed, this logs nothing but keeps the time since that angle
- * was emitted, and one second after the last change it logs a RAVE2E summary and resets.
- */
 internal object HingeBenchProbe {
   private val emitted = HashMap<Int, Long>()
   private val latencies = ArrayList<Double>()

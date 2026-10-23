@@ -1,8 +1,5 @@
 #!/bin/zsh
 # Usage: hinge-compare.sh <rounds> <out dir>
-# Runs every (mode, render, load) case once per round. Within each (render, load) group the
-# order of the transports rotates every round, so warm-up and drift favour none of them. Each
-# run waits for the host's 1-minute load to drop under 8 and records it.
 set -e
 HERE=${0:A:h}
 ROUNDS=$1 OUT=${2:A}

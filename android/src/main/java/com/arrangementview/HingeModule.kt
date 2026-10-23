@@ -10,7 +10,6 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.module.annotations.ReactModule
 
-/** Throwaway POC: the same HingeTracker as the views, delivered by a TurboModule event emitter. */
 @ReactModule(name = HingeModule.NAME)
 class HingeModule(private val context: ReactApplicationContext) : NativeHingeModuleSpec(context) {
   private val tracker = HingeTracker(context) { emitOnHinge(it.toWritableMap()) }

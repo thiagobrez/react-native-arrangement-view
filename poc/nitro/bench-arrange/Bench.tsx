@@ -1,10 +1,7 @@
-// Temporary benchmark screen, identical on both builds. Not committed.
 import { useEffect, useState } from 'react';
 import { I18nManager, Pressable, StyleSheet, Text, View } from 'react-native';
 import { ArrangementView } from 'react-native-arrangement-view';
 
-// Writing direction for the next launch: left to right, right to left with
-// React Native's left/right swap (its default), or right to left without it.
 const DIRECTIONS = ['ltr', 'rtl', 'rtl-noswap'] as const;
 const direction = !I18nManager.isRTL
   ? 'ltr'
@@ -12,24 +9,21 @@ const direction = !I18nManager.isRTL
     ? 'rtl'
     : 'rtl-noswap';
 function setNextDirection() {
-  const next = DIRECTIONS[(DIRECTIONS.indexOf(direction) + 1) % DIRECTIONS.length]!;
+  const next =
+    DIRECTIONS[(DIRECTIONS.indexOf(direction) + 1) % DIRECTIONS.length]!;
   I18nManager.allowRTL(true);
   I18nManager.forceRTL(next !== 'ltr');
   I18nManager.swapLeftAndRightInRTL(next !== 'rtl-noswap');
   return next;
 }
 
-// JS load levels: off, then the JS thread busy in chunks of this many ms.
 const LOADS = [0, 200, 1000];
 
 function busy(ms: number) {
   const end = Date.now() + ms;
-  while (Date.now() < end) {
-    // Hold the JS thread.
-  }
+  while (Date.now() < end) {}
 }
 
-// Ticks on the JS thread, so it visibly stops while JS is busy.
 function JsClock() {
   const [start] = useState(Date.now);
   const [now, setNow] = useState(start);
@@ -38,7 +32,9 @@ function JsClock() {
     return () => clearInterval(id);
   }, []);
   return (
-    <Text style={styles.clock}>JS clock {((now - start) / 1000).toFixed(1)} s</Text>
+    <Text style={styles.clock}>
+      JS clock {((now - start) / 1000).toFixed(1)} s
+    </Text>
   );
 }
 
@@ -123,7 +119,9 @@ export function Bench() {
           onPress={() => setNext(setNextDirection())}
         >
           <Text style={styles.buttonText}>
-            {nextDirection ? `${direction} → ${nextDirection} on relaunch` : direction}
+            {nextDirection
+              ? `${direction} → ${nextDirection} on relaunch`
+              : direction}
           </Text>
         </Pressable>
       </View>

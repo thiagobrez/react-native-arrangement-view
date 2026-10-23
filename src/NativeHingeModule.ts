@@ -1,4 +1,3 @@
-// Throwaway POC: the hinge through a codegen TurboModule event emitter, with no Nitro.
 import {
   TurboModuleRegistry,
   type CodegenTypes,

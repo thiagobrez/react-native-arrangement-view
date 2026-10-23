@@ -4,11 +4,11 @@ This page answers three questions about [Nitro Modules](https://nitro.margelo.co
 
 ## The short answer
 
-Keep the shadow node. Nitro cannot express it, and a Nitro view that holds React children, as the panes do, crashes the app.
+Keep the shadow node. A Nitro view that holds React children, as the panes do, crashes the app, which prototype B shows. Nitro also cannot express the shadow node itself. That part comes from Nitro's source and from the code nitrogen generated in this branch, not from an attempt.
 
 Nitro can run beside the shadow node. The prototype links both into one APK and leaves `cpp/arrange.h` and the shadow node's sources untouched. #54's posture-to-frame benchmark finds no measurable difference. A fold draws its new pane frames in 9.2 ms at the median on both `main` and the prototype, over 100 folds each.
 
-The only gain found is in how hinge readings reach JavaScript. Today they travel as Fabric view events, which Android hands to JavaScript on the next vsync. A Nitro callback skips that wait. A component that renders the hinge angle draws a new angle in 8.2 ms at p50 instead of 23.4 ms, about one frame sooner at 60 Hz. A codegen TurboModule event emitter, which adds no dependency, draws it in 10.2 ms, and the two are not measurably different. The speedup comes from leaving Fabric's event queue. Nitro is not what buys it.
+The only gain found is in how hinge readings reach JavaScript. Today they travel as Fabric view events, which Android hands to JavaScript on the next vsync. A Nitro callback skips that wait. A component that renders the hinge angle draws a new angle in 8.2 ms at p50 instead of 23.4 ms, about one frame sooner at 60 Hz. A codegen TurboModule event emitter, which adds no dependency, draws it in 10.2 ms. The two are not measurably different, though 5 runs each cannot rule out a gap of about 2 ms. The speedup comes from leaving Fabric's event queue. Nitro is not what buys it.
 
 So don't adopt Nitro. If hinge-driven React content needs that frame back, feed `useHingeChange` from a TurboModule event emitter, and keep the Fabric event for Reanimated worklets ([#33](https://github.com/thiagobrez/react-native-arrangement-view/pull/33)).
 
@@ -42,7 +42,7 @@ nitrogen generates every view manager as a `SimpleViewManager`, and both Nitro's
 
 Prototype A adds a Kotlin HybridObject, `Hinge`, fed by the existing `HingeTracker`. Nitro's code builds into its own `libNitroArrangementView.so`. The shadow node stays in the app's `libappmodules.so`, as it is today. The two share no state, so the build needs only the steps in Nitro's module template.
 
-#54's harness times each posture change from WindowManager's report to the first drawn frame whose pane rectangles changed. It also counts frames drawn with stale or hidden panes. Both builds carry the same probe. Each cell is the median of all events over 5 alternating rounds, with the range of the round medians in brackets.
+#54's harness times each posture change from WindowManager's report to the first drawn frame whose pane rectangles changed. It also counts frames drawn with stale or hidden panes. Both builds carry the same probe. The prototype also carries the hinge bench's probe, which searches the view tree on every drawn frame, so any bias is against the prototype. The fold-load runs tap the load button before the first fold, and a screenshot after that tap reads "JS busy 200 ms". Each cell is the median of all events over 5 alternating rounds, with the range of the round medians in brackets.
 
 | Scenario | `main` | Prototype with Nitro |
 | --- | --- | --- |
@@ -51,11 +51,13 @@ Prototype A adds a Kotlin HybridObject, `Hinge`, fed by the existing `HingeTrack
 | New `ArrangementView`, attach to first drawn frame, 55 mounts | 4.1 ms (4.0 to 4.8) | 4.3 ms (3.6 to 4.6) |
 | Unfold from the cover display, frames with stale panes | 0 of 50 | 0 of 50 |
 
+The same five postures of the Features demo, captured on `main` and on the prototype, differ in 0 pixels below the status bar: flat, book, book overlay, tabletop and the cover display. The diff tool finds 122,900 differing pixels between flat and book, so it does see changes.
+
 Nitro is not on this path, so these runs check that linking it breaks nothing. They do not look for a speedup. The attached video folds the emulator while the JS thread is blocked for 3 s. The panes still move while the on-screen JS clock is frozen, which shows that the shadow node still arranges without JavaScript.
 
 ### Hinge readings reach React a frame sooner off Fabric events
 
-The bench screen subscribes one transport at a time, in one APK. The emulator sweeps the hinge between 70° and 130° at 60 Hz for 12 s, 732 samples, of which 721 are distinct readings. Every transport starts from the same `HingeTracker` timestamp. "Drawn" is the first frame in which a bar sized by that angle has its new width. Each cell is the median of 5 runs, with the range in brackets.
+The bench screen subscribes one transport at a time, in one APK. The emulator console sweeps the hinge between 70° and 130° at 60 Hz for 12 s, 732 samples, of which 721 are distinct readings. Every transport starts from the same `HingeTracker` timestamp. "Drawn" is the first frame in which a bar sized by that angle has its new width. Each cell is the median of 5 runs, with the range in brackets. Fabric merges events even with JS idle, so its delivery time covers only the samples that reach JS, which favours Fabric. The loaded drawn-frame row counts only the samples that were drawn. The no-listener main-thread figure also lacks the hinge probe's per-frame cost, which the other three include.
 
 | Measure | Fabric view event (today) | Nitro callback | TurboModule event emitter |
 | --- | --- | --- | --- |
@@ -80,7 +82,7 @@ The users who notice are those of an app that renders hinge-driven content in Re
 | --- | --- | --- |
 | Move the views to Nitro | Blocked. It needs children in Hybrid Views (#873) and a way to own the generated shadow node and its State, and neither exists in 0.37.1 or on the V1 branch. Forking the generated files means redoing the fork after every nitrogen run. Positioning the panes from JavaScript instead undoes #54. Its measurements were 26.0 ms instead of 8.9 per posture change, 146 ms instead of 11.4 under JS load, and 43 of 50 unfolds showing a stale frame instead of 0. | Not feasible |
 | Nitro for the hinge only | Prototype A covers Android with about 210 handwritten lines, half of them build setup (Gradle, CMake, `JNI_OnLoad`, `nitro.json`), plus 18 generated files with 1,093 lines to commit. The APK grows by 1.4 MB on arm64 (`libNitroModules.so` 981 KB, `libNitroArrangementView.so` 407 KB). Left to do: a Swift HybridObject on iOS (`UIHingeInteraction` needs a view, so per-window scoping needs a design), `useHingeChange` and `HingeObserver` on the new feed, docs, tests, and every consumer installing `react-native-nitro-modules`. | 3 to 5 days (guess) |
-| TurboModule event emitter for the hinge | Prototype C covers Android with about 75 handwritten lines on top of the `HingeTracker` change both prototypes share, `codegenConfig.type` set to `all`, and one `#include_next` in the library's replacement spec header. Left to do: the iOS module, plus the same API, docs and test work. No new dependency and no committed generated code. | 2 to 3 days (guess) |
+| TurboModule event emitter for the hinge | Prototype C covers Android with about 75 handwritten lines on top of the `HingeTracker` change both prototypes share, `codegenConfig.type` set to `all`, and one `#include_next` in the library's replacement spec header. The shim built through the example app's autolinking, the path consumers use, but no app outside this repository tried it. Left to do: the iOS module, plus the same API, docs and test work. No new dependency and no committed generated code. | 2 to 3 days (guess) |
 
 Building prototypes A and B took an agent about 14 minutes, smoke runs included. Nitro's module template worked as documented, and coexisted with the library's own CMake and component descriptors. The only snag was a missing `ANDROID_HOME` in one shell.
 
@@ -97,7 +99,7 @@ Building prototypes A and B took an agent about 14 minutes, smoke runs included.
 | Synchronous read of the current hinge | No | Yes, `current` | Possible with a sync method |
 | Risk | Known | 0.37.1 was tested on RN 0.85.3. Crash reports with several JS runtimes are open. | Uses React Native's own API |
 
-Nitro is strongest at fast synchronous calls from JavaScript into native code and at rich types, and this library barely makes such calls. Its one hot path runs from native code into JavaScript, and there Nitro and React Native's own event emitter perform the same.
+Nitro is strongest at fast synchronous calls from JavaScript into native code and at rich types, and this library barely makes such calls. Its one hot path runs from native code into JavaScript. There, Nitro and React Native's own event emitter were not measurably different in drawn-frame time, and Nitro used about 24 µs less main thread per sample.
 
 ## When to look again
 
@@ -123,6 +125,6 @@ Everything runs on the `Pixel_10_Pro_Fold` emulator as `emulator-5554`, from the
 
 3. For the arrangement numbers, apply `poc/nitro/bench-arrange/apply.py` to a checkout of `main` and to this branch, build each with `build-apk.sh` as `arrangementview.example.base` and `arrangementview.example.native`, install both, and run `SIDES="base native" PREFIX=nitro poc/nitro/bench-arrange/compare.sh 5`.
 
-4. `poc/nitro/proof/capture.sh <dir>` records the screenshots and videos attached to the pull request with agent-device 0.21.31.
+4. `poc/nitro/proof/capture.sh <dir>` records the screenshots and videos attached to the pull request with agent-device 0.21.31. Run its `shots` step once with `main`'s APK installed and once with this branch's, then compare the two folders with `python3 -I poc/nitro/proof/diff.py <main dir> <branch dir>`.
 
 [decisions.tsv](decisions.tsv) logs each decision in this run with its evidence.

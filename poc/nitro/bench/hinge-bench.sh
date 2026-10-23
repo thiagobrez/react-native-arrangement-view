@@ -1,5 +1,5 @@
 #!/bin/zsh
-# Usage: hinge-bench.sh <package> <mode fabric|nitro|none> <render 0|1> <load 0|200> <out.json>
+# Usage: hinge-bench.sh <package> <mode fabric|nitro|turbo|none> <render 0|1> <load 0|200> <out.json>
 # Half-opens the emulator, starts the bench app fresh, subscribes one transport, sweeps the hinge
 # at 60 Hz for ~12 s and writes the app's HINGEBENCH report plus JS/main thread CPU to <out.json>.
 set -e
@@ -22,7 +22,7 @@ tap_text() {
   $ADB shell input tap $(( (nums[1] + nums[3]) / 2 )) $(( (nums[2] + nums[4]) / 2 ))
 }
 
-cpu_ms() { # <pid> <tid> -> on-CPU ms from schedstat
+cpu_ms() {
   $ADB shell cat /proc/$1/task/$2/schedstat | awk '{ printf "%.3f", $1 / 1e6 }'
 }
 

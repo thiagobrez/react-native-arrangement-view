@@ -1,4 +1,3 @@
-# Shared by run.sh and rtl.sh. Taps the first view whose text starts with $1.
 ADB=$HOME/Library/Android/sdk/platform-tools/adb
 tap_text() {
   local bounds=""
@@ -10,8 +9,6 @@ tap_text() {
     sleep 1
   done
   if [[ -z $bounds ]]; then
-    # The bench screen's JS clock keeps uiautomator from ever idling. Book-posture bounds from an
-    # agent-device snapshot of the Bench screen, window 2076x2152.
     case $1 in
       "JS idle") bounds='bounds="[855,1972][1049,2074]"' ;;
       "Remount") bounds='bounds="[1088,1972][1399,2074]"' ;;

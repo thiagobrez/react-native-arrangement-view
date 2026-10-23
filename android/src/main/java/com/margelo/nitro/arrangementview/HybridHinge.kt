@@ -15,7 +15,6 @@ import com.facebook.proguard.annotations.DoNotStrip
 import com.margelo.nitro.NitroModules
 import java.util.concurrent.CopyOnWriteArrayList
 
-/** The hinge of the current activity's window, through Nitro instead of a Fabric view event. */
 @Keep
 @DoNotStrip
 class HybridHinge : HybridHingeSpec() {

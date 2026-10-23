@@ -1,5 +1,3 @@
-# Nitro's own shared library. The shadow nodes stay in src/main/jni/CMakeLists.txt, which the
-# app's autolinked build compiles into libappmodules.so.
 project(NitroArrangementView)
 cmake_minimum_required(VERSION 3.9.0)
 

@@ -37,7 +37,6 @@ def panes(draw):
 
 
 def settle(draws, start, end):
-    """First draw in [start, end) showing the frames held at the end of the window."""
     window = [d for d in draws if start <= d['t'] < end]
     if not window:
         return None, 0
@@ -57,8 +56,6 @@ def analyze(path):
             resizes.append({'kind': 'resize', 't': d['t'], 'id': d['id'], 'win': d['win']})
         last_win = d['win']
     out = {'fold': [], 'attach': [], 'resize': []}
-    # Only a fold state that differs from the last one is a change; the first
-    # report after an attach is part of that mount.
     changes, last_state = [], None
     for e in sorted(marks + resizes, key=lambda e: e['t']):
         if e['kind'] == 'fold':

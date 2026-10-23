@@ -7,7 +7,6 @@ import { ExamplesList } from './ExamplesList';
 import { examples } from './examples';
 import { HingeBench, NitroAlone, NitroChildren } from './HingeBench';
 
-// The bench runs its own hinge transports, so the root observer would add a second stream.
 const bench = process.env.EXPO_PUBLIC_RAV_BENCH === '1';
 const Observer = bench
   ? ({ children }: { children: React.ReactNode }) => children

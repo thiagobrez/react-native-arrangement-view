@@ -10,12 +10,10 @@ import androidx.window.layout.FoldingFeature
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.WritableMap
 
-/** One hinge reading, for any transport. A null angle means the sensor hasn't reported. */
 internal data class HingeReading(
   val available: Boolean,
   val radians: Double?,
   val status: String,
-  /** System.nanoTime() when the sensor or the fold reported. */
   val t: Long,
 ) {
   fun toWritableMap(): WritableMap =

@@ -1,7 +1,6 @@
 #!/bin/zsh
 # Usage: compare.sh <rounds> [scenario ...]
-# Alternates the baseline and native builds, swapping which goes first each
-# round, so warm-up and drift favour neither. Logs: runs/final-<side>-<scenario>-<round>.log
+# Logs: runs/final-<side>-<scenario>-<round>.log
 set -e
 HERE=${0:A:h}
 ROUNDS=$1; shift

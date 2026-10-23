@@ -1,4 +1,3 @@
-// Throwaway POC bench: hinge latency over a Fabric event against a Nitro listener.
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -12,9 +11,7 @@ const LOADS = [0, 200];
 
 function busy(ms: number) {
   const end = Date.now() + ms;
-  while (Date.now() < end) {
-    // Hold the JS thread.
-  }
+  while (Date.now() < end) {}
 }
 
 function percentile(sorted: number[], p: number) {
@@ -100,7 +97,6 @@ export function HingeBench() {
           offsetMs: round(offsetMs),
         })
     );
-    // Updated here rather than live, so no status commits land inside a timed sweep.
     setStatus(
       `Current: ${mode}, count ${l.length}, p50 ${round(percentile(sorted, 50)) ?? '-'} ms`
     );
@@ -119,7 +115,6 @@ export function HingeBench() {
       <Text style={styles.angle}>
         {angle == null ? '--' : `${angle.toFixed(1)}°`}
       </Text>
-      {/* HingeBenchProbe.kt reads this bar's width on each drawn frame: 2 dp per degree. */}
       <View
         nativeID="bench-bar"
         collapsable={false}

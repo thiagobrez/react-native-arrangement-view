@@ -5,7 +5,6 @@ import android.view.View
 import android.view.ViewTreeObserver
 import com.facebook.react.uimanager.util.ReactFindViewUtil
 
-// Temporary benchmark probe, identical on both builds. Not part of the library.
 internal object BenchProbe {
   private const val TAG = "RAVBENCH"
 
