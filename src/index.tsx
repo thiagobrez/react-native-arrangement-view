@@ -9,6 +9,7 @@ export type {
   ArrangementLayout,
   ArrangementLayoutHandler,
   ArrangementViewProps,
+  Fold,
   HingeChangeHandler,
   HingeObserverProps,
   HingePolicy,

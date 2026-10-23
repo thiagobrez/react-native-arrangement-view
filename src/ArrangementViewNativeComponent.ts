@@ -8,6 +8,15 @@ type HingeEvent = Readonly<{
   available: boolean;
   angle: CodegenTypes.Double;
   status: string;
+  // Codegen has no optional objects, so a missing fold is flagged and its rect
+  // is zeroed.
+  hasFold: boolean;
+  fold: Readonly<{
+    x: CodegenTypes.Double;
+    y: CodegenTypes.Double;
+    width: CodegenTypes.Double;
+    height: CodegenTypes.Double;
+  }>;
 }>;
 
 // Codegen needs event objects written out, and has no optional ones, so a

@@ -7,19 +7,32 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react';
-import type { HingeChangeHandler, HingeState, HingeStatus } from './types';
+import type {
+  Fold,
+  HingeChangeHandler,
+  HingeState,
+  HingeStatus,
+} from './types';
+
+/** What both native views send in onHingeChange. Parsed here, and nowhere else. */
+type NativeHinge = Readonly<{
+  available: boolean;
+  angle: number;
+  status: string;
+  // Codegen has no optional objects, so a missing fold is flagged, and its rect
+  // is zeroed.
+  hasFold: boolean;
+  fold: Readonly<{ x: number; y: number; width: number; height: number }>;
+}>;
 
 export const unavailableHinge: HingeState = Object.freeze({
   available: false,
   angle: null,
   status: 'unknown',
+  fold: null,
 });
 
-export function normalizeHinge(event: {
-  available: boolean;
-  angle: number;
-  status: string;
-}): HingeState {
+export function normalizeHinge(event: NativeHinge): HingeState {
   if (!event.available) return unavailableHinge;
   const statuses: readonly string[] = ['closed', 'partiallyOpen', 'fullyOpen'];
   return {
@@ -28,7 +41,32 @@ export function normalizeHinge(event: {
     status: statuses.includes(event.status)
       ? (event.status as HingeStatus)
       : 'unknown',
+    fold: event.hasFold ? parseFold(event.fold) : null,
   };
+}
+
+/**
+ * The only place a Fold is made. A rect with a non-finite or negative value is
+ * no fold. Orientation follows FoldingFeature's rule: vertical unless wider than tall.
+ */
+function parseFold(rect: NativeHinge['fold']): Fold | null {
+  const { x, y, width, height } = rect;
+  if (
+    !Number.isFinite(x) ||
+    !Number.isFinite(y) ||
+    !Number.isFinite(width) ||
+    !Number.isFinite(height) ||
+    width < 0 ||
+    height < 0
+  )
+    return null;
+  return Object.freeze({
+    x,
+    y,
+    width,
+    height,
+    orientation: width > height ? 'horizontal' : 'vertical',
+  }) as Fold;
 }
 
 export function createHingeStore() {
@@ -42,17 +80,31 @@ export function createHingeStore() {
         listeners.delete(listener);
       };
     },
+    /**
+     * Keeps the fold's identity while its rect is unchanged, so a selector that
+     * returns `hinge.fold` stays equal across angle updates. Idempotent: an equal
+     * state notifies nobody.
+     */
     update(next: HingeState) {
+      const fold = sameRect(next.fold, current.fold) ? current.fold : next.fold;
       if (
         next.available === current.available &&
         next.angle === current.angle &&
-        next.status === current.status
+        next.status === current.status &&
+        fold === current.fold
       )
         return;
-      current = next;
+      current = fold === next.fold ? next : { ...next, fold };
       listeners.forEach((listener) => listener());
     },
   };
+}
+
+function sameRect(a: Fold | null, b: Fold | null): boolean {
+  if (a === null || b === null) return a === b;
+  return (
+    a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height
+  );
 }
 export const HingeContext = createContext<ReturnType<
   typeof createHingeStore
@@ -99,15 +151,18 @@ export function useHingeChange(onChange?: HingeChangeHandler): HingeState {
   return hinge;
 }
 
+/** What a selector may return: a primitive, or the store's own fold. */
+type HingeSelection = string | number | boolean | null | undefined | Fold;
+
 /**
  * Observe one value derived from the hinge, such as whether it is half-open.
  * The component renders again only when that value changes, however often the
- * angle does. The selector returns a primitive: an object built on each call
- * would never compare equal to the last one.
+ * angle does. Return a primitive or `hinge.fold` as it is: the fold keeps its
+ * identity until it moves, but a copy would never compare equal to the last one.
  */
-export function useHingeSelector<
-  T extends string | number | boolean | null | undefined,
->(selector: (hinge: HingeState) => T): T {
+export function useHingeSelector<T extends HingeSelection>(
+  selector: (hinge: HingeState) => T
+): T {
   const store = useNearestHingeStore('useHingeSelector');
   const select = () => selector(store.getSnapshot());
   return useSyncExternalStore(store.subscribe, select, select);

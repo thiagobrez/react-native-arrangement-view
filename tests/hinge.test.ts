@@ -11,31 +11,169 @@ import {
   useHingeSelector,
   useHingeStore,
 } from '../src/hinge.ts';
-import type { HingeState } from '../src/types.ts';
+import type { Fold, HingeState } from '../src/types.ts';
 
 (
   globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
 ).IS_REACT_ACT_ENVIRONMENT = true;
 
+/** What a native view sends for a fold at this rect; the only way to make one. */
+type NativeHinge = Parameters<typeof normalizeHinge>[0];
+
+const nativeFold = (
+  x: number,
+  y: number,
+  width: number,
+  height: number
+): NativeHinge => ({
+  available: true,
+  angle: 1.5,
+  status: 'partiallyOpen',
+  hasFold: true,
+  fold: { x, y, width, height },
+});
+
+/** A Fold a test builds by hand needs the same cast the store makes. */
+const fold = (x: number, y: number, width: number, height: number): Fold =>
+  normalizeHinge(nativeFold(x, y, width, height)).fold!;
+
+const noFold = {
+  available: true,
+  angle: 1.5,
+  status: 'partiallyOpen',
+  hasFold: false,
+  fold: { x: 0, y: 0, width: 0, height: 0 },
+} as const;
+
 test('missing hardware is unavailable, and unknown future statuses stay unknown', () => {
   assert.deepEqual(
-    normalizeHinge({ available: false, angle: Math.PI, status: 'fullyOpen' }),
+    normalizeHinge({
+      available: false,
+      angle: Math.PI,
+      status: 'fullyOpen',
+      hasFold: true,
+      fold: { x: 1, y: 2, width: 3, height: 4 },
+    }),
     unavailableHinge
   );
   assert.deepEqual(
-    normalizeHinge({ available: true, angle: 1.25, status: 'futureStatus' }),
-    { available: true, angle: 1.25, status: 'unknown' }
+    normalizeHinge({ ...noFold, angle: 1.25, status: 'futureStatus' }),
+    { available: true, angle: 1.25, status: 'unknown', fold: null }
   );
-  assert.equal(
-    normalizeHinge({ available: true, angle: NaN, status: 'partiallyOpen' })
-      .angle,
-    null
-  );
+  assert.equal(normalizeHinge({ ...noFold, angle: NaN }).angle, null);
 });
 
 test('native radians are preserved without angle-based status inference', () => {
-  const event = { available: true, angle: 0.1, status: 'fullyOpen' } as const;
-  assert.deepEqual(normalizeHinge(event), event);
+  const event = {
+    available: true,
+    angle: Math.PI,
+    status: 'fullyOpen',
+    hasFold: false,
+    fold: { x: 0, y: 0, width: 0, height: 0 },
+  } as const;
+  assert.deepEqual(normalizeHinge(event), {
+    available: true,
+    angle: Math.PI,
+    status: 'fullyOpen',
+    fold: null,
+  });
+});
+
+test('the fold a native event describes becomes a Fold, and its absence is null', () => {
+  assert.deepEqual(normalizeHinge(noFold).fold, null);
+  assert.deepEqual(normalizeHinge(nativeFold(426, 0, 0, 2152)).fold, {
+    x: 426,
+    y: 0,
+    width: 0,
+    height: 2152,
+    orientation: 'vertical',
+  });
+});
+
+test('orientation follows the rect, not which platform sent it', () => {
+  // A Pixel's fold is a line: 0 wide in book posture, 0 tall in tabletop.
+  assert.equal(fold(426, 0, 0, 2152).orientation, 'vertical');
+  assert.equal(fold(0, 426, 2152, 0).orientation, 'horizontal');
+  // The Duo's division is a band about 40 pt wide, and a horizontal one.
+  assert.equal(fold(170, 0, 40, 750).orientation, 'vertical');
+  assert.equal(fold(0, 170, 750, 40).orientation, 'horizontal');
+  // Square reserves vertically, as FoldingFeature's rule does.
+  assert.equal(fold(0, 0, 40, 40).orientation, 'vertical');
+});
+
+test('a rect that is not a fold parses as no fold', () => {
+  for (const rect of [
+    { x: NaN, y: 0, width: 0, height: 100 },
+    { x: 0, y: Infinity, width: 0, height: 100 },
+    { x: 0, y: 0, width: NaN, height: 100 },
+    { x: 0, y: 0, width: 0, height: -1 },
+    { x: 0, y: 0, width: -5, height: 100 },
+  ]) {
+    assert.equal(
+      normalizeHinge({ ...noFold, hasFold: true, fold: rect }).fold,
+      null,
+      `${JSON.stringify(rect)}`
+    );
+  }
+  // A zeroed rect with no fold is no fold; a zero-size rect that is one still is.
+  assert.equal(normalizeHinge(noFold).fold, null);
+  assert.deepEqual(normalizeHinge(nativeFold(0, 0, 0, 0)).fold, {
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+    orientation: 'vertical',
+  });
+});
+
+test('a fold is frozen', () => {
+  assert.ok(Object.isFrozen(fold(1, 2, 3, 4)));
+});
+
+test('the store keeps one fold object while its rect is unchanged', () => {
+  const store = createHingeStore();
+  store.update(normalizeHinge(nativeFold(426, 0, 0, 2152)));
+  const first = store.getSnapshot().fold;
+  assert.ok(first);
+  // The same rect at a new angle, and from an event that repeats the rect.
+  store.update(normalizeHinge({ ...nativeFold(426, 0, 0, 2152), angle: 2.1 }));
+  assert.equal(store.getSnapshot().fold, first);
+  assert.equal(store.getSnapshot().angle, 2.1);
+  // Moved by a pixel: a new object.
+  store.update(normalizeHinge(nativeFold(427, 0, 0, 2152)));
+  const moved = store.getSnapshot().fold;
+  assert.notEqual(moved, first);
+  assert.equal(moved?.x, 427);
+  // Back to the first rect: a third object, because the last one described 427.
+  store.update(normalizeHinge(nativeFold(426, 0, 0, 2152)));
+  assert.notEqual(store.getSnapshot().fold, moved);
+  assert.equal(store.getSnapshot().fold?.x, 426);
+});
+
+test('the store keeps a null fold, and reports one that appears or goes away', () => {
+  const store = createHingeStore();
+  store.update(normalizeHinge(noFold));
+  assert.equal(store.getSnapshot().fold, null);
+  store.update(normalizeHinge(noFold));
+  assert.equal(store.getSnapshot().fold, null);
+  store.update(normalizeHinge(nativeFold(0, 170, 750, 40)));
+  const band = store.getSnapshot().fold;
+  assert.equal(band?.orientation, 'horizontal');
+  store.update(normalizeHinge(noFold));
+  assert.equal(store.getSnapshot().fold, null);
+});
+
+test('an update that changes nothing notifies nobody', () => {
+  const store = createHingeStore();
+  store.update(normalizeHinge(nativeFold(426, 0, 0, 2152)));
+  let notifications = 0;
+  store.subscribe(() => {
+    notifications++;
+  });
+  store.update(normalizeHinge(nativeFold(426, 0, 0, 2152)));
+  assert.equal(notifications, 0);
+  store.update(normalizeHinge(nativeFold(426, 1, 0, 2152)));
+  assert.equal(notifications, 1);
 });
 
 test('independent arrangements do not leak events, and unsubscribe stops delivery', () => {
@@ -46,7 +184,7 @@ test('independent arrangements do not leak events, and unsubscribe stops deliver
     notifications++;
   });
   const open = normalizeHinge({
-    available: true,
+    ...noFold,
     angle: Math.PI,
     status: 'fullyOpen',
   });
@@ -82,7 +220,12 @@ test('hook receives changes, uses the latest callback, and cleans up on unmount'
     root.update(render((hinge) => second.push(hinge)));
   });
   await act(() => {
-    store.update({ available: true, angle: 1.5, status: 'partiallyOpen' });
+    store.update({
+      available: true,
+      angle: 1.5,
+      status: 'partiallyOpen',
+      fold: null,
+    });
   });
   assert.equal(first.length, 1);
   assert.equal(second.length, 1);
@@ -108,15 +251,31 @@ test('an arrangement feeds native events to its store, and keeps it across rende
   const initialStore = store;
   assert.equal(store.getSnapshot(), unavailableHinge);
 
-  const nativeEvent = { available: true, angle: Math.PI, status: 'fullyOpen' };
+  const nativeEvent = {
+    available: true,
+    angle: Math.PI,
+    status: 'fullyOpen',
+    hasFold: false,
+    fold: { x: 0, y: 0, width: 0, height: 0 },
+  };
   onHingeChange({ nativeEvent });
-  assert.deepEqual(store.getSnapshot(), nativeEvent);
+  assert.deepEqual(store.getSnapshot(), normalizeHinge(nativeEvent));
 
   await act(() => {
     root.update(createElement(Arrangement));
   });
   assert.equal(store, initialStore);
-  assert.deepEqual(store.getSnapshot(), nativeEvent);
+  assert.deepEqual(store.getSnapshot(), normalizeHinge(nativeEvent));
+
+  const foldEvent = nativeFold(355, 0, 40, 750);
+  onHingeChange({ nativeEvent: foldEvent });
+  assert.deepEqual(store.getSnapshot().fold, {
+    x: 355,
+    y: 0,
+    width: 40,
+    height: 750,
+    orientation: 'vertical',
+  });
 });
 
 test('the hook reads the nearest observer, and needs one', async () => {
@@ -136,11 +295,13 @@ test('the hook reads the nearest observer, and needs one', async () => {
     );
   });
   await act(() => {
-    outer.update({ available: true, angle: Math.PI, status: 'fullyOpen' });
+    outer.update(
+      normalizeHinge({ ...noFold, angle: Math.PI, status: 'fullyOpen' })
+    );
   });
   assert.equal(root.root.findByType('div').children[0], 'unknown');
   await act(() => {
-    inner.update({ available: true, angle: 1.5, status: 'partiallyOpen' });
+    inner.update(normalizeHinge(nativeFold(0, 170, 750, 40)));
   });
   assert.equal(root.root.findByType('div').children[0], 'partiallyOpen');
 
@@ -176,14 +337,112 @@ test('a selector renders again only when its value changes', async () => {
   assert.equal(renders, 1);
   for (const angle of [0.5, 1, 1.5]) {
     await act(() => {
-      store.update({ available: true, angle, status: 'partiallyOpen' });
+      store.update({
+        available: true,
+        angle,
+        status: 'partiallyOpen',
+        fold: null,
+      });
     });
   }
   assert.equal(renders, 2);
   assert.equal(root.root.findByType('div').children[0], 'true');
   await act(() => {
-    store.update({ available: true, angle: Math.PI, status: 'fullyOpen' });
+    store.update({
+      available: true,
+      angle: Math.PI,
+      status: 'fullyOpen',
+      fold: null,
+    });
   });
   assert.equal(renders, 3);
   assert.equal(root.root.findByType('div').children[0], 'false');
+});
+
+test('a selector that returns the fold renders when it moves, not at every angle', async () => {
+  const store = createHingeStore();
+  let renders = 0;
+  const selections: (Fold | null)[] = [];
+  function Probe() {
+    renders++;
+    selections.push(useHingeSelector((hinge) => hinge.fold));
+    return createElement(
+      'div',
+      null,
+      String(selections[selections.length - 1]?.x ?? '-')
+    );
+  }
+  let root!: ReactTestRenderer;
+  await act(() => {
+    root = create(
+      createElement(HingeContext, { value: store }, createElement(Probe))
+    );
+  });
+  assert.equal(renders, 1);
+  assert.equal(selections[0], null);
+
+  // The fold arrives: one render.
+  await act(() => {
+    store.update(normalizeHinge(nativeFold(426, 0, 0, 2152)));
+  });
+  assert.equal(renders, 2);
+  const landed = selections[1];
+  assert.equal(landed?.x, 426);
+
+  // Sweeping the angle at the same rect never renders again, and the fold the
+  // selector returns stays the same object.
+  for (const angle of [1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5]) {
+    await act(() => {
+      store.update(normalizeHinge({ ...nativeFold(426, 0, 0, 2152), angle }));
+    });
+  }
+  assert.equal(renders, 2);
+  assert.equal(selections[1], landed);
+  assert.equal(store.getSnapshot().angle, 2.5);
+
+  // The fold moves: it renders, and returns a different object.
+  await act(() => {
+    store.update(normalizeHinge(nativeFold(426, 0, 0, 2150)));
+  });
+  assert.equal(renders, 3);
+  assert.notEqual(selections[2], landed);
+  assert.equal(root.root.findByType('div').children[0], '426');
+
+  // The fold goes away.
+  await act(() => {
+    store.update(normalizeHinge(noFold));
+  });
+  assert.equal(renders, 4);
+  assert.equal(selections[3], null);
+});
+
+test('a selector can return one number of the fold, or the fold for one posture', async () => {
+  const store = createHingeStore();
+  const xs: (number | null)[] = [];
+  const books: (Fold | null)[] = [];
+  function Probe() {
+    xs.push(useHingeSelector((hinge) => hinge.fold?.x ?? null));
+    books.push(
+      useHingeSelector((hinge) =>
+        hinge.fold?.orientation === 'vertical' ? hinge.fold : null
+      )
+    );
+    return null;
+  }
+  await act(() => {
+    create(createElement(HingeContext, { value: store }, createElement(Probe)));
+  });
+  assert.deepEqual([xs.at(-1), books.at(-1)], [null, null]);
+
+  // A horizontal fold has an x, and is not a book fold.
+  await act(() => {
+    store.update(normalizeHinge(nativeFold(0, 170, 750, 40)));
+  });
+  assert.deepEqual([xs.at(-1), books.at(-1)], [0, null]);
+
+  await act(() => {
+    store.update(normalizeHinge(nativeFold(426, 0, 0, 2152)));
+  });
+  assert.equal(xs.at(-1), 426);
+  assert.equal(books.at(-1)?.orientation, 'vertical');
 });
