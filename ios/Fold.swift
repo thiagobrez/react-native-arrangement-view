@@ -20,9 +20,10 @@ public final class RNFold: NSObject {
   @objc public static func division(in view: UIView) -> CGRect {
 #if canImport(UIKit, _version: 9127.0.85)  // the iOS 27.1 SDK
     if #available(iOS 27.1, *), let window = view.window {
-      // Inactive ones are asked for and filtered here rather than left to the
-      // option: `isActive` is what tells a fold that divides from a hinge that is
-      // merely open, and without the option the query reports nothing at all.
+      // Asks for the inactive ones and filters on `isActive` here: the header
+      // documents what the option adds but not what the query without it filters
+      // on, and `isActive` is the documented property that tells a fold dividing
+      // the window from one that merely exists.
       let regions = window.__reservedRegions(of: .division(), options: [.includeInactive])
       for region in regions where region.isActive {
         // `frame` is already in the window's own space, margins included, which is

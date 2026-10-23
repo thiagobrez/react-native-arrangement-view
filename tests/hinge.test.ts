@@ -126,6 +126,21 @@ test('a rect that is not a fold parses as no fold', () => {
   });
 });
 
+test('a closed hinge reports no fold, whatever the native event says', () => {
+  // The rule is encoded here rather than left to each platform: on the Duo the app
+  // moves to the outer panel when the hinge closes, and Android reports no fold on
+  // the cover display, so no window is divided at a closed hinge.
+  const closed = { ...nativeFold(170, 0, 40, 750), angle: 0, status: 'closed' };
+  assert.equal(normalizeHinge(closed).fold, null);
+  assert.equal(normalizeHinge(closed).status, 'closed');
+  assert.equal(normalizeHinge(closed).angle, 0);
+  // The band comes back with the posture that divides the window again.
+  assert.deepEqual(
+    normalizeHinge({ ...closed, status: 'partiallyOpen' }).fold,
+    fold(170, 0, 40, 750)
+  );
+});
+
 test('a fold is frozen', () => {
   assert.ok(Object.isFrozen(fold(1, 2, 3, 4)));
 });

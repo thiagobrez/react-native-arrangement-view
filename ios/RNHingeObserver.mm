@@ -32,7 +32,9 @@ static BOOL RNHingesEqual(const RNHingeObserverEventEmitter::OnHingeChange &one,
 @implementation RNHingeObserver {
   std::optional<RNHingeObserverEventEmitter::OnHingeChange> _hinge;
   NSUInteger _updates;
+#ifdef RAV_HAS_HINGE
   __weak UIWindowScene *_observedScene;
+#endif
 }
 + (ComponentDescriptorProvider)componentDescriptorProvider {
   return concreteComponentDescriptorProvider<RNHingeObserverComponentDescriptor>();
@@ -42,8 +44,8 @@ static BOOL RNHingesEqual(const RNHingeObserverEventEmitter::OnHingeChange &one,
   if (self = [super initWithFrame:frame]) {
     _props = std::make_shared<const RNHingeObserverProps>();
 #ifdef RAV_HAS_HINGE
+    __weak RNHingeObserver *weakSelf = self;
     if (@available(iOS 27.1, *)) {
-      __weak RNHingeObserver *weakSelf = self;
       [self addInteraction:[[UIHingeInteraction alloc] initWithUpdateHandler:^(
                                 UIHingeInteraction *interaction, UIHingeInteractionUpdate *update) {
         RNHingeObserver *strongSelf = weakSelf;
@@ -68,7 +70,12 @@ static BOOL RNHingesEqual(const RNHingeObserverEventEmitter::OnHingeChange &one,
           case UIHingeStatusFullyOpen: status = "fullyOpen"; break;
           default: break;
         }
+        // The division reads as settled at the layout pass that follows, not here, and this 0x0
+        // view's metrics never change, so nothing else would ask UIKit for it.
+        BOOL crossed = !strongSelf->_hinge || !strongSelf->_hinge->available ||
+                       strongSelf->_hinge->status != status;
         [strongSelf emit:RNHingeEvent(true, hinge.angle, status, [RNFold divisionIn:strongSelf])];
+        if (crossed) [strongSelf setNeedsLayout];
       }]];
     }
 #endif
@@ -102,6 +109,12 @@ static BOOL RNHingesEqual(const RNHingeObserverEventEmitter::OnHingeChange &one,
     [self refreshFold];
   }
 #endif
+}
+// The one moment UIKit reads the division as settled. It lays this view out when the window's
+// division changes, and at a crossing whose metrics do not move, when the hinge update asks.
+- (void)layoutSubviews {
+  [super layoutSubviews];
+  [self refreshFold];
 }
 #ifdef RAV_HAS_HINGE
 - (void)observeScene:(UIWindowScene *)scene {

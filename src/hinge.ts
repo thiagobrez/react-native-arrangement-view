@@ -35,13 +35,16 @@ export const unavailableHinge: HingeState = Object.freeze({
 export function normalizeHinge(event: NativeHinge): HingeState {
   if (!event.available) return unavailableHinge;
   const statuses: readonly string[] = ['closed', 'partiallyOpen', 'fullyOpen'];
+  const status = statuses.includes(event.status)
+    ? (event.status as HingeStatus)
+    : 'unknown';
   return {
     available: true,
     angle: Number.isFinite(event.angle) ? event.angle : null,
-    status: statuses.includes(event.status)
-      ? (event.status as HingeStatus)
-      : 'unknown',
-    fold: event.hasFold ? parseFold(event.fold) : null,
+    status,
+    // A closed hinge divides no window: a folding screen moves the app to its
+    // outer or cover display, so neither platform's fold is where the window is.
+    fold: status === 'closed' || !event.hasFold ? null : parseFold(event.fold),
   };
 }
 

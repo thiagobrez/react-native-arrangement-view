@@ -59,6 +59,8 @@ type Fold = {
   side for touch. A hinge between two screens is the band it hides.
 - Every `HingeObserver` and `ArrangementView` in a window reports the same fold: it belongs to
   the window, not to the observer.
+- A closed hinge never divides a window, because a folding screen moves the app to its outer or
+  cover display, so `fold` is `null` whenever `status` is `"closed"`.
 
 | Situation                             | iOS    | Android                                    |
 | ------------------------------------- | ------ | ------------------------------------------ |
