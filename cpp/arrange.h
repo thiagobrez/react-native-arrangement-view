@@ -40,6 +40,7 @@ struct Fold {
   bool operator==(const Fold &) const = default;
 };
 
+/** All in dp; the fold is relative to the arrangement. */
 struct Geometry {
   double width{};
   double height{};

@@ -149,6 +149,7 @@ void ArrangementViewShadowNode::placePanes() {
   if (children.empty()) {
     return;
   }
+  // A strong reference: replacing the content View below may drop the last other one.
   const auto content = children.front();
   const auto &panes = content->getChildren();
   react_native_assert(

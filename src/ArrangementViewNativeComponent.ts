@@ -48,6 +48,7 @@ export interface NativeProps extends ViewProps {
   /** Android only: the space in dp between the panes around an avoided hinge. */
   hingeGap?: CodegenTypes.WithDefault<CodegenTypes.Double, 24>;
   onHingeChange?: CodegenTypes.DirectEventHandler<HingeEvent>;
+  /** Where the native view put the panes, in dp, relative to its content box on Android. */
   onPanesChange?: CodegenTypes.DirectEventHandler<PanesEvent>;
 }
 
