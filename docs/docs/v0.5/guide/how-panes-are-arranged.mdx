@@ -12,7 +12,7 @@ Each platform follows its own conventions. iOS delegates arrangement to SwiftUI'
 
 ## iOS
 
-- A half-open hinge splits the panes on either side of it, keeping 20 pt clear on each side of the crease.
+- A half-open hinge splits the panes on either side of it, keeping 20 pt clear on each side of the crease. A hinge less than 20 pt inside the arrangement's edge leaves no room for that, so it is ignored.
 - Otherwise the size classes decide. Side by side needs a regular horizontal size class and stacked a regular vertical one. When both are regular, the arrangement's longer side is halved. When both are compact, as on an iPhone in landscape, the primary pane shows alone.
 - `overlay` puts both panes at full size, primary in front. A half-open hinge separates them, with the primary after the hinge: on the trailing side, or below it.
 - In a split, `primaryEdge` sets the layout direction of SwiftUI's arrangement, the only control it has over the side. The panes keep the inherited direction. In an overlay, it sets the edge SwiftUI gives each pane.
@@ -20,7 +20,7 @@ Each platform follows its own conventions. iOS delegates arrangement to SwiftUI'
 ## Android
 
 - The window decides how many panes fit: two side by side from 840 dp wide, and never in a window under 480 dp tall, such as a phone in landscape, which Android's guidance considers too short for two panes. Two stacked fit in tabletop posture, or in a single-column window at least 900 dp tall.
-- A hinge that `hingePolicy` avoids decides the axis, and the panes are separated by `hingeGap` centred on the crease. A half-open hinge splits the panes whatever the window size, as on iOS; a flat one only where two panes fit anyway. When the split doesn't fit, or `axes` excludes it, the primary pane shows alone on the side of the hinge `primaryEdge` names, leading by default, or above it.
+- A hinge that `hingePolicy` avoids decides the axis, and the panes are separated by `hingeGap` centred on the crease. A hinge closer to the arrangement's edge than half of `hingeGap` leaves no room for a pane on that side, so it is ignored, as on iOS. A half-open hinge splits the panes whatever the window size, as on iOS; a flat one only where two panes fit anyway. When the split doesn't fit, or `axes` excludes it, the primary pane shows alone on the side of the hinge `primaryEdge` names, leading by default, or above it.
 - Otherwise the panes halve the arrangement and touch.
 - `overlay` puts both panes at full size, primary in front. An avoided hinge separates them, as on iOS.
 - Right-to-left layouts put the primary pane on the right, and `primaryEdge` sides are mirrored with them.
@@ -49,12 +49,13 @@ Screen readers go through the panes in reading order, whichever is primary: with
 
 ## Where the platforms differ
 
-| Situation                                     | iOS                                                  | Android                                                                                   |
-| --------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| Plus / Pro Max iPhones in landscape           | Side by side: they have a regular width in landscape | Primary only: the window is under 480 dp tall, as on every phone in landscape             |
-| No hinge, two panes fit both ways             | The arrangement's longer side is halved              | Side by side, whatever the arrangement's shape                                            |
-| Space around a half-open hinge                | 20 pt on each side, fixed                            | `hingeGap`, 24 dp by default; `hingePolicy` can include a flat hinge or ignore hinges     |
-| A half-open hinge whose split `axes` excludes | Primary only, at full size across the hinge          | Primary only, on the `primaryEdge` side of the hinge, leading by default, or the top side |
+| Situation                                                      | iOS                                                  | Android                                                                                   |
+| -------------------------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Plus / Pro Max iPhones in landscape                            | Side by side: they have a regular width in landscape | Primary only: the window is under 480 dp tall, as on every phone in landscape             |
+| No hinge, two panes fit both ways                              | The arrangement's longer side is halved              | Side by side, whatever the arrangement's shape                                            |
+| Space around a half-open hinge                                 | 20 pt on each side, fixed                            | `hingeGap`, 24 dp by default; `hingePolicy` can include a flat hinge or ignore hinges     |
+| A half-open hinge whose split `axes` excludes                  | Primary only, at full size across the hinge          | Primary only, on the `primaryEdge` side of the hinge, leading by default, or the top side |
+| A half-open hinge across an arrangement taller than it is wide | Stacked across the hinge: the longer side is halved  | Side by side, on either side of the hinge                                                 |
 
 See the [platform comparison](./platform-comparison) for screenshots of each posture and orientation.
 

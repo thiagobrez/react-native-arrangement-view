@@ -37,17 +37,24 @@ const isFull = (f: Frame, g: Geometry) =>
 const overlaid = ({ primary, secondary }: PaneFrames, g: Geometry) =>
   secondary !== null && isFull(primary, g) && isFull(secondary, g);
 
-/** The fold the panes keep clear of, if the policy avoids it and it crosses the arrangement. */
-function avoidedFold({ geometry: g, options: o }: Case) {
+function policyFold({ geometry: g, options: o }: Case) {
   const fold = g.fold;
   if (!fold) return null;
   const avoided =
     o.hingePolicy === 'alwaysAvoid' ||
     (o.hingePolicy === 'avoidSeparating' && fold.separating);
+  if (!avoided) return null;
   const axis = foldAxis(fold);
   const [start, end] = foldSpan(axis, fold);
-  if (!avoided || !(start > 0 && end < extentOf(axis, g))) return null;
-  return { fold, axis, start, end };
+  const middle = (start + end) / 2;
+  const half = Math.max(end - start, o.hingeGap) / 2;
+  const fits = middle - half > 0 && middle + half < extentOf(axis, g);
+  return { fold, axis, start, end, fits };
+}
+
+function avoidedFold(c: Case) {
+  const hinge = policyFold(c);
+  return hinge?.fits ? hinge : null;
 }
 
 const EPS = 1e-6;
@@ -74,7 +81,11 @@ function edges(value: ArrangeOptions['primaryEdge']) {
     : [undefined, undefined];
 }
 
-type Property = (c: Case, r: PaneFrames) => string | null;
+type Property = (
+  c: Case,
+  r: PaneFrames,
+  neverAvoidResult: PaneFrames | undefined
+) => string | null;
 
 const PROPERTIES: Record<string, Property> = {
   'inside the arrangement': ({ geometry: g }, r) => {
@@ -137,11 +148,18 @@ const PROPERTIES: Record<string, Property> = {
     const [s0, s1] = frameSpan(hinge.axis, r.secondary);
     const gap = Math.max(p0, s0) - Math.min(p1, s1);
     const wanted = Math.max(c.options.hingeGap, hinge.end - hinge.start);
-    // A pane clamped to the arrangement's edge narrows the gap; 'no empty
-    // pane' reports that case.
-    if (p1 - p0 > 0 && s1 - s0 > 0 && gap < wanted - EPS)
+    if (gap < wanted - EPS)
       return `panes are ${gap} apart around the hinge, not ${wanted}`;
     return null;
+  },
+
+  'a hinge without room for the gap is ignored': (_, r, neverAvoidResult) => {
+    if (
+      !neverAvoidResult ||
+      JSON.stringify(r) === JSON.stringify(neverAvoidResult)
+    )
+      return null;
+    return `${JSON.stringify(r)} differs from the layout that ignores the hinge, ${JSON.stringify(neverAvoidResult)}`;
   },
 
   'a separating hinge always splits': (c, r) => {
@@ -344,10 +362,7 @@ function* sampled(count: number): Generator<Case> {
   }
 }
 
-const KNOWN_FINDINGS: Record<string, string> = {
-  'no empty pane':
-    'an avoided hinge within hingeGap / 2 of the arrangement edge clamps a pane to 0 dp',
-};
+const KNOWN_FINDINGS: Record<string, string> = {};
 
 const failures = new Map<
   string,
@@ -362,12 +377,24 @@ const cases = function* () {
 const CASES_PER_HARNESS_RUN = 65_536;
 let batch: Case[] = [];
 const checkBatch = () => {
-  const results = arrangeAll(batch);
+  const neverAvoid = batch.map((c) =>
+    policyFold(c)?.fits === false
+      ? { ...c, options: { ...c.options, hingePolicy: 'neverAvoid' as const } }
+      : null
+  );
+  const results = arrangeAll([
+    ...batch,
+    ...neverAvoid.filter((c) => c !== null),
+  ]);
+  let nextNeverAvoid = batch.length;
   batch.forEach((c, i) => {
     const result = results[i]!;
+    const neverAvoidResult = neverAvoid[i]
+      ? results[nextNeverAvoid++]
+      : undefined;
     checked++;
     for (const [name, property] of Object.entries(PROPERTIES)) {
-      const why = property(c, result);
+      const why = property(c, result, neverAvoidResult);
       if (!why) continue;
       const seen = failures.get(name);
       if (seen) seen.count++;

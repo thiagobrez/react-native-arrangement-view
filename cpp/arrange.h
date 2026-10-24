@@ -71,11 +71,6 @@ inline double jsMax(double a, double b) noexcept {
   if (a == b) return std::signbit(a) ? b : a;
   return a > b ? a : b;
 }
-inline double jsMin(double a, double b) noexcept {
-  if (std::isnan(a) || std::isnan(b)) return NAN;
-  if (a == b) return std::signbit(a) ? a : b;
-  return a < b ? a : b;
-}
 
 // Material's window size class breakpoints.
 inline constexpr double COMPACT_HEIGHT = 480;
@@ -93,6 +88,8 @@ inline constexpr double EXPANDED_HEIGHT = 900;
  * landscape, gets no columns: Android's window size class guidance calls two
  * panes impractical there, though Material's scaffold checks only the width.
  *
+ * A hinge the policy avoids decides the axis and separates the panes by
+ * `hingeGap` around it, if that gap fits inside the arrangement, as on iOS.
  * A separating hinge always splits, whatever the window size, as it does on
  * iOS.
  *
@@ -101,7 +98,6 @@ inline constexpr double EXPANDED_HEIGHT = 900;
  */
 inline PaneFrames arrange(const Geometry &geometry, const ArrangeOptions &options) noexcept {
   using detail::jsMax;
-  using detail::jsMin;
   const double width = geometry.width;
   const double height = geometry.height;
   const Size &window = geometry.window;
@@ -145,11 +141,11 @@ inline PaneFrames arrange(const Geometry &geometry, const ArrangeOptions &option
     const double start = axis == Axis::Horizontal ? fold->x : fold->y;
     const double end = axis == Axis::Horizontal ? fold->x + fold->width : fold->y + fold->height;
     const double extent = axis == Axis::Horizontal ? width : height;
-    if (start > 0 && end < extent) {
-      const double middle = (start + end) / 2;
-      const double half = jsMax(end - start, hingeGap) / 2;
-      const double before = jsMax(0, middle - half);
-      const double after = jsMin(extent, middle + half);
+    const double middle = (start + end) / 2;
+    const double half = jsMax(end - start, hingeGap) / 2;
+    const double before = middle - half;
+    const double after = middle + half;
+    if (before > 0 && after < extent) {
       // Overlay's primary pane goes after the hinge, as SwiftUI puts it.
       if (fold->separating ? allows(axis) : fits(axis))
         return split(axis, before, after, arrangement == Arrangement::Overlay);
