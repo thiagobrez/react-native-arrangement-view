@@ -15,11 +15,37 @@ export type PrimaryEdge = HorizontalEdge | VerticalEdge;
 /** Which hinges the panes keep clear of, after Material's `HingePolicy`. */
 export type HingePolicy = 'avoidSeparating' | 'alwaysAvoid' | 'neverAvoid';
 export type HingeStatus = 'unknown' | 'closed' | 'partiallyOpen' | 'fullyOpen';
+
+declare const fromHingeStore: unique symbol;
+
+/**
+ * Where the fold divides the window, in the coordinates `measureInWindow` and
+ * `getBoundingClientRect()` use, in dp (Android) or points (iOS). The area is the
+ * one the system reserves for the fold: a line, 0 wide or tall, on an Android
+ * folding screen; on iOS a band that includes Apple's touch margins; on a device
+ * with two screens, the band its hinge hides.
+ */
+export type Fold = Readonly<{
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  /** `vertical` when the fold runs top to bottom, as in book posture. Derived from the rect. */
+  orientation: 'vertical' | 'horizontal';
+  readonly [fromHingeStore]: true;
+}>;
+
 /** Angle is in radians. A missing hinge is unavailable, never assumed flat. */
 export type HingeState = Readonly<{
   available: boolean;
   angle: number | null;
   status: HingeStatus;
+  /**
+   * Where the system divides the window at the fold. Null unless it does: while
+   * a folding screen is half-open, or whenever the window spans a hinge between
+   * two screens. The same value from every observer in a window.
+   */
+  fold: Fold | null;
 }>;
 export type HingeChangeHandler = (hinge: HingeState) => void;
 export interface HingeObserverProps {

@@ -21,11 +21,15 @@ using namespace facebook::react;
     _host = [[RNArrangementHost alloc] initWithFrame:self.bounds];
     self.contentView = _host;
     __weak RNArrangementView *weakSelf = self;
-    _host.onHingeChange = ^(BOOL available, double angle, NSString *status) {
+    _host.onHingeChange = ^(BOOL available, double angle, NSString *status, CGRect fold) {
       RNArrangementView *strongSelf = weakSelf;
       if (!strongSelf || !strongSelf->_eventEmitter) return;
       auto emitter = std::static_pointer_cast<const RNArrangementViewEventEmitter>(strongSelf->_eventEmitter);
-      emitter->onHingeChange({(bool)available, angle, std::string(status.UTF8String)});
+      CGRect zeroed = CGRectIsNull(fold) ? CGRectZero : fold;
+      RNArrangementViewEventEmitter::OnHingeChange event{
+        (bool)available, angle, std::string(status.UTF8String), !CGRectIsNull(fold),
+        {CGRectGetMinX(zeroed), CGRectGetMinY(zeroed), CGRectGetWidth(zeroed), CGRectGetHeight(zeroed)}};
+      emitter->onHingeChange(event);
     };
     _host.onPanesChange = ^(CGRect primary, CGRect secondary, BOOL secondaryVisible) {
       RNArrangementView *strongSelf = weakSelf;

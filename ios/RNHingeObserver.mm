@@ -1,4 +1,5 @@
 #import "RNHingeObserver.h"
+#import "ArrangementView-Swift.h"
 #import <optional>
 #import <react/renderer/components/RNArrangementViewSpec/ComponentDescriptors.h>
 #import <react/renderer/components/RNArrangementViewSpec/EventEmitters.h>
@@ -10,9 +11,28 @@ using namespace facebook::react;
 #define RAV_HAS_HINGE 1
 #endif
 
+static RNHingeObserverEventEmitter::OnHingeChange RNHingeEvent(BOOL available, CGFloat angle, std::string status,
+                                                              CGRect fold) {
+  if (CGRectIsNull(fold)) return {available, angle, status, false, {0, 0, 0, 0}};
+  return {available, angle, status, true,
+          {CGRectGetMinX(fold), CGRectGetMinY(fold), CGRectGetWidth(fold), CGRectGetHeight(fold)}};
+}
+
+static char RAVSceneGeometryContext;
+
+static BOOL RNHingesEqual(const RNHingeObserverEventEmitter::OnHingeChange &one,
+                          const RNHingeObserverEventEmitter::OnHingeChange &other) {
+  return one.available == other.available && one.angle == other.angle && one.status == other.status &&
+         one.hasFold == other.hasFold && one.fold.x == other.fold.x && one.fold.y == other.fold.y &&
+         one.fold.width == other.fold.width && one.fold.height == other.fold.height;
+}
+
 @implementation RNHingeObserver {
   std::optional<RNHingeObserverEventEmitter::OnHingeChange> _hinge;
   NSUInteger _updates;
+#ifdef RAV_HAS_HINGE
+  __weak UIWindowScene *_observedScene;
+#endif
 }
 + (ComponentDescriptorProvider)componentDescriptorProvider {
   return concreteComponentDescriptorProvider<RNHingeObserverComponentDescriptor>();
@@ -22,8 +42,8 @@ using namespace facebook::react;
   if (self = [super initWithFrame:frame]) {
     _props = std::make_shared<const RNHingeObserverProps>();
 #ifdef RAV_HAS_HINGE
+    __weak RNHingeObserver *weakSelf = self;
     if (@available(iOS 27.1, *)) {
-      __weak RNHingeObserver *weakSelf = self;
       [self addInteraction:[[UIHingeInteraction alloc] initWithUpdateHandler:^(
                                 UIHingeInteraction *interaction, UIHingeInteractionUpdate *update) {
         RNHingeObserver *strongSelf = weakSelf;
@@ -37,7 +57,7 @@ using namespace facebook::react;
           // newer update, has no hinge.
           dispatch_async(dispatch_get_main_queue(), ^{
             RNHingeObserver *view = weakSelf;
-            if (view.window && view->_updates == current) [view emit:{false, 0, "unknown"}];
+            if (view.window && view->_updates == current) [view emit:RNHingeEvent(false, 0, "unknown", CGRectNull)];
           });
           return;
         }
@@ -48,7 +68,12 @@ using namespace facebook::react;
           case UIHingeStatusFullyOpen: status = "fullyOpen"; break;
           default: break;
         }
-        [strongSelf emit:{true, hinge.angle, status}];
+        BOOL postureChanged = !strongSelf->_hinge || !strongSelf->_hinge->available ||
+                              strongSelf->_hinge->status != status;
+        UIWindow *window = strongSelf.window;
+        [strongSelf emit:RNHingeEvent(true, hinge.angle, status,
+                                      window ? [RNFold divisionIn:window] : CGRectNull)];
+        if (postureChanged) [strongSelf rereadFoldAtNextLayout];
       }]];
     }
 #endif
@@ -57,8 +82,7 @@ using namespace facebook::react;
 }
 - (void)emit:(RNHingeObserverEventEmitter::OnHingeChange)hinge {
   // The interaction repeats equal updates as a fold settles. One held for the emitter isn't sent yet.
-  if (_eventEmitter && _hinge && _hinge->available == hinge.available && _hinge->angle == hinge.angle &&
-      _hinge->status == hinge.status)
+  if (_eventEmitter && _hinge && RNHingesEqual(*_hinge, hinge))
     return;
   _hinge = hinge;
   if (!_eventEmitter) return;
@@ -69,5 +93,54 @@ using namespace facebook::react;
   [super updateEventEmitter:eventEmitter];
   // The interaction can report before Fabric has given this view its emitter.
   if (first && _hinge) [self emit:*_hinge];
+}
+- (void)didMoveToWindow {
+  [super didMoveToWindow];
+#ifdef RAV_HAS_HINGE
+  if (@available(iOS 27.1, *)) {
+    [self observeGeometryOfScene:nil];
+    [self observeGeometryOfScene:self.window.windowScene];
+    [self refreshFold];
+  }
+#endif
+}
+- (void)layoutSubviews {
+  [super layoutSubviews];
+  [self refreshFold];
+}
+#ifdef RAV_HAS_HINGE
+- (void)rereadFoldAtNextLayout { [self setNeedsLayout]; }
+// KVO arrives while the window is still resizing, so the read waits for the next main-queue turn.
+- (void)rereadFoldAfterWindowResize {
+  dispatch_async(dispatch_get_main_queue(), ^{ [self refreshFold]; });
+}
+- (void)observeGeometryOfScene:(UIWindowScene *)scene {
+  if (_observedScene == scene) return;
+  if (_observedScene) [_observedScene removeObserver:self forKeyPath:@"effectiveGeometry"];
+  _observedScene = scene;
+  if (scene)
+    [scene addObserver:self forKeyPath:@"effectiveGeometry" options:0 context:&RAVSceneGeometryContext];
+}
+- (void)observeValueForKeyPath:(NSString *)keyPath
+                      ofObject:(id)object
+                        change:(NSDictionary<NSKeyValueChangeKey, id> *)change
+                       context:(void *)context {
+  if (context == &RAVSceneGeometryContext) {
+    [self rereadFoldAfterWindowResize];
+    return;
+  }
+  [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+}
+- (void)dealloc {
+  if (_observedScene) [_observedScene removeObserver:self forKeyPath:@"effectiveGeometry"];
+}
+#endif
+- (void)refreshFold {
+#ifdef RAV_HAS_HINGE
+  if (!_hinge || !_hinge->available) return;
+  UIWindow *window = self.window;
+  [self emit:RNHingeEvent(_hinge->available, _hinge->angle, _hinge->status,
+                          window ? [RNFold divisionIn:window] : CGRectNull)];
+#endif
 }
 @end

@@ -11,20 +11,32 @@ private final class ArrangementModel: ObservableObject {
   @Published var axes = "both"
   @Published var primaryEdge = "auto"
   @Published var primaryVerticalEdge = "auto"
-  var hingeChanged: ((Bool, Double, String) -> Void)?
+  var hingeChanged: ((Bool, Double, String, CGRect) -> Void)?
   var paneLayout: ((UIView, CGRect) -> Void)?
   var panesChanged: ((CGRect, CGRect?) -> Void)?
   weak var host: UIView?
   private var reported: (primary: CGRect, secondary: CGRect?)?
   private var reportScheduled = false
-  private var sentHinge: (Bool, Double, String)?
+  private var sentHinge: (Bool, Double, String, CGRect)?
+
+  private var fold: CGRect = .null
 
   /// SwiftUI repeats `onHingeChange` with equal contexts while a fold
   /// relayouts, so only a hinge that differs from the last one sent goes out.
   func sendHinge(_ available: Bool, _ angle: Double, _ status: String) {
-    if let sentHinge, sentHinge == (available, angle, status) { return }
-    sentHinge = (available, angle, status)
-    hingeChanged?(available, angle, status)
+    let fold = available ? self.fold : .null
+    let next = (available, angle, status, fold)
+    if let sentHinge, sentHinge == next { return }
+    sentHinge = next
+    hingeChanged?(available, angle, status, fold)
+  }
+
+  func refreshFold() {
+    let next = host?.window.map(RNFold.division(in:)) ?? .null
+    guard next != fold else { return }
+    fold = next
+    guard let sent = sentHinge else { return }
+    sendHinge(sent.0, sent.1, sent.2)
   }
 
   /// Reports where the panes are once the current layout pass is over, and
@@ -206,7 +218,7 @@ public final class RNArrangementHost: UIView {
   private let model = ArrangementModel()
   private var controller: UIHostingController<ArrangementContent>!
 
-  @objc public var onHingeChange: ((Bool, Double, String) -> Void)? {
+  @objc public var onHingeChange: ((Bool, Double, String, CGRect) -> Void)? {
     didSet { model.hingeChanged = onHingeChange }
   }
   @objc public var onPaneLayout: ((UIView, CGRect) -> Void)? {
@@ -246,10 +258,12 @@ public final class RNArrangementHost: UIView {
     super.layoutSubviews()
     attachController()
     controller.view.frame = bounds
+    model.refreshFold()
   }
   public override func didMoveToWindow() {
     super.didMoveToWindow()
     if window == nil { detachController() } else { attachController() }
+    model.refreshFold()
   }
   private func attachController() {
     guard window != nil else { return }
