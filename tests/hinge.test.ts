@@ -89,11 +89,16 @@ test('the fold a native event describes becomes a Fold, and its absence is null'
 });
 
 test('orientation follows the rect, not which platform sent it', () => {
-  assert.equal(fold(426, 0, 0, 2152).orientation, 'vertical');
-  assert.equal(fold(0, 426, 2152, 0).orientation, 'horizontal');
-  assert.equal(fold(170, 0, 40, 750).orientation, 'vertical');
-  assert.equal(fold(0, 170, 750, 40).orientation, 'horizontal');
-  assert.equal(fold(0, 0, 40, 40).orientation, 'vertical');
+  const pixelBookLine = fold(426, 0, 0, 2152);
+  const pixelTabletopLine = fold(0, 426, 2152, 0);
+  const duoBookBand = fold(170, 0, 40, 750);
+  const duoTabletopBand = fold(0, 170, 750, 40);
+  const squareBand = fold(0, 0, 40, 40);
+  assert.equal(pixelBookLine.orientation, 'vertical');
+  assert.equal(pixelTabletopLine.orientation, 'horizontal');
+  assert.equal(duoBookBand.orientation, 'vertical');
+  assert.equal(duoTabletopBand.orientation, 'horizontal');
+  assert.equal(squareBand.orientation, 'vertical');
 });
 
 test('a rect that is not a fold parses as no fold', () => {

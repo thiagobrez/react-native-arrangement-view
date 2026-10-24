@@ -46,21 +46,21 @@ internal class HingeTracker(private val view: View, private val emit: (WritableM
   private var last: Sent? = null
   private var root: View? = null
 
-  private val onRootLayout = View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> emitHinge() }
+  private val onRootInsetsChange = View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> emitHinge() }
 
   /** Pass whether the owner will report its window's layout, which it can't without an activity. */
   fun attach(awaitLayout: Boolean) {
     attached = true
     awaitingLayout = awaitLayout
     root = RootViewUtil.getRootView(view) as? View
-    root?.addOnLayoutChangeListener(onRootLayout)
+    root?.addOnLayoutChangeListener(onRootInsetsChange)
     updateSensor()
   }
 
   fun detach() {
     attached = false
     sensorManager.unregisterListener(this)
-    root?.removeOnLayoutChangeListener(onRootLayout)
+    root?.removeOnLayoutChangeListener(onRootInsetsChange)
     root = null
   }
 

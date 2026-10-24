@@ -32,7 +32,7 @@ private final class ArrangementModel: ObservableObject {
   }
 
   func refreshFold() {
-    let next = host.map(RNFold.division(in:)) ?? .null
+    let next = host?.window.map(RNFold.division(in:)) ?? .null
     guard next != fold else { return }
     fold = next
     guard let sent = sentHinge else { return }

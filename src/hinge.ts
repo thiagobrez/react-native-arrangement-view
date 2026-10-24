@@ -39,8 +39,12 @@ export function normalizeHinge(event: NativeHinge): HingeState {
     available: true,
     angle: Number.isFinite(event.angle) ? event.angle : null,
     status,
-    fold: status === 'closed' || !event.hasFold ? null : parseFold(event.fold),
+    fold: dividesTheWindow(status, event) ? parseFold(event.fold) : null,
   };
+}
+
+function dividesTheWindow(status: HingeStatus, event: NativeHinge): boolean {
+  return status !== 'closed' && event.hasFold;
 }
 
 function parseFold(rect: NativeHinge['fold']): Fold | null {
@@ -75,15 +79,17 @@ export function createHingeStore() {
       };
     },
     update(next: HingeState) {
-      const fold = sameRect(next.fold, current.fold) ? current.fold : next.fold;
+      const stableFold = sameRect(next.fold, current.fold)
+        ? current.fold
+        : next.fold;
       if (
         next.available === current.available &&
         next.angle === current.angle &&
         next.status === current.status &&
-        fold === current.fold
+        stableFold === current.fold
       )
         return;
-      current = fold === next.fold ? next : { ...next, fold };
+      current = stableFold === next.fold ? next : { ...next, fold: stableFold };
       listeners.forEach((listener) => listener());
     },
   };

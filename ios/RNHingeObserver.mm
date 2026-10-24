@@ -68,10 +68,12 @@ static BOOL RNHingesEqual(const RNHingeObserverEventEmitter::OnHingeChange &one,
           case UIHingeStatusFullyOpen: status = "fullyOpen"; break;
           default: break;
         }
-        BOOL crossed = !strongSelf->_hinge || !strongSelf->_hinge->available ||
-                       strongSelf->_hinge->status != status;
-        [strongSelf emit:RNHingeEvent(true, hinge.angle, status, [RNFold divisionIn:strongSelf])];
-        if (crossed) [strongSelf setNeedsLayout];
+        BOOL postureChanged = !strongSelf->_hinge || !strongSelf->_hinge->available ||
+                              strongSelf->_hinge->status != status;
+        UIWindow *window = strongSelf.window;
+        [strongSelf emit:RNHingeEvent(true, hinge.angle, status,
+                                      window ? [RNFold divisionIn:window] : CGRectNull)];
+        if (postureChanged) [strongSelf rereadFoldAtNextLayout];
       }]];
     }
 #endif
@@ -96,8 +98,8 @@ static BOOL RNHingesEqual(const RNHingeObserverEventEmitter::OnHingeChange &one,
   [super didMoveToWindow];
 #ifdef RAV_HAS_HINGE
   if (@available(iOS 27.1, *)) {
-    [self observeScene:nil];
-    [self observeScene:self.window.windowScene];
+    [self observeGeometryOfScene:nil];
+    [self observeGeometryOfScene:self.window.windowScene];
     [self refreshFold];
   }
 #endif
@@ -107,7 +109,12 @@ static BOOL RNHingesEqual(const RNHingeObserverEventEmitter::OnHingeChange &one,
   [self refreshFold];
 }
 #ifdef RAV_HAS_HINGE
-- (void)observeScene:(UIWindowScene *)scene {
+- (void)rereadFoldAtNextLayout { [self setNeedsLayout]; }
+// KVO arrives while the window is still resizing, so the read waits for the next main-queue turn.
+- (void)rereadFoldAfterWindowResize {
+  dispatch_async(dispatch_get_main_queue(), ^{ [self refreshFold]; });
+}
+- (void)observeGeometryOfScene:(UIWindowScene *)scene {
   if (_observedScene == scene) return;
   if (_observedScene) [_observedScene removeObserver:self forKeyPath:@"effectiveGeometry"];
   _observedScene = scene;
@@ -119,9 +126,7 @@ static BOOL RNHingesEqual(const RNHingeObserverEventEmitter::OnHingeChange &one,
                         change:(NSDictionary<NSKeyValueChangeKey, id> *)change
                        context:(void *)context {
   if (context == &RAVSceneGeometryContext) {
-    dispatch_async(dispatch_get_main_queue(), ^{
-      [self refreshFold];
-    });
+    [self rereadFoldAfterWindowResize];
     return;
   }
   [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
@@ -133,7 +138,9 @@ static BOOL RNHingesEqual(const RNHingeObserverEventEmitter::OnHingeChange &one,
 - (void)refreshFold {
 #ifdef RAV_HAS_HINGE
   if (!_hinge || !_hinge->available) return;
-  [self emit:RNHingeEvent(_hinge->available, _hinge->angle, _hinge->status, [RNFold divisionIn:self])];
+  UIWindow *window = self.window;
+  [self emit:RNHingeEvent(_hinge->available, _hinge->angle, _hinge->status,
+                          window ? [RNFold divisionIn:window] : CGRectNull)];
 #endif
 }
 @end
