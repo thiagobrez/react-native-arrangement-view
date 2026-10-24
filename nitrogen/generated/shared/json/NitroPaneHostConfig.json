@@ -1,0 +1,10 @@
+{
+  "uiViewClassName": "NitroPaneHost",
+  "supportsRawText": false,
+  "bubblingEventTypes": {},
+  "directEventTypes": {},
+  "validAttributes": {
+    "color": true,
+    "hybridRef": true
+  }
+}

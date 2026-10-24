@@ -11,7 +11,7 @@ import com.facebook.react.uimanager.ThemedReactContext
 
 class HingeObserverView(private val reactContext: ThemedReactContext) : View(reactContext) {
 
-  private val hinge = HingeTracker(reactContext) { dispatchReactEvent(reactContext, HingeTracker.EVENT, it) }
+  private val hinge = HingeTracker(reactContext) { dispatchReactEvent(reactContext, HingeTracker.EVENT, it.toWritableMap()) }
   private val windowInfo = WindowInfoTrackerCallbackAdapter(WindowInfoTracker.getOrCreate(reactContext))
 
   private val onWindowLayout = Consumer<WindowLayoutInfo> { info ->

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://nitro.margelo.com/nitro.schema.json",
+  "cxxNamespace": ["arrangementview"],
+  "ios": {
+    "iosModuleName": "ArrangementView"
+  },
+  "android": {
+    "androidNamespace": ["arrangementview"],
+    "androidCxxLibName": "NitroArrangementView"
+  },
+  "autolinking": {
+    "Hinge": {
+      "android": {
+        "language": "kotlin",
+        "implementationClassName": "HybridHinge"
+      }
+    },
+    "NitroPaneHost": {
+      "android": {
+        "language": "kotlin",
+        "implementationClassName": "HybridNitroPaneHost"
+      }
+    }
+  },
+  "ignorePaths": ["**/node_modules", "apps", "docs", "lib"]
+}

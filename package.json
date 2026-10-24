@@ -18,6 +18,8 @@
     "android",
     "ios",
     "cpp",
+    "nitrogen",
+    "nitro.json",
     "*.podspec",
     "react-native.config.js",
     "!ios/build",
@@ -43,7 +45,8 @@
     "verify:arrange": "node --no-warnings tests/properties/arrange.check.ts",
     "verify:arrange:mutants": "node --no-warnings tests/properties/arrange.mutants.ts",
     "version-packages": "changeset version && yarn install --no-immutable",
-    "publish-packages": "yarn lint && yarn typecheck && yarn test && yarn build && changeset publish"
+    "publish-packages": "yarn lint && yarn typecheck && yarn test && yarn build && changeset publish",
+    "nitrogen": "nitrogen --logLevel=debug"
   },
   "keywords": [
     "react-native",
@@ -98,16 +101,19 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-ft-flow": "^3.0.11",
     "eslint-plugin-prettier": "^5.5.6",
+    "nitrogen": "0.37.1",
     "prettier": "^3.9.6",
     "react": "19.2.3",
     "react-native": "0.86.3",
     "react-native-builder-bob": "^0.43.1",
+    "react-native-nitro-modules": "0.37.1",
     "react-test-renderer": "19.2.3",
     "typescript": "^6.0.3"
   },
   "peerDependencies": {
     "react": ">=19.0.0",
-    "react-native": ">=0.83.0"
+    "react-native": ">=0.83.0",
+    "react-native-nitro-modules": "0.37.1"
   },
   "workspaces": [
     ".",
@@ -135,7 +141,7 @@
   },
   "codegenConfig": {
     "name": "RNArrangementViewSpec",
-    "type": "components",
+    "type": "all",
     "jsSrcsDir": "src",
     "ios": {
       "components": {
