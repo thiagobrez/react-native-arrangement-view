@@ -16,6 +16,18 @@ interface Mutant {
 
 const MUTANTS: Mutant[] = [
   {
+    file: 'arrange.h',
+    find: 'if (before > 0 && after < extent) {',
+    replace: 'if (start > 0 && end < extent) {',
+    breaks: 'no empty pane',
+  },
+  {
+    file: 'arrange.h',
+    find: 'if (before > 0 && after < extent) {',
+    replace: 'if (before >= 0 && after <= extent) {',
+    breaks: 'a hinge without room for the gap is ignored',
+  },
+  {
     // The gap ignores a hinge wider than hingeGap.
     file: 'arrange.h',
     find: 'jsMax(end - start, hingeGap) / 2',
@@ -85,8 +97,8 @@ const MUTANTS: Mutant[] = [
   },
   {
     file: 'arrange.h',
-    find: 'const double after = jsMin(extent, middle + half);',
-    replace: 'const double after = middle + half;',
+    find: 'Frame{end, 0, width - end, height}',
+    replace: 'Frame{end, 0, width - start, height}',
     breaks: 'inside the arrangement',
   },
   {

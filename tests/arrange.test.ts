@@ -214,6 +214,29 @@ test('a fold that does not cross the arrangement separates nothing', () => {
   }
 });
 
+test('a fold too close to the edge for hingeGap separates nothing, as on iOS', () => {
+  const hingeGap = 24;
+  const column = { width: 431.5, height: 880, window: inner.window };
+  const options = [
+    { ...split, hingeGap },
+    { ...split, hingeGap, axes: 'vertical' },
+    { ...overlay, hingeGap },
+  ] as const;
+  for (const x of [6.5, hingeGap / 2, column.width - hingeGap / 2]) {
+    const geometry = { ...column, fold: { ...bookFold, x } };
+    for (const o of options)
+      assert.deepEqual(arrange(geometry, o), arrange(column, o));
+  }
+  const pastHalfGap = {
+    ...column,
+    fold: { ...bookFold, x: hingeGap / 2 + 0.5 },
+  };
+  assert.deepEqual(arrange(pastHalfGap, options[0]), {
+    primary: { left: 0, top: 0, width: 0.5, height: 880 },
+    secondary: { left: 24.5, top: 0, width: 407, height: 880 },
+  });
+});
+
 test('right-to-left mirrors which side is leading', () => {
   const rtl = { ...split, rtl: true };
   assert.deepEqual(arrange(inner, rtl), {

@@ -1,6 +1,6 @@
 ---
 name: verify-arrange
-description: Check Android's pane layout, arrange() in cpp/arrange.h and describeLayout() in src/layout.ts, against its promises (panes stay inside the arrangement, never overlap, keep clear of an avoided hinge, split at a separating hinge, show both panes in tabletop, honour axes and primaryEdge, and report the layout they show) on every input in a bounded grid plus 500,000 seeded random cases. Use whenever a change touches cpp/arrange.h, describeLayout(), resolvePrimaryEdge() in src/primaryEdge.ts, their option types in src/types.ts, or how the Android shadow node (android/src/main/jni/ArrangementShadowNodes.cpp) calls arrange(), and before releasing a change to hinge or window size class handling.
+description: Check Android's pane layout, arrange() in cpp/arrange.h and describeLayout() in src/layout.ts, against its promises (panes stay inside the arrangement, never overlap, keep clear of an avoided hinge, ignore a hinge too close to the edge for the gap, split at a separating hinge, show both panes in tabletop, honour axes and primaryEdge, and report the layout they show) on every input in a bounded grid plus 500,000 seeded random cases. Use whenever a change touches cpp/arrange.h, describeLayout(), resolvePrimaryEdge() in src/primaryEdge.ts, their option types in src/types.ts, or how the Android shadow node (android/src/main/jni/ArrangementShadowNodes.cpp) calls arrange(), and before releasing a change to hinge or window size class handling.
 ---
 
 # Verify arrange()
@@ -18,9 +18,10 @@ Each property is one entry in `PROPERTIES` in `tests/properties/arrange.check.ts
 | inside the arrangement | Every shown pane lies within the arrangement's bounds, with non-negative size. | Content is clipped off screen. |
 | no empty pane | Every shown pane has positive width and height. | A pane the app expects to see, often the primary pane holding the main content, is invisible. |
 | split panes do not overlap | Panes that aren't overlaid sit side by side or stacked, span the arrangement across their axis, and don't overlap. | One pane covers part of the other. |
-| clear of an avoided hinge | When `hingePolicy` avoids the fold and the fold crosses the arrangement, no pane lies across it. Overlay with both panes full-size is the exception. | Content sits under a half-open crease or a physical hinge. |
-| hingeGap between panes | Panes on either side of an avoided hinge are at least `max(hingeGap, fold width)` apart, unless a pane is clamped to the edge (that case is "no empty pane"). | The panes crowd the crease. |
-| a separating hinge always splits | A separating fold that crosses the arrangement always splits the panes along it, whatever the window size, unless `axes` excludes that axis. | Book or tabletop posture shows one pane across the crease. |
+| clear of an avoided hinge | When `hingePolicy` avoids the fold and the gap around it (`max(hingeGap, fold width)`, centred on the fold) fits inside the arrangement, no pane lies across the fold. Overlay with both panes full-size is the exception. | Content sits under a half-open crease or a physical hinge. |
+| hingeGap between panes | Panes on either side of an avoided hinge are at least `max(hingeGap, fold width)` apart. | The panes crowd the crease. |
+| a hinge without room for the gap is ignored | A fold the policy avoids, but whose gap doesn't fit inside the arrangement (it is outside it, or within half the gap of its edge), gives the same layout as with `hingePolicy: 'neverAvoid'`, as iOS ignores a hinge whose 20 pt band doesn't fit. | A pane on the near side of the hinge gets 0 dp, so the primary content, or the whole arrangement, disappears. |
+| a separating hinge always splits | A separating fold with room for the gap always splits the panes along it, whatever the window size, unless `axes` excludes that axis. | Book or tabletop posture shows one pane across the crease. |
 | tabletop shows both panes | In tabletop (a half-open horizontal fold), split shows both panes whatever the window size, unless `axes` is `'horizontal'`. That holds even when the fold isn't avoided (`neverAvoid`) or doesn't cross the arrangement. | A phone-sized window in tabletop shows one pane, against Material's rule. |
 | axes is respected | A split never goes along an axis that `axes` excludes. | Panes are stacked when the app asked only for side by side, or the other way round. |
 | primary on its edge | Side by side, the primary pane takes the horizontal side `primaryEdge` names: leading by default for split, trailing for overlay. Leading is left in LTR and right in RTL. Stacked, a split's primary pane is always on top, and an overlay's takes the vertical side `primaryEdge` names, below the hinge by default. `primaryEdge` can be one side or a `[horizontal, vertical]` pair. Any other array is ignored. A single pane beside a hinge goes where the primary pane would split to. | The panes swap sides, ignore RTL, or misread a pair. |
@@ -29,7 +30,7 @@ Each property is one entry in `PROPERTIES` in `tests/properties/arrange.check.ts
 ## Run it
 
 ```sh
-yarn verify:arrange           # about 45 s; checks the current cpp/arrange.h and src
+yarn verify:arrange           # about 60 s; checks the current cpp/arrange.h and src
 yarn verify:arrange:mutants   # about 3.5 min on 10 cores; proves each property can still fail
 ```
 
@@ -39,15 +40,11 @@ Run `yarn verify:arrange` on every change that touches the covered code. Also ru
 
 ## Known findings
 
-- **no empty pane.** Suppose a hinge the policy avoids crosses the arrangement within `hingeGap / 2` of its edge, which with the default `hingeGap` of 24 means within 12 dp. `arrange()` then clamps the pane on that side to 0 dp and still reports it as shown.
+None. The check first found that a hinge within `hingeGap / 2` of the arrangement's edge clamped the pane on that side to 0 dp, which hid the primary pane, or with `axes: 'vertical'` the whole arrangement. `arrange()` now ignores such a hinge, as iOS does.
 
-  Take a Pixel Fold's inner screen in book posture (841 × 701 dp, crease at x = 420.5) with an `ArrangementView` in a column that starts 414 dp from the left. The fold reaches the arrangement at x = 6.5. The primary pane then gets a frame 0 dp wide, the secondary pane starts at 18.5, and `useArrangementLayout` reports `{ secondaryVisible: true, axis: 'horizontal' }`. The app's primary content is gone.
+Panes can still be slivers by design: a hinge 12.5 dp inside the edge gives a 0.5 dp pane with the default `hingeGap`. iOS does the same with its 20 pt band, giving a 0.5 pt pane at 20.5 pt.
 
-  With `axes: 'vertical'` it is worse: the only pane is 0 dp wide, so the arrangement shows nothing. A little further from the edge, the pane is a sliver: at 20.5 dp it is 8.5 dp wide.
-
-  The cause is the clamp in `const double before = jsMax(0, middle - half)` and `const double after = jsMin(extent, middle + half)` in `cpp/arrange.h`, together with the check `start > 0 && end < extent`, which treats such a fold as dividing the arrangement.
-
-  Found on 2026-10-19 and not fixed. A fix belongs in `arrange()` in `cpp/arrange.h`, for example treating a fold that leaves no room on one side like a fold along the edge. Once the fix lands, the check prints `was a known finding` and exits 1. Remove the entry from `KNOWN_FINDINGS`, and add a mutant to `tests/properties/arrange.mutants.ts` that reintroduces the clamp, so this property is proven able to fail too.
+When the check finds a bug that won't be fixed in the same change, add it to `KNOWN_FINDINGS` with one line on the cause, and describe it here with a case in dp. Once the fix lands, the check prints `was a known finding` and exits 1: remove the entry, and add a mutant that brings the bug back.
 
 ## Reading a failure
 
