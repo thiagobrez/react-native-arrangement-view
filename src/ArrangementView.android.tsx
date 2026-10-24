@@ -66,6 +66,7 @@ export function ArrangementView({
 }
 ArrangementView.Primary = ArrangementPrimary;
 ArrangementView.Secondary = ArrangementSecondary;
+ArrangementView satisfies typeof import('./ArrangementView').ArrangementView;
 
 const styles = StyleSheet.create({
   content: { flex: 1, alignSelf: 'stretch' },
