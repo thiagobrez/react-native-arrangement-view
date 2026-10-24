@@ -8,7 +8,7 @@ import {
   type ArrangementLayout,
 } from 'react-native-arrangement-view';
 import { Dashboard } from './Dashboard';
-import { colors, today } from './data';
+import { colors, FIXED_TODAY } from './data';
 import { headerBase, headerButtons, type HeaderButton } from './header';
 import { HistoryCalendar } from './HistoryCalendar';
 
@@ -16,8 +16,8 @@ const Stack = createNativeStackNavigator();
 
 const settings: HeaderButton = {
   label: 'Settings',
-  symbol: 'gearshape',
-  icon: 'cog-outline',
+  sfSymbol: 'gearshape',
+  materialIcon: 'cog-outline',
 };
 
 export function StepsTab() {
@@ -33,27 +33,24 @@ export function StepsTab() {
 }
 
 function StepsScreen() {
-  const [selected, setSelected] = useState(today);
-  // On a closed device the calendar opens as a sheet instead.
-  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [selected, setSelected] = useState(FIXED_TODAY);
+  const [calendarSheetOpen, setCalendarSheetOpen] = useState(false);
   const [layout, setLayout] = useState<ArrangementLayout | null>(null);
-  const openCalendar = useCallback(() => setCalendarOpen(true), []);
+  const openCalendar = useCallback(() => setCalendarSheetOpen(true), []);
 
-  // The calendar button opens what the calendar pane would show, so it's only
-  // offered once the panes are laid out without it.
-  const showCalendar = layout !== null && !layout.secondaryVisible;
+  const calendarPaneHidden = layout !== null && !layout.secondaryVisible;
   const navigation = useNavigation();
   useLayoutEffect(() => {
     const calendar: HeaderButton = {
       label: 'Calendar',
-      symbol: 'calendar',
-      icon: 'calendar-month-outline',
+      sfSymbol: 'calendar',
+      materialIcon: 'calendar-month-outline',
       onPress: openCalendar,
     };
     navigation.setOptions(
-      headerButtons(showCalendar ? [calendar, settings] : [settings])
+      headerButtons(calendarPaneHidden ? [calendar, settings] : [settings])
     );
-  }, [navigation, showCalendar, openCalendar]);
+  }, [navigation, calendarPaneHidden, openCalendar]);
 
   return (
     <SafeAreaView style={styles.screen} edges={['left', 'right', 'bottom']}>
@@ -63,7 +60,7 @@ function StepsScreen() {
         primaryEdge="trailing"
         onArrangementLayoutChange={(next) => {
           setLayout(next);
-          if (next.secondaryVisible) setCalendarOpen(false);
+          if (next.secondaryVisible) setCalendarSheetOpen(false);
         }}
       >
         <ArrangementView.Primary>
@@ -74,10 +71,10 @@ function StepsScreen() {
         </ArrangementView.Secondary>
       </ArrangementView>
       <Modal
-        visible={calendarOpen}
+        visible={calendarSheetOpen}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => setCalendarOpen(false)}
+        onRequestClose={() => setCalendarSheetOpen(false)}
       >
         {/* A modal is a separate window, with insets of its own. */}
         <SafeAreaProvider>
@@ -86,7 +83,7 @@ function StepsScreen() {
               <Text style={styles.sheetTitle}>History</Text>
               <Pressable
                 accessibilityRole="button"
-                onPress={() => setCalendarOpen(false)}
+                onPress={() => setCalendarSheetOpen(false)}
                 hitSlop={12}
               >
                 <Text style={styles.done}>Done</Text>
@@ -96,7 +93,7 @@ function StepsScreen() {
               selected={selected}
               onSelect={(date) => {
                 setSelected(date);
-                setCalendarOpen(false);
+                setCalendarSheetOpen(false);
               }}
             />
           </SafeAreaView>

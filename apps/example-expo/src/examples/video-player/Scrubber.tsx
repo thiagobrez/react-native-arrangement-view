@@ -20,12 +20,11 @@ export function Scrubber({
   onScrubbingChange,
 }: ScrubberProps) {
   const [width, setWidth] = useState(0);
-  // The position under the finger while dragging, as a fraction.
-  const [scrub, setScrub] = useState<number | null>(null);
-  const fraction = scrub ?? (duration > 0 ? currentTime / duration : 0);
+  const [dragFraction, setDragFraction] = useState<number | null>(null);
+  const fraction = dragFraction ?? (duration > 0 ? currentTime / duration : 0);
   const at = ({ nativeEvent }: GestureResponderEvent) =>
     width > 0 ? Math.min(1, Math.max(0, nativeEvent.locationX / width)) : 0;
-  const shown = scrub === null ? currentTime : scrub * duration;
+  const shown = dragFraction === null ? currentTime : dragFraction * duration;
 
   return (
     <View style={styles.scrubber}>
@@ -46,12 +45,12 @@ export function Scrubber({
         onResponderTerminationRequest={() => false}
         onResponderGrant={(event) => {
           onScrubbingChange(true);
-          setScrub(at(event));
+          setDragFraction(at(event));
         }}
-        onResponderMove={(event) => setScrub(at(event))}
+        onResponderMove={(event) => setDragFraction(at(event))}
         onResponderRelease={(event) => {
           onSeek(at(event) * duration);
-          setScrub(null);
+          setDragFraction(null);
           onScrubbingChange(false);
         }}
         style={styles.hitArea}
@@ -63,7 +62,7 @@ export function Scrubber({
           pointerEvents="none"
           style={[
             styles.thumb,
-            scrub !== null && styles.thumbActive,
+            dragFraction !== null && styles.thumbActive,
             { left: fraction * width - 8 },
           ]}
         />
