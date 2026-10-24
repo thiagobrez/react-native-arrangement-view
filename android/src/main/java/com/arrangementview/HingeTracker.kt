@@ -6,59 +6,60 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Build
+import android.view.View
+import androidx.core.content.ContextCompat
+import androidx.core.util.Consumer
+import androidx.window.java.layout.WindowInfoTrackerCallbackAdapter
 import androidx.window.layout.FoldingFeature
+import androidx.window.layout.WindowInfoTracker
+import androidx.window.layout.WindowLayoutInfo
 import com.facebook.react.bridge.Arguments
-import com.facebook.react.bridge.WritableMap
+import com.facebook.react.bridge.ReactContext
 
-/**
- * The hinge as one view's window sees it. The owner passes in the fold from its window's layout,
- * and reports when it is attached; the angle comes from the hinge angle sensor (Android 11+).
- * Detaching keeps the last state. Reattaching replays the current one, since WindowManager reports
- * the window's layout to a new listener and the sensor reports its value when registered; nothing
- * is reported until both have, so a fresh angle never pairs with a stale fold or the reverse.
- */
-internal class HingeTracker(context: Context, private val emit: (WritableMap) -> Unit) :
-  SensorEventListener {
+internal class HingeTracker(
+  private val view: View,
+  private val reactContext: ReactContext,
+  private val onWindowLayout: (FoldingFeature?) -> Unit = {},
+) : SensorEventListener {
 
-  var fold: FoldingFeature? = null
-    set(value) {
-      field = value
-      awaitingLayout = false
-      emitHinge()
-    }
-
-  private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+  private val windowInfo = WindowInfoTrackerCallbackAdapter(WindowInfoTracker.getOrCreate(reactContext))
+  private val sensorManager = reactContext.getSystemService(Context.SENSOR_SERVICE) as SensorManager
   private val sensor: Sensor? =
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
       sensorManager.getDefaultSensor(Sensor.TYPE_HINGE_ANGLE)
     } else {
       null
     }
-  private var attached = false
+  private var fold: FoldingFeature? = null
   private var awaitingLayout = false
   private var awaitingSensor = false
   private var degrees: Float? = null
   private var last: Triple<Boolean, Double, String>? = null
 
-  /** Pass whether the owner will report its window's layout, which it can't without an activity. */
-  fun attach(awaitLayout: Boolean) {
-    attached = true
-    awaitingLayout = awaitLayout
-    updateSensor()
+  private val windowLayoutListener = Consumer<WindowLayoutInfo> { info ->
+    fold = info.displayFeatures.filterIsInstance<FoldingFeature>().firstOrNull()
+    awaitingLayout = false
+    onWindowLayout(fold)
+    emitHinge()
   }
 
-  fun detach() {
-    attached = false
-    sensorManager.unregisterListener(this)
-  }
-
-  private fun updateSensor() {
-    sensorManager.unregisterListener(this)
-    if (attached && sensor != null) {
+  fun attach() {
+    val activity = reactContext.currentActivity
+    awaitingLayout = activity != null
+    if (sensor != null) {
       // A sensor that has reported reports again when registered.
       awaitingSensor = degrees != null
       sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL)
     }
+    if (activity != null) {
+      windowInfo.addWindowLayoutInfoListener(
+        activity, ContextCompat.getMainExecutor(reactContext), windowLayoutListener)
+    }
+  }
+
+  fun detach() {
+    windowInfo.removeWindowLayoutInfoListener(windowLayoutListener)
+    sensorManager.unregisterListener(this)
   }
 
   override fun onSensorChanged(event: SensorEvent) {
@@ -70,6 +71,9 @@ internal class HingeTracker(context: Context, private val emit: (WritableMap) ->
   override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) = Unit
 
   private fun emitHinge() {
+    // When attach() adds the window layout listener, nothing goes out until the first layout
+    // arrives, so a fresh angle never pairs with a stale fold. When the sensor has reported before,
+    // nothing goes out until it reports again, so a fresh fold never pairs with a stale angle.
     if (awaitingLayout || awaitingSensor) return
     val degrees = degrees
     val fold = fold
@@ -87,7 +91,9 @@ internal class HingeTracker(context: Context, private val emit: (WritableMap) ->
     val hinge = Triple(available, radians, status)
     if (hinge == last) return
     last = hinge
-    emit(
+    view.dispatchReactEvent(
+      reactContext,
+      EVENT,
       Arguments.createMap().apply {
         putBoolean("available", available)
         putDouble("angle", radians)

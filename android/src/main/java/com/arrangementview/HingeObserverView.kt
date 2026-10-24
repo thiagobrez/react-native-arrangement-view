@@ -1,36 +1,19 @@
 package com.arrangementview
 
 import android.view.View
-import androidx.core.content.ContextCompat
-import androidx.core.util.Consumer
-import androidx.window.java.layout.WindowInfoTrackerCallbackAdapter
-import androidx.window.layout.FoldingFeature
-import androidx.window.layout.WindowInfoTracker
-import androidx.window.layout.WindowLayoutInfo
 import com.facebook.react.uimanager.ThemedReactContext
 
-class HingeObserverView(private val reactContext: ThemedReactContext) : View(reactContext) {
+class HingeObserverView(reactContext: ThemedReactContext) : View(reactContext) {
 
-  private val hinge = HingeTracker(reactContext) { dispatchReactEvent(reactContext, HingeTracker.EVENT, it) }
-  private val windowInfo = WindowInfoTrackerCallbackAdapter(WindowInfoTracker.getOrCreate(reactContext))
-
-  private val onWindowLayout = Consumer<WindowLayoutInfo> { info ->
-    hinge.fold = info.displayFeatures.filterIsInstance<FoldingFeature>().firstOrNull()
-  }
+  private val hinge = HingeTracker(this, reactContext)
 
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
-    val activity = reactContext.currentActivity
-    hinge.attach(awaitLayout = activity != null)
-    if (activity != null) {
-      windowInfo.addWindowLayoutInfoListener(
-        activity, ContextCompat.getMainExecutor(reactContext), onWindowLayout)
-    }
+    hinge.attach()
   }
 
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
-    windowInfo.removeWindowLayoutInfoListener(onWindowLayout)
     hinge.detach()
   }
 }
