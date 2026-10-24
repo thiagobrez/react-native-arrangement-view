@@ -64,9 +64,13 @@ const policyDir =
   process.env.ARRANGE_CPP_DIR ??
   fileURLToPath(new URL('../../cpp/', import.meta.url));
 
-// Built once per source and compiler, then reused. Parallel test files race
-// to build it, so each writes its own file and renames it into place.
-function harness() {
+function compileAtomically(compiler: string, flags: string[], binary: string) {
+  const building = `${binary}.${process.pid}`;
+  execFileSync(compiler, [...flags, join(here, 'harness.cpp'), '-o', building]);
+  renameSync(building, binary);
+}
+
+function cachedHarnessBinary() {
   const compiler = process.env.CXX ?? 'c++';
   const flags = ['-std=c++20', '-O2', '-ffp-contract=off', `-I${policyDir}`];
   const hash = createHash('sha256').update([compiler, ...flags].join(' '));
@@ -76,22 +80,14 @@ function harness() {
   const binary = join(dir, hash.digest('hex').slice(0, 16));
   if (!existsSync(binary)) {
     mkdirSync(dir, { recursive: true });
-    const building = `${binary}.${process.pid}`;
-    execFileSync(compiler, [
-      ...flags,
-      join(here, 'harness.cpp'),
-      '-o',
-      building,
-    ]);
-    renameSync(building, binary);
+    compileAtomically(compiler, flags, binary);
   }
   return binary;
 }
-const binary = harness();
+const binary = cachedHarnessBinary();
 
-// The record layout harness.cpp reads and writes, in doubles.
-const IN = 19;
-const OUT = 9;
+const DOUBLES_PER_CASE = 19;
+const DOUBLES_PER_RESULT = 9;
 const code = {
   arrangement: { split: 0, overlay: 1 },
   axes: { both: 0, horizontal: 1, vertical: 2 },
@@ -101,10 +97,10 @@ const code = {
 } as const;
 
 export function arrangeAll(cases: readonly Case[]): PaneFrames[] {
-  const input = new Float64Array(cases.length * IN);
+  const input = new Float64Array(cases.length * DOUBLES_PER_CASE);
   cases.forEach(({ geometry: g, options: o }, i) => {
     const edge = resolvePrimaryEdge(o.primaryEdge);
-    const r = i * IN;
+    const r = i * DOUBLES_PER_CASE;
     input[r] = g.width;
     input[r + 1] = g.height;
     input[r + 2] = g.window.width;
@@ -132,7 +128,7 @@ export function arrangeAll(cases: readonly Case[]): PaneFrames[] {
   const stdin = openSync(casesFile, 'r');
   const run = spawnSync(binary, {
     stdio: [stdin, 'pipe', 'pipe'],
-    maxBuffer: cases.length * OUT * 8 + 1024,
+    maxBuffer: cases.length * DOUBLES_PER_RESULT * 8 + 1024,
   });
   closeSync(stdin);
   unlinkSync(casesFile);
@@ -144,9 +140,9 @@ export function arrangeAll(cases: readonly Case[]): PaneFrames[] {
       run.stdout.byteOffset + run.stdout.byteLength
     )
   );
-  if (out.length !== cases.length * OUT)
+  if (out.length !== cases.length * DOUBLES_PER_RESULT)
     throw new Error(
-      `${binary} wrote ${out.length} numbers, not ${cases.length * OUT}`
+      `${binary} wrote ${out.length} numbers, not ${cases.length * DOUBLES_PER_RESULT}`
     );
   const frame = (at: number): Frame => ({
     left: out[at]!,
@@ -155,8 +151,10 @@ export function arrangeAll(cases: readonly Case[]): PaneFrames[] {
     height: out[at + 3]!,
   });
   return cases.map((_, i) => ({
-    primary: frame(i * OUT),
-    secondary: out[i * OUT + 4] ? frame(i * OUT + 5) : null,
+    primary: frame(i * DOUBLES_PER_RESULT),
+    secondary: out[i * DOUBLES_PER_RESULT + 4]
+      ? frame(i * DOUBLES_PER_RESULT + 5)
+      : null,
   }));
 }
 

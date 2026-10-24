@@ -1,6 +1,7 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
 import { arrange, type Fold, type Geometry } from './harness/arrange.ts';
+import type { ArrangementViewProps } from '../src/types.ts';
 
 const window = (width: number, height: number): Geometry => ({
   width,
@@ -19,12 +20,11 @@ const full = ({ width, height }: Geometry) => ({
   height,
 });
 
-// A seamless fold down the middle of `inner`, the way WindowManager reports it.
 const bookFold: Fold = {
-  x: 425,
+  x: inner.width / 2,
   y: 0,
   width: 0,
-  height: 880,
+  height: inner.height,
   orientation: 'vertical',
   separating: true,
   halfOpened: true,
@@ -51,12 +51,15 @@ test('an expanded-width window puts the panes side by side', () => {
     primary: { left: 0, top: 0, width: 425, height: 880 },
     secondary: { left: 425, top: 0, width: 425, height: 880 },
   });
-  // From 480 dp tall, the end of compact height.
   const shortest = window(960, 480);
-  assert.deepEqual(arrange(shortest, split), {
-    primary: { left: 0, top: 0, width: 480, height: 480 },
-    secondary: { left: 480, top: 0, width: 480, height: 480 },
-  });
+  assert.deepEqual(
+    arrange(shortest, split),
+    {
+      primary: { left: 0, top: 0, width: 480, height: 480 },
+      secondary: { left: 480, top: 0, width: 480, height: 480 },
+    },
+    'two columns start at 480 dp tall'
+  );
 });
 
 test('a compact-height window, such as a phone in landscape, shows one pane', () => {
@@ -138,12 +141,15 @@ test('a half-open hinge separates the panes by hingeGap, centred on the crease',
     primary: { left: 0, top: 0, width: 405, height: 880 },
     secondary: { left: 445, top: 0, width: 405, height: 880 },
   });
-  // The gap is never narrower than a physical hinge.
   const thick = { ...book, fold: { ...bookFold, x: 415, width: 20 } };
-  assert.deepEqual(arrange(thick, { ...split, hingeGap: 0 }), {
-    primary: { left: 0, top: 0, width: 415, height: 880 },
-    secondary: { left: 435, top: 0, width: 415, height: 880 },
-  });
+  assert.deepEqual(
+    arrange(thick, { ...split, hingeGap: 0 }),
+    {
+      primary: { left: 0, top: 0, width: 415, height: 880 },
+      secondary: { left: 435, top: 0, width: 415, height: 880 },
+    },
+    'the gap is never narrower than a physical hinge'
+  );
 });
 
 test('the hinge picks the split axis: tabletop stacks even in a wide window', () => {
@@ -160,32 +166,33 @@ test('flat, the panes touch; hingePolicy decides which hinges to avoid', () => {
     arrange(flat, { ...split, hingePolicy: 'alwaysAvoid' }),
     arrange(book, split)
   );
-  // An off-centre half-open hinge, ignored: the panes halve the window and touch.
   const offCentre = { ...book, fold: { ...bookFold, x: 300 } };
   assert.deepEqual(
     arrange(offCentre, { ...split, hingePolicy: 'neverAvoid' }),
-    arrange(inner, split)
+    arrange(inner, split),
+    'the panes halve the window and touch across an ignored off-centre hinge'
   );
 });
 
 test('one pane beside a hinge stays on its leading side', () => {
-  // The hinge's axis is excluded...
-  assert.deepEqual(arrange(book, { ...split, axes: 'vertical' }), {
-    primary: { left: 0, top: 0, width: 413, height: 880 },
-    secondary: null,
-  });
-  assert.deepEqual(arrange(tabletop, { ...split, axes: 'horizontal' }), {
-    primary: { left: 0, top: 0, width: 880, height: 413 },
-    secondary: null,
-  });
-  // ...or a flat hinge is avoided in a window too narrow for two panes.
+  assert.deepEqual(
+    arrange(book, { ...split, axes: 'vertical' }),
+    { primary: { left: 0, top: 0, width: 413, height: 880 }, secondary: null },
+    "axes excludes the book hinge's axis"
+  );
+  assert.deepEqual(
+    arrange(tabletop, { ...split, axes: 'horizontal' }),
+    { primary: { left: 0, top: 0, width: 880, height: 413 }, secondary: null },
+    "axes excludes the tabletop hinge's axis"
+  );
   const narrowFlat = {
     ...mediumTablet,
     fold: { ...flatFold, x: 350, height: 700 },
   };
   assert.deepEqual(
     arrange(narrowFlat, { ...split, hingePolicy: 'alwaysAvoid' }),
-    { primary: { left: 0, top: 0, width: 338, height: 700 }, secondary: null }
+    { primary: { left: 0, top: 0, width: 338, height: 700 }, secondary: null },
+    'a flat hinge is avoided in a window too narrow for two panes'
   );
 });
 
@@ -198,7 +205,9 @@ test('overlay separated by a hinge puts the primary pane after it', () => {
     primary: { left: 0, top: 437, width: 880, height: 413 },
     secondary: { left: 0, top: 0, width: 880, height: 413 },
   });
-  // When the hinge cannot separate them, the panes overlay across it.
+});
+
+test('overlay stacks both panes at full size across a hinge that axes excludes', () => {
   assert.deepEqual(arrange(book, { ...overlay, axes: 'vertical' }), {
     primary: full(book),
     secondary: full(book),
@@ -251,8 +260,11 @@ test('right-to-left mirrors which side is leading', () => {
     width: 413,
     height: 880,
   });
-  // Stacked panes are unaffected.
-  assert.deepEqual(arrange(coverPortrait, rtl), arrange(coverPortrait, split));
+  assert.deepEqual(
+    arrange(coverPortrait, rtl),
+    arrange(coverPortrait, split),
+    'stacked panes are unaffected'
+  );
 });
 
 test('primaryEdge puts the primary pane on the leading or trailing side', () => {
@@ -283,16 +295,19 @@ test('primaryEdge puts the primary pane on the leading or trailing side', () => 
       );
     }
   }
-  // One pane beside a hinge goes to that side too.
   assert.deepEqual(
     arrange(book, { ...split, axes: 'vertical', primaryEdge: 'trailing' }),
-    { primary: { left: 437, top: 0, width: 413, height: 880 }, secondary: null }
+    {
+      primary: { left: 437, top: 0, width: 413, height: 880 },
+      secondary: null,
+    },
+    'one pane beside a hinge goes to that side too'
   );
-  // Stacked panes are unaffected.
   for (const geometry of [coverPortrait, tabletop]) {
     assert.deepEqual(
       arrange(geometry, { ...split, primaryEdge: 'trailing' }),
-      arrange(geometry, split)
+      arrange(geometry, split),
+      'stacked panes are unaffected'
     );
   }
 });
@@ -308,17 +323,17 @@ test("primaryEdge's top or bottom puts an overlay's primary pane above or below 
     primary: below,
     secondary: above,
   });
-  // A split's primary pane stays on top, as on iOS.
   assert.deepEqual(
     arrange(tabletop, { ...split, primaryEdge: 'bottom' }),
-    arrange(tabletop, split)
+    arrange(tabletop, split),
+    "a split's primary pane stays on top, as on iOS"
   );
-  // Panes side by side, or overlapping, are unaffected.
   for (const geometry of [book, inner, coverPortrait]) {
     for (const options of [split, overlay]) {
       assert.deepEqual(
         arrange(geometry, { ...options, primaryEdge: 'top' }),
-        arrange(geometry, options)
+        arrange(geometry, options),
+        "primaryEdge 'top' moves only an overlay's stacked panes"
       );
     }
   }
@@ -334,9 +349,11 @@ test('primaryEdge takes a horizontal and a vertical side', () => {
     arrange(tabletop, { ...overlay, primaryEdge: edges }),
     arrange(tabletop, { ...overlay, primaryEdge: 'top' })
   );
+  // @ts-expect-error The horizontal side comes first.
+  const verticalFirst: ArrangementViewProps['primaryEdge'] = ['top', 'leading'];
   assert.deepEqual(
-    // @ts-expect-error The horizontal side comes first.
-    arrange(tabletop, { ...overlay, primaryEdge: ['top', 'leading'] }),
-    arrange(tabletop, overlay)
+    arrange(tabletop, { ...overlay, primaryEdge: verticalFirst }),
+    arrange(tabletop, overlay),
+    'a pair with the vertical side first is ignored'
   );
 });

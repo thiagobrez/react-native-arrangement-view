@@ -1,6 +1,7 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
 import { resolvePrimaryEdge } from '../src/primaryEdge.ts';
+import { untyped } from './untyped.ts';
 
 test('one side sets its own axis only', () => {
   assert.deepEqual(resolvePrimaryEdge('trailing'), {
@@ -31,8 +32,7 @@ test('any other array is ignored and reported', () => {
     ['leading', 'top', 'bottom'],
   ];
   for (const value of invalid) {
-    // Untyped callers can pass these; the type only allows a pair.
-    const edges = resolvePrimaryEdge(value as never);
+    const edges = resolvePrimaryEdge(untyped(value));
     assert.equal(edges.horizontal, undefined);
     assert.equal(edges.vertical, undefined);
     assert.equal(edges.problems.length, 1);
