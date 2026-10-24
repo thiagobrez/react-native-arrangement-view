@@ -8,7 +8,7 @@ using arrangementview::PaneFrames;
 
 #pragma mark - ArrangementViewState
 
-ArrangementViewState::ArrangementViewState(const ArrangementViewState &previous, const folly::dynamic & /*data*/)
+ArrangementViewState::ArrangementViewState(const ArrangementViewState &previous, const folly::dynamic &)
     : ArrangementViewState(previous) {}
 
 folly::dynamic ArrangementViewState::getDynamic() const {

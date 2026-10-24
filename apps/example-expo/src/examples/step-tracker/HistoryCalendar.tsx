@@ -146,7 +146,6 @@ function Cell({
   );
 }
 
-/** Diagonal stripes for days still to come. */
 function Hatching() {
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">

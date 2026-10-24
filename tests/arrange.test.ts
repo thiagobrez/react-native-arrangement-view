@@ -2,17 +2,16 @@ import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
 import { arrange, type Fold, type Geometry } from './harness/arrange.ts';
 
-// Windows named for the Pixel 10 Pro Fold, in dp. The arrangement fills each.
 const window = (width: number, height: number): Geometry => ({
   width,
   height,
   window: { width, height },
 });
-const coverPortrait = window(440, 960); // compact width, expanded height
-const coverLandscape = window(960, 440); // expanded width, compact height
-const inner = window(850, 880); // expanded width, medium height
-const phone = window(400, 700); // compact width, medium height
-const mediumTablet = window(700, 700); // medium width, medium height
+const coverPortrait = window(440, 960);
+const coverLandscape = window(960, 440);
+const inner = window(850, 880);
+const phone = window(400, 700);
+const mediumTablet = window(700, 700);
 const full = ({ width, height }: Geometry) => ({
   left: 0,
   top: 0,
@@ -103,7 +102,6 @@ test('a half-open hinge splits the panes whatever the window size', () => {
 });
 
 test('the window decides, not the arrangement inside it', () => {
-  // A wide arrangement in a tall single-column window still stacks.
   const banner = { width: 400, height: 200, window: coverPortrait.window };
   assert.deepEqual(arrange(banner, split), {
     primary: { left: 0, top: 0, width: 400, height: 100 },
@@ -270,7 +268,6 @@ test('primaryEdge puts the primary pane on the leading or trailing side', () => 
       arrange(inner, { ...split, rtl, primaryEdge: 'leading' }),
       arrange(inner, { ...split, rtl })
     );
-    // Around a half-open hinge, for either arrangement.
     const [beforeHinge, afterHinge] = [
       { left: 0, top: 0, width: 413, height: 880 },
       { left: 437, top: 0, width: 413, height: 880 },

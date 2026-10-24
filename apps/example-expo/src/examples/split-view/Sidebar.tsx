@@ -11,10 +11,6 @@ export interface SidebarProps {
   onSelect: (id: string) => void;
 }
 
-/**
- * The split's primary column: a list of trails, the split's state, and the
- * hinge, which the app's HingeObserver reports outside an ArrangementView.
- */
 export function Sidebar({
   selectedId,
   collapsed,

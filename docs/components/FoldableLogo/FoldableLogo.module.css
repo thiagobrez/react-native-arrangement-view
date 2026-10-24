@@ -31,7 +31,6 @@
   height: 100%;
   opacity: 0;
   cursor: grab;
-  /* A swipe up or down still scrolls the page. */
   touch-action: pan-y;
 }
 

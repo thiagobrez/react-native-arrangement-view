@@ -19,14 +19,9 @@ export interface Frame {
 
 export interface PaneFrames {
   primary: Frame;
-  /** Null when only the primary pane is shown. */
   secondary: Frame | null;
 }
 
-/**
- * What the panes' frames show. Panes that overlap, as in overlay, have no
- * axis but are overlapping. A hidden secondary pane has no frame.
- */
 export function describeLayout({
   primary,
   secondary,
@@ -60,7 +55,6 @@ export function describeLayout({
   };
 }
 
-/** One arrangement's layout: null until its panes are first laid out. */
 export function createLayoutStore() {
   let current: ArrangementLayout | null = null;
   const listeners = new Set<() => void>();
@@ -108,10 +102,6 @@ const frame = ({ x, y, width, height }: NativeRect): Frame => ({
   height,
 });
 
-/**
- * One arrangement's store. It reports changes to `onChange` without
- * re-rendering the arrangement itself.
- */
 export function useLayoutStore(onChange?: ArrangementLayoutHandler) {
   const [store] = useState(createLayoutStore);
   const callback = useLatest(onChange);

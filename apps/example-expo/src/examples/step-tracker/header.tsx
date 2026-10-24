@@ -22,7 +22,6 @@ export interface HeaderButton {
   onPress?: () => void;
 }
 
-/** A light header without a hairline, over the screen's own background. */
 export const headerBase: NativeStackNavigationOptions = {
   headerStyle: { backgroundColor: colors.background },
   headerTintColor: colors.text,

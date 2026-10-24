@@ -28,23 +28,16 @@ const { resolvePrimaryEdge }: typeof import('../../src/primaryEdge.ts') =
 
 export type { Frame, PaneFrames };
 
-/** A fold within the arrangement, as Jetpack WindowManager reports it. */
 export interface Fold {
   x: number;
   y: number;
   width: number;
   height: number;
-  /** A vertical fold runs top to bottom, as in book posture. */
   orientation: 'vertical' | 'horizontal';
-  /** Half-open, or a hinge that hides content. */
   separating: boolean;
   halfOpened: boolean;
 }
 
-/**
- * The arrangement's size, the size of the window it is in, and the fold, if
- * any. All in dp; the fold is relative to the arrangement.
- */
 export interface Geometry {
   width: number;
   height: number;
@@ -107,10 +100,6 @@ const code = {
   vertical: { auto: 0, top: 1, bottom: 2 },
 } as const;
 
-/**
- * Many cases in one run of the C++. Options pass through resolvePrimaryEdge
- * first, as ArrangementView.android.tsx passes them to the native view.
- */
 export function arrangeAll(cases: readonly Case[]): PaneFrames[] {
   const input = new Float64Array(cases.length * IN);
   cases.forEach(({ geometry: g, options: o }, i) => {

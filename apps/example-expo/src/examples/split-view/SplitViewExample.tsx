@@ -14,12 +14,6 @@ import { trails } from './trails';
 
 const NEARLY_FLAT = (135 * Math.PI) / 180;
 
-/**
- * react-native-screens' Split (UISplitViewController, iOS only) with an
- * ArrangementView inside its secondary column. Expo Router's
- * `expo-router/unstable-split-view` wraps the same component, but only as the
- * root layout, so this app nests `Split.Host` in its stack directly.
- */
 export function SplitViewExample() {
   const navigation =
     useNavigation<NativeStackNavigationProp<Record<string, undefined>>>();
@@ -50,8 +44,6 @@ export function SplitViewExample() {
     [navigation]
   );
 
-  // A collapsed split shows its own back button over the pushed detail; the
-  // stack's would sit on top of it.
   const splitHasBackButton = collapsed && detailVisible;
   useEffect(() => {
     navigation.setOptions({ headerBackVisible: !splitHasBackButton });
@@ -70,7 +62,6 @@ export function SplitViewExample() {
       preferredSplitBehavior="tile"
       topColumnForCollapsing="primary"
       onCollapse={() => {
-        // The new split starts on the sidebar.
         setCollapsed(true);
         setDetailVisible(false);
       }}
@@ -87,7 +78,6 @@ export function SplitViewExample() {
             displayMode={displayMode}
             onSelect={(id) => {
               setSelectedId(id);
-              // Pushes the secondary column when the split is collapsed.
               split.current?.show('secondary');
             }}
           />

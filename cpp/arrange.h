@@ -9,7 +9,6 @@ namespace arrangementview {
 enum class Arrangement : uint8_t { Split, Overlay };
 enum class Axes : uint8_t { Both, Horizontal, Vertical };
 using Axis = Axes;
-/** Which hinges the panes keep clear of, after Material's `HingePolicy`. */
 enum class HingePolicy : uint8_t { AvoidSeparating, AlwaysAvoid, NeverAvoid };
 enum class HorizontalEdge : uint8_t { Auto, Leading, Trailing };
 enum class VerticalEdge : uint8_t { Auto, Top, Bottom };
@@ -41,10 +40,7 @@ struct Fold {
   bool operator==(const Fold &) const = default;
 };
 
-/**
- * The arrangement's size, the size of the window it is in, and the fold, if
- * any. All in dp; the fold is relative to the arrangement.
- */
+/** All in dp; the fold is relative to the arrangement. */
 struct Geometry {
   double width{};
   double height{};
@@ -53,7 +49,6 @@ struct Geometry {
   bool operator==(const Geometry &) const = default;
 };
 
-/** The props, with `primaryEdge` already split into a side per axis. */
 struct ArrangeOptions {
   Arrangement arrangement{Arrangement::Split};
   Axes axes{Axes::Both};
@@ -96,10 +91,7 @@ inline constexpr double EXPANDED_HEIGHT = 900;
  * A hinge the policy avoids decides the axis and separates the panes by
  * `hingeGap` around it, if that gap fits inside the arrangement, as on iOS.
  * A separating hinge always splits, whatever the window size, as it does on
- * iOS. A split that doesn't fit, or that `axes` excludes, shows only the
- * primary pane. `primaryEdge` puts the primary pane on the leading or
- * trailing side of panes placed side by side, and an overlay's above or below
- * panes that are stacked.
+ * iOS.
  *
  * Compile with -ffp-contract=off, so the frames are the same bits on every
  * compiler and device.

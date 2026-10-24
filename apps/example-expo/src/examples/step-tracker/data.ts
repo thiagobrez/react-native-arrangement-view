@@ -4,7 +4,6 @@ export type Activity = 'walk' | 'run' | 'bike' | 'swim';
 
 export interface Day {
   date: Date;
-  /** Null for a day still to come. */
   steps: number | null;
   activity?: Activity;
 }
@@ -46,7 +45,6 @@ export const sameDay = (a: Date, b: Date) =>
   a.getMonth() === b.getMonth() &&
   a.getDate() === b.getDate();
 
-/** Every day of a month, with its steps once it has passed. */
 export function month(year: number, index: number): Day[] {
   const length = new Date(year, index + 1, 0).getDate();
   return Array.from({ length }, (_, offset) => {
@@ -86,7 +84,6 @@ export function halfHours(of: Day): number[] {
   if (sameDay(of.date, today))
     return [60, 75, 55, 40, 50, 65, 45, 80, 70, 95, 160, 690, 1310, 1120, 1060];
   if (of.steps === null) return [];
-  // A day's steps spread over waking hours, with the date as the seed.
   let seed = of.date.getDate() * 7919 + of.date.getMonth() * 104729;
   const random = () => {
     seed = (seed * 16807) % 2147483647;
@@ -203,7 +200,6 @@ export type WorkoutFamily = 'walk' | 'cycle' | 'run' | 'hiit' | 'swim';
 const at = (date: number, hours: number, minutes: number) =>
   new Date(2026, 8, date, hours, minutes);
 
-/** September's workouts, newest first. */
 export const workouts: Workout[] = [
   {
     type: 'outdoorCycle',
@@ -306,7 +302,6 @@ export const families: WorkoutFamily[] = [
   'swim',
 ];
 
-/** The month's totals, in the order the summary shows them. */
 export function totals(of: Workout[]) {
   const minutes = of.reduce((sum, workout) => sum + workout.minutes, 0);
   const kcal = of.reduce((sum, workout) => sum + workout.kcal, 0);

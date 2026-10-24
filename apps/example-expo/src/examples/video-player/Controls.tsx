@@ -22,12 +22,6 @@ export interface ControlsProps {
 const HIDE_AFTER_MS = 3000;
 const RATES = [1, 1.25, 1.5, 2, 0.5];
 
-/**
- * The overlay's primary pane. Covering the whole arrangement, it floats over
- * the video and hides while the video plays; tap anywhere to bring it back.
- * Given its own region by a half-open hinge, it becomes a full-screen remote
- * that stays visible.
- */
 export function Controls({ player }: ControlsProps) {
   const navigation = useNavigation();
   const { isPlaying } = useEvent(player, 'playingChange', {
@@ -44,8 +38,6 @@ export function Controls({ player }: ControlsProps) {
     playbackRate: player.playbackRate,
   });
 
-  // A hinge that separates the panes gives the primary its own region after
-  // the hinge: below it in tabletop, on the trailing side held like a book.
   const layout = useArrangementLayout();
   const separated = layout !== null && !layout.isOverlapping;
   const axis = layout?.axis ?? null;
@@ -213,7 +205,6 @@ export function Controls({ player }: ControlsProps) {
         pointerEvents={visible ? 'box-none' : 'none'}
         style={[styles.scrim, { opacity }]}
       >
-        {/* Centred on the video, which ignores the safe area too. */}
         <View pointerEvents="box-none" style={styles.centred}>
           {transport}
         </View>

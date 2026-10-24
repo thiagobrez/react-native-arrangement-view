@@ -1,11 +1,8 @@
 import type { HorizontalEdge, PrimaryEdge, VerticalEdge } from './types';
 
 export interface PrimaryEdges {
-  /** The side when the panes are side by side. */
   horizontal?: HorizontalEdge;
-  /** The side when an overlay's panes are stacked. */
   vertical?: VerticalEdge;
-  /** Human-readable problems with the value, for dev warnings. */
   problems: string[];
 }
 
@@ -14,11 +11,6 @@ const isHorizontal = (edge: unknown): edge is HorizontalEdge =>
 const isVertical = (edge: unknown): edge is VerticalEdge =>
   edge === 'top' || edge === 'bottom';
 
-/**
- * Splits `primaryEdge` into a side for each axis. A pair must be horizontal,
- * then vertical; any other array is ignored and reported, for callers
- * without type checking.
- */
 export function resolvePrimaryEdge(
   value: PrimaryEdge | readonly [HorizontalEdge, VerticalEdge] | undefined
 ): PrimaryEdges {

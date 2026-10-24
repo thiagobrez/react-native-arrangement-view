@@ -14,22 +14,9 @@ import {
 import { AlarmSettings } from './AlarmSettings';
 import { ClockFace } from './ClockFace';
 
-// A preview waits a little, which leaves time to stand the phone up, and
-// then lets the glow rise over a few seconds instead of the minutes before a
-// real alarm.
 const PREVIEW_LEAD_SECONDS = 8;
 const PREVIEW_GLOW_SECONDS = 15;
 
-/**
- * A view that takes over the display in the tent posture: a bedside clock,
- * after the one Apple showed with iPhone Duo stood up on a nightstand, which
- * glows before the alarm. Only the layout is real: nothing rings, and the
- * glow is a preview.
- *
- * The clock is the primary pane, so it's what shows where only one fits. The
- * alarm's settings are the secondary pane, beside the clock once unfolded and
- * below it, on the half resting on the table, when half-open like a laptop.
- */
 export function TentPosture() {
   const [alarm, setAlarm] = useState(() => new Date(2026, 0, 1, 6, 30));
   const [wake, setWake] = useState<'asleep' | 'waking' | 'ringing'>('asleep');
@@ -63,7 +50,6 @@ export function TentPosture() {
   };
   useEffect(() => () => glow.stopAnimation(), [glow]);
 
-  // Stood up as a tent, the clock is all there is.
   const navigation = useNavigation();
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: !tent, autoHideHomeIndicator: tent });

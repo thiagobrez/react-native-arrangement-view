@@ -28,7 +28,7 @@ if (!versions.includes(latest)) {
   throw new Error(`${version} is released, but docs/${latest}/ doesn't exist.`);
 }
 
-/** The address a page is deployed at. Routes don't include the base path. */
+/** Routes don't include the base path. */
 function pageUrl(routePath: string) {
   const file = routePath.endsWith('/') ? routePath : `${routePath}.html`;
   return new URL(file.slice(1), site).href;
@@ -80,7 +80,6 @@ export default defineConfig({
     ['meta', { property: 'og:image:width', content: '1200' }],
     ['meta', { property: 'og:image:height', content: '630' }],
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
-    // Only the released version's pages are indexed, each under one address.
     (route) =>
       route.version === latest
         ? ['link', { rel: 'canonical', href: pageUrl(route.routePath) }]
@@ -90,7 +89,6 @@ export default defineConfig({
         ? ['meta', { property: 'og:url', content: pageUrl(route.routePath) }]
         : undefined,
   ],
-  // Writes llms.txt, llms-full.txt and a Markdown copy of each page, for agents.
   llms: true,
   plugins: [sitemap()],
   globalStyles: path.join(import.meta.dirname, 'styles/index.css'),

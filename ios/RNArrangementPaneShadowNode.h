@@ -22,7 +22,7 @@ class ArrangementPaneShadowNode final : public ArrangementPaneShadowBase {
     if (data.measured) {
       // SwiftUI supplies a physical origin in the ArrangementView's coordinates.
       // Apply it after Yoga's directional layout: putting it in left/start would
-      // mirror it in RTL. Descendants still inherit the normal layout direction.
+      // mirror it in RTL.
       auto metrics = getLayoutMetrics();
       metrics.frame.origin = data.origin;
       setLayoutMetrics(metrics);

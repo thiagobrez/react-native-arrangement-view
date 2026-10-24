@@ -18,7 +18,6 @@ type Props = {
   posture: 'closed' | 'half' | 'flat';
 };
 
-/** The iOS and Android screenshots of one posture in every orientation. */
 export function Comparison({ arrangement, posture }: Props) {
   return (
     <div className={styles.grid}>

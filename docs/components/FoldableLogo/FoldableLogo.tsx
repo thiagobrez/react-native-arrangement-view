@@ -9,16 +9,10 @@ import styles from './FoldableLogo.module.css';
 import type { FoldableScene } from './scene.ts';
 
 type Props = {
-  /** The logo's image, shown until the model loads and where WebGL is unavailable. */
   src: string;
   alt: string;
 };
 
-/**
- * The logo as a 3D model of the foldable it draws. The device folds, and
- * takes each posture, and its displays show the two panes arranged the way
- * the library arranges them.
- */
 export function FoldableLogo({ src, alt }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const scene = useRef<FoldableScene | null>(null);
@@ -33,7 +27,6 @@ export function FoldableLogo({ src, alt }: Props) {
 
   useEffect(() => {
     let unmounted = false;
-    // three.js is loaded apart from the page, and only in a browser.
     import('./scene.ts')
       .then(({ createFoldableScene }) => {
         if (unmounted || !canvas.current) return;

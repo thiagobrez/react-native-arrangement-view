@@ -26,10 +26,6 @@ export interface DashboardProps {
   onSelect: (date: Date) => void;
 }
 
-/**
- * The day's activity. Beside the calendar pane it swaps the week strip, which
- * the calendar already covers, for an hourly chart.
- */
 export function Dashboard({ selected, onSelect }: DashboardProps) {
   const layout = useArrangementLayout();
   const selectedDay = day(selected);
@@ -135,7 +131,6 @@ export function Dashboard({ selected, onSelect }: DashboardProps) {
           <HourlyChart values={halfHours(selectedDay)} />
         )}
 
-        {/* Pushes what follows to the bottom of the screen. */}
         <View style={styles.spacer} />
 
         <Text style={styles.credit}>
@@ -252,7 +247,6 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   scroll: { flex: 1 },
-  // Grows to the screen's height, so the spacer can push the strip down.
   content: {
     flexGrow: 1,
     paddingStart: 18,

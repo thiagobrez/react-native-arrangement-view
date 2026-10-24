@@ -8,10 +8,6 @@ import {
 } from 'react-native-arrangement-view';
 import type { Trail } from './trails';
 
-/**
- * The split's secondary column. Its ArrangementView only gets the column's
- * width, so whether it splits depends on where the column sits on the hinge.
- */
 export function Detail({ trail }: { trail: Trail }) {
   return (
     <SafeAreaView
@@ -88,7 +84,6 @@ function Stat({
   );
 }
 
-/** A pane that prints the size its ArrangementView gave it. */
 function Measured({
   id,
   style,

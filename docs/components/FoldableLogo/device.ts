@@ -54,7 +54,6 @@ export interface DeviceState {
   status: HingeStatus;
   /** The display the app is on. */
   screen: 'cover' | 'inner';
-  /** The app is turned a quarter, its top at the upright display's left. */
   landscape: boolean;
   /** The panes on that display, upright, where Android's policy puts them. */
   primary: Frame;
@@ -79,7 +78,6 @@ export function describeDevice({ orientation, angle }: Pose): DeviceState {
           ? 'book'
           : orientation;
 
-  // A tent keeps the app on the cover display, however far it is open.
   const screen =
     orientation === 'tent' || status === 'closed' ? 'cover' : 'inner';
   const landscape = orientation !== 'upright';

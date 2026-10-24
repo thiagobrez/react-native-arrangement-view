@@ -20,15 +20,9 @@ ArrangementSecondary.displayName = 'ArrangementView.Secondary';
 export interface ResolvedSlots {
   primary: ReactElement | null;
   secondary: ReactElement | null;
-  /** Human-readable problems with the supplied children, for dev warnings. */
   problems: string[];
 }
 
-/**
- * Picks the Primary and Secondary slot elements out of ArrangementView's
- * children. Slots are matched by component identity, so their order does not
- * matter. Anything else is reported as a problem and ignored.
- */
 export function resolveSlots(children: ReactNode): ResolvedSlots {
   const problems: string[] = [];
   let primary: ReactElement | null = null;
@@ -83,7 +77,6 @@ function describe(child: ReactNode): string {
 
 const warned = new Set<string>();
 
-/** Warns once per distinct message, only outside production builds. */
 export function warnOnce(messages: readonly string[]) {
   if (process.env.NODE_ENV === 'production') return;
   for (const message of messages) {

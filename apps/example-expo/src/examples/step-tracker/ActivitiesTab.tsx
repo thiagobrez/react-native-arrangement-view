@@ -28,7 +28,6 @@ import { headerBase, headerButtons } from './header';
 
 const Stack = createNativeStackNavigator();
 
-/** Every workout this month: a list, and the month at a glance where there's room. */
 export function ActivitiesTab() {
   return (
     <Stack.Navigator screenOptions={headerBase}>
@@ -58,12 +57,6 @@ export function ActivitiesTab() {
 const WIDE = 640;
 const TALL = 480;
 
-/**
- * Unlike the steps tab, this one never splits into panes: a wide window shows
- * a narrow month column beside the list, which may run across a flat hinge,
- * as in the original. A plain responsive layout does that; it needs no
- * ArrangementView.
- */
 function ActivitiesScreen() {
   const window = useWindowDimensions();
   const wide = window.width >= WIDE && window.height >= TALL;
@@ -94,10 +87,6 @@ const familyIcons: Record<WorkoutFamily, keyof typeof workoutKinds> = {
   swim: 'outdoorSwim',
 };
 
-/**
- * The workouts, newest first: one column of wide cards opening with the
- * month's summary, or two columns of compact cards beside the month column.
- */
 function WorkoutList({
   columns,
   summary = false,
@@ -218,7 +207,6 @@ function WorkoutCard({
   );
 }
 
-/** The month as dots, with each workout day marked by its activity. */
 function MonthGrid() {
   const days = month(today.getFullYear(), today.getMonth());
   const cells = [...Array<null>(days[0]!.date.getDay()).fill(null), ...days];
@@ -272,8 +260,8 @@ const shadow = {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   columns: { flex: 1, flexDirection: 'row' },
-  // About a third of the width, as the original gives the month. ScrollView's
-  // own style sets flexGrow, which would win over the `flex` shorthand.
+  // ScrollView's own style sets flexGrow, which would win over the `flex`
+  // shorthand.
   sidebar: { flexGrow: 3, flexBasis: 0 },
   sidebarContent: { paddingHorizontal: 18, paddingTop: 4, paddingBottom: 24 },
   list: { flexGrow: 7, flexBasis: 0 },
