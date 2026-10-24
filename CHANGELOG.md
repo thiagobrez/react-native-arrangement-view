@@ -1,5 +1,15 @@
 # react-native-arrangement-view
 
+## 0.5.1
+
+### Patch Changes
+
+- [#44](https://github.com/thiagobrez/react-native-arrangement-view/pull/44) [`a1eb0fa`](https://github.com/thiagobrez/react-native-arrangement-view/commit/a1eb0fae25a808de04d742cc3339dc23caf18748) Thanks [@thiagobrez](https://github.com/thiagobrez)! - On Android, a hinge closer to the arrangement's edge than half of `hingeGap` is ignored, as iOS ignores one less than 20 pt inside. Before, the pane on that side was squeezed to 0 dp, hiding the primary pane, or with `axes: 'vertical'` the whole arrangement.
+
+- [#49](https://github.com/thiagobrez/react-native-arrangement-view/pull/49) [`83bc36b`](https://github.com/thiagobrez/react-native-arrangement-view/commit/83bc36bb8f86390cab087a75109fc61629a94b2b) Thanks [@thiagobrez](https://github.com/thiagobrez)! - On iOS, `HingeObserver` no longer holds a hinge that arrives before React Native gives the view its event handler. It drops that hinge, as `ArrangementView` already does. React Native gives the view its handler before the view joins a window, and iOS reports the hinge only to a view in a window, so apps see the same hinges as before.
+
+- [#50](https://github.com/thiagobrez/react-native-arrangement-view/pull/50) [`f2bd60d`](https://github.com/thiagobrez/react-native-arrangement-view/commit/f2bd60d88cf9c3789e29815ef096d4e8c0bb3026) Thanks [@thiagobrez](https://github.com/thiagobrez)! - Editor hovers for `ArrangementView` and `HingeObserver` now describe what each component does, including on web. `ArrangementView` is typed to return an element instead of `never`.
+
 ## 0.5.0
 
 ### Minor Changes
