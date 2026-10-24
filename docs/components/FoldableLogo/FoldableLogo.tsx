@@ -1,10 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  describeDevice,
-  initialPose,
-  postures,
-  type Posture,
-} from './device.ts';
+import { describeDevice, logoPose, postures, type Posture } from './device.ts';
 import styles from './FoldableLogo.module.css';
 import type { FoldableScene } from './scene.ts';
 
@@ -19,11 +14,9 @@ export function FoldableLogo({ src, alt }: Props) {
   const [model, setModel] = useState<'loading' | 'ready' | 'unavailable'>(
     'loading'
   );
-  const [angle, setAngle] = useState(initialPose.angle);
-  const [device, setDevice] = useState(() => describeDevice(initialPose));
-  // A posture that was picked stays the current one while the device folds to
-  // it, through the postures on the way. Folding by hand goes by the fold.
-  const [picked, setPicked] = useState<Posture | null>(null);
+  const [angle, setAngle] = useState(logoPose.degrees);
+  const [device, setDevice] = useState(() => describeDevice(logoPose));
+  const [targetPosture, setTargetPosture] = useState<Posture | null>(null);
 
   useEffect(() => {
     let unmounted = false;
@@ -49,7 +42,7 @@ export function FoldableLogo({ src, alt }: Props) {
   }
 
   const ready = model === 'ready';
-  const current = picked ?? device.posture;
+  const current = targetPosture ?? device.posture;
   const posture = postures.find(({ id }) => id === current);
   return (
     <div className={styles.logo}>
@@ -78,8 +71,8 @@ export function FoldableLogo({ src, alt }: Props) {
             aria-pressed={current === id}
             disabled={!ready}
             onClick={() => {
-              setPicked(id);
-              scene.current?.pose(id);
+              setTargetPosture(id);
+              scene.current?.animateTo(id);
             }}
           >
             {label}
@@ -96,8 +89,8 @@ export function FoldableLogo({ src, alt }: Props) {
           disabled={!ready}
           aria-valuetext={`${angle} degrees`}
           onChange={(event) => {
-            setPicked(null);
-            scene.current?.fold(Number(event.target.value));
+            setTargetPosture(null);
+            scene.current?.snapToDegrees(Number(event.target.value));
           }}
         />
         <output className={styles.angle}>{angle}°</output>
