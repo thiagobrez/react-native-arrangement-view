@@ -5,13 +5,12 @@
 #import <react/renderer/components/RNArrangementViewSpec/Props.h>
 using namespace facebook::react;
 
-// An older SDK has no UIHingeInteraction to compile, so the hinge stays unavailable.
 #if defined(__IPHONE_27_1) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_27_1
-#define RAV_HAS_HINGE 1
+#define RAV_SDK_HAS_HINGE_INTERACTION 1
 #endif
 
 @implementation RNHingeObserver {
-  std::optional<RNHingeObserverEventEmitter::OnHingeChange> _hinge;
+  std::optional<RNHingeObserverEventEmitter::OnHingeChange> _sentHinge;
   NSUInteger _updates;
 }
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -21,7 +20,7 @@ using namespace facebook::react;
 - (instancetype)initWithFrame:(CGRect)frame {
   if (self = [super initWithFrame:frame]) {
     _props = std::make_shared<const RNHingeObserverProps>();
-#ifdef RAV_HAS_HINGE
+#ifdef RAV_SDK_HAS_HINGE_INTERACTION
     if (@available(iOS 27.1, *)) {
       __weak RNHingeObserver *weakSelf = self;
       [self addInteraction:[[UIHingeInteraction alloc] initWithUpdateHandler:^(
@@ -31,14 +30,7 @@ using namespace facebook::react;
         UIHinge *hinge = update.hinge;
         NSUInteger current = ++strongSelf->_updates;
         if (!hinge) {
-          // The interaction also reports no hinge just before the view leaves its window, as
-          // under a pushed screen, which keeps the last state: it reports the current one when
-          // the view returns. Decide once the move is over. A view still in a window, with no
-          // newer update, has no hinge.
-          dispatch_async(dispatch_get_main_queue(), ^{
-            RNHingeObserver *view = weakSelf;
-            if (view.window && view->_updates == current) [view emit:{false, 0, "unknown"}];
-          });
+          [strongSelf reportNoHingeUnlessLeavingWindow:current];
           return;
         }
         std::string status = "unknown";
@@ -48,20 +40,27 @@ using namespace facebook::react;
           case UIHingeStatusFullyOpen: status = "fullyOpen"; break;
           default: break;
         }
-        [strongSelf emit:{true, hinge.angle, status}];
+        [strongSelf emitIfChanged:{true, hinge.angle, status}];
       }]];
     }
 #endif
   }
   return self;
 }
-- (void)emit:(RNHingeObserverEventEmitter::OnHingeChange)hinge {
-  // The interaction repeats equal updates as a fold settles.
-  if (_hinge && _hinge->available == hinge.available && _hinge->angle == hinge.angle &&
-      _hinge->status == hinge.status)
+- (void)reportNoHingeUnlessLeavingWindow:(NSUInteger)update {
+  // The interaction reports no hinge before the view leaves its window, so decide after the move.
+  __weak RNHingeObserver *weakSelf = self;
+  dispatch_async(dispatch_get_main_queue(), ^{
+    RNHingeObserver *view = weakSelf;
+    if (view.window && view->_updates == update) [view emitIfChanged:{false, 0, "unknown"}];
+  });
+}
+- (void)emitIfChanged:(RNHingeObserverEventEmitter::OnHingeChange)hinge {
+  if (_sentHinge && _sentHinge->available == hinge.available && _sentHinge->angle == hinge.angle &&
+      _sentHinge->status == hinge.status)
     return;
   if (!_eventEmitter) return;
-  _hinge = hinge;
+  _sentHinge = hinge;
   std::static_pointer_cast<const RNHingeObserverEventEmitter>(_eventEmitter)->onHingeChange(hinge);
 }
 @end

@@ -16,31 +16,27 @@ private final class ArrangementModel: ObservableObject {
   private var reportScheduled = false
   private var sentHinge: (Bool, Double, String)?
 
-  /// SwiftUI repeats `onHingeChange` with equal contexts while a fold
-  /// relayouts, so only a hinge that differs from the last one sent goes out.
-  func sendHinge(_ available: Bool, _ angle: Double, _ status: String) {
+  func sendHingeIfChanged(_ available: Bool, _ angle: Double, _ status: String) {
     if let sentHinge, sentHinge == (available, angle, status) { return }
     sentHinge = (available, angle, status)
     hingeChanged?(available, angle, status)
   }
 
-  /// Reports where the panes are once the current layout pass is over, and
-  /// only if that changed. A hidden pane is not in the window.
   func schedulePanesReport() {
     guard !reportScheduled else { return }
     reportScheduled = true
     DispatchQueue.main.async { [weak self] in
       guard let self else { return }
       reportScheduled = false
-      guard let host, let primary = frame(of: primary, in: host) else { return }
-      let secondary = frame(of: secondary, in: host)
+      guard let host, let primary = visibleFrame(of: primary, in: host) else { return }
+      let secondary = visibleFrame(of: secondary, in: host)
       if let reported, reported.primary == primary, reported.secondary == secondary { return }
       reported = (primary, secondary)
       panesChanged?(primary, secondary)
     }
   }
 
-  private func frame(of pane: UIView?, in host: UIView) -> CGRect? {
+  private func visibleFrame(of pane: UIView?, in host: UIView) -> CGRect? {
     guard let container = pane?.superview as? PaneContainer,
           container.window != nil, !container.isHidden,
           container.isDescendant(of: host) else { return nil }
@@ -83,6 +79,9 @@ private final class PaneContainer: UIView {
     super.didMoveToWindow()
     model?.schedulePanesReport()
   }
+  func removePaneIfStillOwned() {
+    if pane.superview === self { pane.removeFromSuperview() }
+  }
 }
 
 private struct ReactPane: UIViewRepresentable {
@@ -94,33 +93,28 @@ private struct ReactPane: UIViewRepresentable {
     CGSize(width: proposal.width ?? 0, height: proposal.height ?? 0)
   }
   static func dismantleUIView(_ view: PaneContainer, coordinator: ()) {
-    // A style change may already have moved the same React view to its new slot.
-    if view.pane.superview === view { view.pane.removeFromSuperview() }
+    view.removePaneIfStillOwned()
     view.model?.schedulePanesReport()
   }
 }
 
 private struct ArrangementContent: View {
   @ObservedObject var model: ArrangementModel
-  @Environment(\.layoutDirection) private var layoutDirection
+  @Environment(\.layoutDirection) private var inheritedLayoutDirection
 
-  // The panes keep the inherited direction if the split overrides it.
-  @ViewBuilder private var primary: some View {
-    if let pane = model.primary {
-      ReactPane(pane: pane, model: model).environment(\.layoutDirection, layoutDirection)
-    }
-  }
-  @ViewBuilder private var secondary: some View {
-    if let pane = model.secondary {
-      ReactPane(pane: pane, model: model).environment(\.layoutDirection, layoutDirection)
+  private var primary: some View { reactPane(model.primary) }
+  private var secondary: some View { reactPane(model.secondary) }
+  @ViewBuilder private func reactPane(_ pane: UIView?) -> some View {
+    if let pane {
+      ReactPane(pane: pane, model: model).environment(\.layoutDirection, inheritedLayoutDirection)
     }
   }
 
   // SwiftUI puts a split's primary pane on the leading side and cannot choose
   // the side, so the split reverses the direction when `primaryEdge` is trailing.
   private var splitDirection: LayoutDirection {
-    guard model.primaryEdge == "trailing" else { return layoutDirection }
-    return layoutDirection == .rightToLeft ? .leftToRight : .rightToLeft
+    guard model.primaryEdge == "trailing" else { return inheritedLayoutDirection }
+    return inheritedLayoutDirection == .rightToLeft ? .leftToRight : .rightToLeft
   }
 
   @ViewBuilder var body: some View {
@@ -131,7 +125,7 @@ private struct ArrangementContent: View {
       nativeArrangement
         .onHingeChange { _, context in
           guard let hinge = context.hinge else {
-            model.sendHinge(false, 0, "unknown")
+            model.sendHingeIfChanged(false, 0, "unknown")
             return
           }
           let status: String
@@ -141,7 +135,7 @@ private struct ArrangementContent: View {
           case .fullyOpen: status = "fullyOpen"
           default: status = "unknown"
           }
-          model.sendHinge(true, hinge.angle.radians, status)
+          model.sendHingeIfChanged(true, hinge.angle.radians, status)
         }
     } else {
       fallback
@@ -204,11 +198,10 @@ public final class RNArrangementHost: UIView {
   @objc public var onHingeChange: ((Bool, Double, String) -> Void)? {
     didSet { model.hingeChanged = onHingeChange }
   }
-  @objc public var onPaneLayout: ((UIView, CGRect) -> Void)? {
+  @objc public var onPaneLayout: ((_ pane: UIView, _ frameInHost: CGRect) -> Void)? {
     didSet { model.paneLayout = onPaneLayout }
   }
-  /// The panes' frames in this view, and whether the secondary is shown.
-  @objc public var onPanesChange: ((CGRect, CGRect, Bool) -> Void)? {
+  @objc public var onPanesChange: ((_ primaryInHost: CGRect, _ secondaryInHost: CGRect, _ secondaryVisible: Bool) -> Void)? {
     didSet {
       model.panesChanged = onPanesChange.map { report in
         { primary, secondary in report(primary, secondary ?? .zero, secondary != nil) }
