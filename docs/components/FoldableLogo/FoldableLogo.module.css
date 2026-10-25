@@ -13,6 +13,7 @@
 }
 
 .stage {
+  --model-height: 86%;
   position: relative;
   width: 100%;
   max-width: 26rem;
@@ -38,10 +39,9 @@
   opacity: 1;
 }
 
-/* The image stands where the model appears, at about its size. */
 .placeholder {
   width: auto;
-  height: 86%;
+  height: var(--model-height);
   margin: auto;
   pointer-events: none;
 }

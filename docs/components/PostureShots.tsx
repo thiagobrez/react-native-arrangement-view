@@ -9,14 +9,13 @@ const allPlatforms = [
 type Platform = (typeof allPlatforms)[number]['dir'];
 
 type Props = {
-  /** A folder in public/. */
-  dir: string;
+  publicFolder: string;
   postures: { file: string; label: string }[];
   platforms?: Platform[];
 };
 
 export function PostureShots({
-  dir,
+  publicFolder,
   postures,
   platforms = ['ios', 'android'],
 }: Props) {
@@ -34,7 +33,9 @@ export function PostureShots({
           {shown.map((platform) => (
             <div key={platform.dir} className={styles.shot}>
               <img
-                src={withBase(`/${dir}/${platform.dir}-${posture.file}.jpg`)}
+                src={withBase(
+                  `/${publicFolder}/${platform.dir}-${posture.file}.jpg`
+                )}
                 alt={`${platform.label}, ${posture.label.toLowerCase()}`}
                 loading="lazy"
               />

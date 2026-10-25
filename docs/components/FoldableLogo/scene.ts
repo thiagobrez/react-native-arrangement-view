@@ -26,34 +26,30 @@ import {
 } from 'three';
 import type { Frame } from '../../../src/layout.ts';
 import {
-  cover,
+  coverDp,
   describeDevice,
-  initialPose,
-  inner,
+  innerDp,
+  logoPose,
   postures,
   type DeviceState,
-  type Orientation,
+  type Hold,
   type Posture,
 } from './device.ts';
 
 export interface FoldableScene {
-  /** Animates to a posture, and turns the camera to show it. */
-  pose(posture: Posture): void;
-  /** Folds to an angle in degrees at once, as a slider does. */
-  fold(angle: number): void;
+  animateTo(posture: Posture): void;
+  snapToDegrees(degrees: number): void;
   dispose(): void;
 }
 
-// The device, in world units. Each half is a display's half and a bezel wide.
-const DP = 1 / 300;
-const BEZEL = 36 * DP;
-const HALF_WIDTH = (inner.width / 2) * DP + BEZEL;
-const HEIGHT = inner.height * DP + 2 * BEZEL;
+const WORLD_UNITS_PER_DP = 1 / 300;
+const BEZEL = 36 * WORLD_UNITS_PER_DP;
+const HALF_WIDTH = (innerDp.width / 2) * WORLD_UNITS_PER_DP + BEZEL;
+const HEIGHT = innerDp.height * WORLD_UNITS_PER_DP + 2 * BEZEL;
 const THICKNESS = 0.13;
 const CORNER = 0.26;
 const BEVEL = 0.022;
-// Keeps a display clear of the body it lies on.
-const LIFT = 0.003;
+const Z_FIGHT_OFFSET = 0.003;
 
 const BODY = '#262a3c';
 const SCREEN_OFF = '#1b1e2b';
@@ -62,9 +58,10 @@ const PRIMARY = ['#7c6cf2', '#5a4bd1'] as const;
 const SECONDARY = ['#2dc2b4', '#1d958f'] as const;
 
 const FIELD_OF_VIEW = 30;
-// The space the camera keeps in view, enough for the device open flat.
-const VIEW_WIDTH = 4.5;
-const VIEW_HEIGHT = 3.9;
+const VIEW_MARGIN_X = 133 * WORLD_UNITS_PER_DP;
+const VIEW_MARGIN_Y = 89 * WORLD_UNITS_PER_DP;
+const VIEW_WIDTH = 2 * HALF_WIDTH + 2 * VIEW_MARGIN_X;
+const VIEW_HEIGHT = HEIGHT + 2 * VIEW_MARGIN_Y;
 
 const views: Record<Posture, readonly [yaw: number, pitch: number]> = {
   closed: [24, 10],
@@ -74,45 +71,49 @@ const views: Record<Posture, readonly [yaw: number, pitch: number]> = {
   tent: [22, 20],
 };
 
-/**
- * How each orientation holds the device. The hinge runs along the device's Y
- * axis, and the inner display faces +Z open flat. `share` is how much of the
- * fold the right half takes: both halves fold evenly, but on a table the
- * right half lies still. `turn` is how far a closing device turns its cover
- * to the front.
- */
-const holds: Record<
-  Orientation,
-  { quaternion: Quaternion; share: number; turn: number }
-> = {
-  upright: { quaternion: new Quaternion(), share: 0.5, turn: 1 },
-  // The right half on the table, the hinge along the table's far side.
-  tabletop: {
-    quaternion: basis([0, 0, 1], [1, 0, 0], [0, 1, 0]),
-    share: 0,
-    turn: 0,
-  },
-  // The hinge on top, the cover display towards the camera.
-  tent: {
-    quaternion: basis([0, 0, -1], [1, 0, 0], [0, -1, 0]),
-    share: 0.5,
-    turn: 0,
-  },
-};
-
 type Axis = [number, number, number];
 
-function basis(x: Axis, y: Axis, z: Axis) {
+const TOWARD_VIEWER: Axis = [0, 0, 1];
+const AWAY_FROM_VIEWER: Axis = [0, 0, -1];
+const ACROSS: Axis = [1, 0, 0];
+const UP: Axis = [0, 1, 0];
+const DOWN: Axis = [0, -1, 0];
+
+function basis(rightHalf: Axis, hinge: Axis, innerDisplay: Axis) {
   return new Quaternion().setFromRotationMatrix(
     new Matrix4().makeBasis(
-      new Vector3(...x),
-      new Vector3(...y),
-      new Vector3(...z)
+      new Vector3(...rightHalf),
+      new Vector3(...hinge),
+      new Vector3(...innerDisplay)
     )
   );
 }
 
-/** A value that eases to its target without overshooting. */
+const holds: Record<
+  Hold,
+  {
+    quaternion: Quaternion;
+    rightHalfFoldShare: number;
+    coverTurnOnClose: number;
+  }
+> = {
+  upright: {
+    quaternion: new Quaternion(),
+    rightHalfFoldShare: 0.5,
+    coverTurnOnClose: 1,
+  },
+  tabletop: {
+    quaternion: basis(TOWARD_VIEWER, ACROSS, UP),
+    rightHalfFoldShare: 0,
+    coverTurnOnClose: 0,
+  },
+  tent: {
+    quaternion: basis(AWAY_FROM_VIEWER, ACROSS, DOWN),
+    rightHalfFoldShare: 0.5,
+    coverTurnOnClose: 0,
+  },
+};
+
 class Spring {
   value: number;
   target: number;
@@ -135,11 +136,12 @@ class Spring {
 
   step(dt: number) {
     if (this.value === this.target && this.velocity === 0) return false;
-    const damping = 2 * Math.sqrt(this.stiffness);
+    const criticalDamping = 2 * Math.sqrt(this.stiffness);
     const steps = Math.ceil(dt / 0.004);
     for (let i = 0; i < steps; i++) {
       const force =
-        this.stiffness * (this.target - this.value) - damping * this.velocity;
+        this.stiffness * (this.target - this.value) -
+        criticalDamping * this.velocity;
       this.velocity += (force * dt) / steps;
       this.value += (this.velocity * dt) / steps;
     }
@@ -165,14 +167,12 @@ function frameSprings(frame: Frame): FrameSprings {
 
 const frameKeys = ['left', 'top', 'width', 'height'] as const;
 
-/** A display: its panes are painted on a canvas, a pixel to the dp. */
-interface Screen {
+interface PaintedDisplay {
   size: { width: number; height: number };
   context: CanvasRenderingContext2D;
   texture: CanvasTexture;
   on: Spring;
-  /** 0 upright, 1 turned a quarter. */
-  turn: Spring;
+  quarterTurn: Spring;
   primary: FrameSprings;
   secondary: FrameSprings;
   secondaryOn: Spring;
@@ -182,13 +182,13 @@ interface Screen {
 }
 
 const separated = (state: DeviceState) =>
-  state.screen === 'inner' && state.status === 'partiallyOpen';
+  state.appDisplay === 'inner' && state.status === 'partiallyOpen';
 
-function createScreen(
-  size: Screen['size'],
+function createPaintedDisplay(
+  size: PaintedDisplay['size'],
   state: DeviceState,
   on: boolean
-): Screen {
+): PaintedDisplay {
   const canvas = document.createElement('canvas');
   canvas.width = size.width;
   canvas.height = size.height;
@@ -198,7 +198,7 @@ function createScreen(
   const full = { left: 0, top: 0, ...size };
   const springs = {
     on: new Spring(on ? 1 : 0, 400),
-    turn: new Spring(on && state.landscape ? 1 : 0),
+    quarterTurn: new Spring(on && state.landscape ? 1 : 0),
     secondaryOn: new Spring(on && state.secondary ? 1 : 0),
     crease: new Spring(on && separated(state) ? 1 : 0),
   };
@@ -220,23 +220,22 @@ function createScreen(
   };
 }
 
-/**
- * Points a display's springs at what the device shows. A display that is off
- * has nothing to animate from, so it takes the layout at once.
- */
-function aim(screen: Screen, state: DeviceState, active: boolean) {
-  const off = screen.on.value < 0.02;
+const OFF_BELOW = 0.02;
+
+function retarget(screen: PaintedDisplay, state: DeviceState, active: boolean) {
+  const nothingToAnimateFrom = screen.on.value < OFF_BELOW;
   screen.on.target = active ? 1 : 0;
   if (!active) return;
 
-  const set = (spring: Spring, target: number, jump = off) => {
+  const set = (spring: Spring, target: number, jump = nothingToAnimateFrom) => {
     if (jump) spring.jump(target);
     else spring.target = target;
   };
-  set(screen.turn, state.landscape ? 1 : 0);
+  set(screen.quarterTurn, state.landscape ? 1 : 0);
   set(screen.crease, separated(state) ? 1 : 0);
   set(screen.secondaryOn, state.secondary ? 1 : 0);
-  const appearing = off || screen.secondaryOn.value < 0.02;
+  const appearing =
+    nothingToAnimateFrom || screen.secondaryOn.value < OFF_BELOW;
   for (const key of frameKeys) {
     set(screen.primary[key], state.primary[key]);
     if (state.secondary)
@@ -244,10 +243,10 @@ function aim(screen: Screen, state: DeviceState, active: boolean) {
   }
 }
 
-function paint(screen: Screen, font: string) {
+function paint(screen: PaintedDisplay, font: string) {
   const { context, size } = screen;
   const on = MathUtils.clamp(screen.on.value, 0, 1);
-  const turn = MathUtils.clamp(screen.turn.value, 0, 1);
+  const quarterTurn = MathUtils.clamp(screen.quarterTurn.value, 0, 1);
   context.globalAlpha = 1;
   context.fillStyle = SCREEN_OFF;
   context.fillRect(0, 0, size.width, size.height);
@@ -279,10 +278,10 @@ function paint(screen: Screen, font: string) {
     context.fillStyle = gradient;
     context.fillRect(left, top, width, height);
 
-    const across = MathUtils.lerp(width, height, turn);
-    const down = MathUtils.lerp(height, width, turn);
+    const across = MathUtils.lerp(width, height, quarterTurn);
+    const down = MathUtils.lerp(height, width, quarterTurn);
     context.translate(left + width / 2, top + height / 2);
-    context.rotate((-turn * Math.PI) / 2);
+    context.rotate((-quarterTurn * Math.PI) / 2);
     context.translate(-across / 2 + 44, -down / 2 + 44);
     context.textBaseline = 'top';
     context.fillStyle = '#fff';
@@ -362,15 +361,15 @@ function roundedRect(
   return shape;
 }
 
-/**
- * A half of the device: its inner face on the plane z = 0, the hinge along
- * x = 0. `side` is 1 for the right half, -1 for the left.
- */
-function bodyGeometry(side: 1 | -1) {
+const RIGHT = 1;
+const LEFT = -1;
+type Side = typeof RIGHT | typeof LEFT;
+
+function bodyGeometry(side: Side) {
   const outer = { topRight: CORNER, bottomRight: CORNER };
   const hinge = { topLeft: 0.04, bottomLeft: 0.04 };
   const shape =
-    side === 1
+    side === RIGHT
       ? roundedRect(0, -HEIGHT / 2, HALF_WIDTH, HEIGHT / 2, {
           ...outer,
           ...hinge,
@@ -391,11 +390,7 @@ function bodyGeometry(side: 1 | -1) {
   }).translate(0, 0, BEVEL - THICKNESS);
 }
 
-/**
- * A display's surface facing +Z. `from` and `to` are the part of its texture
- * it shows across, so the inner display's halves each show a half.
- */
-function displayGeometry(shape: Shape, from: number, to: number) {
+function displayGeometry(shape: Shape, uStart: number, uEnd: number) {
   const geometry = new ShapeGeometry(shape, 20);
   geometry.computeBoundingBox();
   const { min, max } = geometry.boundingBox!;
@@ -405,11 +400,31 @@ function displayGeometry(shape: Shape, from: number, to: number) {
     const across = (position.getX(i) - min.x) / (max.x - min.x);
     uv.setXY(
       i,
-      MathUtils.lerp(from, to, across),
+      MathUtils.lerp(uStart, uEnd, across),
       (position.getY(i) - min.y) / (max.y - min.y)
     );
   }
   return geometry;
+}
+
+function spineGeometry() {
+  const radius = THICKNESS * 0.97;
+  const thetaStart = Math.PI / 2;
+  const thetaLength = Math.PI;
+  return new CylinderGeometry(
+    radius,
+    radius,
+    HEIGHT - 0.1,
+    24,
+    1,
+    false,
+    thetaStart,
+    thetaLength
+  );
+}
+
+function wrapDegrees(degrees: number) {
+  return MathUtils.euclideanModulo(degrees + 180, 360) - 180;
 }
 
 export function createFoldableScene(
@@ -421,7 +436,9 @@ export function createFoldableScene(
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = VSMShadowMap;
 
-  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const prefersReducedMotion = matchMedia(
+    '(prefers-reduced-motion: reduce)'
+  ).matches;
   const font = getComputedStyle(canvas).fontFamily;
   const disposables: { dispose(): void }[] = [renderer];
   const mesh = (
@@ -455,25 +472,25 @@ export function createFoldableScene(
   ground.receiveShadow = true;
   scene.add(ground);
 
-  let pose = initialPose;
+  let pose = logoPose;
   let state = describeDevice(pose);
   const screens = {
-    cover: createScreen(cover, state, state.screen === 'cover'),
-    inner: createScreen(inner, state, state.screen === 'inner'),
+    cover: createPaintedDisplay(coverDp, state, state.appDisplay === 'cover'),
+    inner: createPaintedDisplay(innerDp, state, state.appDisplay === 'inner'),
   };
   const bodyMaterial = new MeshStandardMaterial({
     color: BODY,
     roughness: 0.55,
     metalness: 0.25,
   });
-  const display = (geometry: BufferGeometry, screen: Screen) => {
+  const display = (geometry: BufferGeometry, screen: PaintedDisplay) => {
     disposables.push(screen.texture);
     return mesh(
       geometry,
       new MeshBasicMaterial({ map: screen.texture, toneMapped: false })
     );
   };
-  const half = (side: 1 | -1) => {
+  const half = (side: Side) => {
     const group = new Group();
     const body = mesh(bodyGeometry(side), bodyMaterial);
     body.castShadow = true;
@@ -481,7 +498,7 @@ export function createFoldableScene(
     const radius = CORNER - BEZEL;
     const top = HEIGHT / 2 - BEZEL;
     const shape =
-      side === 1
+      side === RIGHT
         ? roundedRect(0, -top, edge, top, {
             topRight: radius,
             bottomRight: radius,
@@ -491,20 +508,20 @@ export function createFoldableScene(
             bottomLeft: radius,
           });
     const screen = display(
-      side === 1
+      side === RIGHT
         ? displayGeometry(shape, 0.5, 1)
         : displayGeometry(shape, 0, 0.5),
       screens.inner
     );
-    screen.position.z = LIFT;
+    screen.position.z = Z_FIGHT_OFFSET;
     group.add(body, screen);
     return { group, body };
   };
-  const right = half(1);
-  const left = half(-1);
+  const right = half(RIGHT);
+  const left = half(LEFT);
 
-  const coverWidth = cover.width * DP;
-  const coverHeight = cover.height * DP;
+  const coverWidth = coverDp.width * WORLD_UNITS_PER_DP;
+  const coverHeight = coverDp.height * WORLD_UNITS_PER_DP;
   const coverDisplay = display(
     displayGeometry(
       roundedRect(
@@ -524,37 +541,23 @@ export function createFoldableScene(
     ).rotateY(Math.PI),
     screens.cover
   );
-  coverDisplay.position.set(-HALF_WIDTH / 2, 0, -THICKNESS - LIFT);
+  coverDisplay.position.set(-HALF_WIDTH / 2, 0, -THICKNESS - Z_FIGHT_OFFSET);
   left.group.add(coverDisplay);
 
-  // Half a cylinder about the hinge, on the outside of the fold.
-  const spine = mesh(
-    new CylinderGeometry(
-      THICKNESS * 0.97,
-      THICKNESS * 0.97,
-      HEIGHT - 0.1,
-      24,
-      1,
-      false,
-      Math.PI / 2,
-      Math.PI
-    ),
-    bodyMaterial
-  );
+  const spine = mesh(spineGeometry(), bodyMaterial);
   spine.castShadow = true;
 
   const device = new Group();
   device.add(right.group, left.group, spine);
   scene.add(device);
 
-  const angle = new Spring(pose.angle, 60, 0.05);
+  const angle = new Spring(pose.degrees, 60, 0.05);
   const yaw = new Spring(views[state.posture][0], 60, 0.01);
   const pitch = new Spring(views[state.posture][1], 60, 0.01);
-  // A change of orientation eases from how the device was held to the new hold.
-  const hold = holds[pose.orientation];
+  const hold = holds[pose.hold];
   const held = { ...hold, quaternion: hold.quaternion.clone() };
-  let from = { ...held, quaternion: held.quaternion.clone() };
-  const progress = new Spring(1, 60);
+  let previousHold = { ...held, quaternion: held.quaternion.clone() };
+  const holdBlend = new Spring(1, 60);
 
   const box = new Box3();
   const target = new Vector3();
@@ -564,21 +567,33 @@ export function createFoldableScene(
   let reported = '';
 
   function place() {
-    const to = holds[pose.orientation];
-    const eased = MathUtils.clamp(progress.value, 0, 1);
-    held.quaternion.slerpQuaternions(from.quaternion, to.quaternion, eased);
-    held.share = MathUtils.lerp(from.share, to.share, eased);
-    held.turn = MathUtils.lerp(from.turn, to.turn, eased);
+    const to = holds[pose.hold];
+    const eased = MathUtils.clamp(holdBlend.value, 0, 1);
+    held.quaternion.slerpQuaternions(
+      previousHold.quaternion,
+      to.quaternion,
+      eased
+    );
+    held.rightHalfFoldShare = MathUtils.lerp(
+      previousHold.rightHalfFoldShare,
+      to.rightHalfFoldShare,
+      eased
+    );
+    held.coverTurnOnClose = MathUtils.lerp(
+      previousHold.coverTurnOnClose,
+      to.coverTurnOnClose,
+      eased
+    );
 
-    // Upright, a device turns as it closes, to show its cover.
     const fold = MathUtils.degToRad(180 - angle.value);
-    const turn = (1 - MathUtils.smoothstep(angle.value, 0, 70)) * held.turn;
+    const turn =
+      (1 - MathUtils.smoothstep(angle.value, 0, 70)) * held.coverTurnOnClose;
     device.quaternion
       .copy(held.quaternion)
       .multiply(turned.setFromAxisAngle(up, (turn * Math.PI) / 2));
-    right.group.rotation.y = -fold * held.share;
-    left.group.rotation.y = fold * (1 - held.share);
-    spine.rotation.y = (fold * (1 - 2 * held.share)) / 2;
+    right.group.rotation.y = -fold * held.rightHalfFoldShare;
+    left.group.rotation.y = fold * (1 - held.rightHalfFoldShare);
+    spine.rotation.y = (fold * (1 - 2 * held.rightHalfFoldShare)) / 2;
 
     device.position.set(0, 0, 0);
     device.updateMatrixWorld(true);
@@ -603,9 +618,8 @@ export function createFoldableScene(
     camera.lookAt(target);
   }
 
-  /** Advances a spring, or without motion takes it to its target. */
   const advance = (spring: Spring, dt: number) => {
-    if (!still) return spring.step(dt);
+    if (!prefersReducedMotion) return spring.step(dt);
     const moved = spring.value !== spring.target;
     spring.jump(spring.target);
     return moved;
@@ -613,13 +627,13 @@ export function createFoldableScene(
 
   function update(dt: number) {
     let moving = false;
-    for (const spring of [angle, yaw, pitch, progress]) {
+    for (const spring of [angle, yaw, pitch, holdBlend]) {
       if (advance(spring, dt)) moving = true;
     }
-    state = describeDevice({ ...pose, angle: angle.value });
+    state = describeDevice({ ...pose, degrees: angle.value });
     for (const name of ['cover', 'inner'] as const) {
       const screen = screens[name];
-      aim(screen, state, state.screen === name);
+      retarget(screen, state, state.appDisplay === name);
       let changed = screen.stale;
       for (const spring of screen.springs) {
         if (advance(spring, dt)) changed = moving = true;
@@ -703,23 +717,22 @@ export function createFoldableScene(
   canvas.addEventListener('pointercancel', onPointerUp);
 
   return {
-    pose(posture) {
+    animateTo(posture) {
       const next = postures.find(({ id }) => id === posture)!.pose;
-      if (next.orientation !== pose.orientation) {
-        from = { ...held, quaternion: held.quaternion.clone() };
-        progress.jump(0);
-        progress.target = 1;
+      if (next.hold !== pose.hold) {
+        previousHold = { ...held, quaternion: held.quaternion.clone() };
+        holdBlend.jump(0);
+        holdBlend.target = 1;
       }
-      pose = { ...pose, orientation: next.orientation };
-      angle.target = next.angle;
-      // Take the short way round to the posture's view.
+      pose = { ...pose, hold: next.hold };
+      angle.target = next.degrees;
       const [around, above] = views[posture];
-      yaw.jump(MathUtils.euclideanModulo(yaw.value + 180, 360) - 180);
+      yaw.jump(wrapDegrees(yaw.value));
       yaw.target = around;
       pitch.target = above;
       invalidate();
     },
-    fold(degrees) {
+    snapToDegrees(degrees) {
       angle.jump(MathUtils.clamp(degrees, 0, 180));
       invalidate();
     },

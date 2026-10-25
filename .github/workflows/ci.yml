@@ -58,8 +58,6 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  # Builds the APK that e2e-android installs. A Release build bundles the
-  # JavaScript, so no Metro server is needed, and the emulator runs x86_64.
   build-android:
     runs-on: ubuntu-latest
 
@@ -87,7 +85,7 @@ jobs:
         run: |
           yarn example expo prebuild --platform android
 
-      - name: Build example for Android
+      - name: Build Release APK for the x86_64 e2e emulator, with the JS bundled
         working-directory: apps/example-expo/android
         env:
           JAVA_OPTS: '-XX:MaxHeapSize=6g'
@@ -185,11 +183,10 @@ jobs:
         include:
           - runner: macos-latest
             xcode: '26'
-            arrangement: false
-          # The native ArrangementView needs the iOS 27.1 SDK; see ios/ArrangementHost.swift.
+            native-arrangement: false
           - runner: xcode-27
             xcode: '27.1'
-            arrangement: true
+            native-arrangement: true
 
     env:
       RCT_USE_RN_DEP: 1
@@ -215,19 +212,19 @@ jobs:
         run: |
           yarn example build:ios
 
-      # The library refers to SwiftUI's split style only when it compiled the native arrangement.
       - name: Check native ArrangementView is compiled only with the iOS 27.1 SDK
         run: |
           library=apps/example-expo/ios/build/Build/Products/Debug-iphonesimulator/ArrangementView/libArrangementView.a
+          native_only_symbol=SplitArrangementViewStyle
           test -f "$library"
-          if nm -u "$library" | grep SplitArrangementViewStyle > /dev/null; then
+          if nm -u "$library" | grep "$native_only_symbol" > /dev/null; then
             compiled=true
           else
             compiled=false
           fi
 
-          if [[ $compiled != "${{ matrix.arrangement }}" ]]; then
-            echo "::error::Native ArrangementView compiled: $compiled with the iOS $(xcrun --sdk iphoneos --show-sdk-version) SDK, expected ${{ matrix.arrangement }}"
+          if [[ $compiled != "${{ matrix.native-arrangement }}" ]]; then
+            echo "::error::Native ArrangementView compiled: $compiled with the iOS $(xcrun --sdk iphoneos --show-sdk-version) SDK, expected ${{ matrix.native-arrangement }}"
             exit 1
           fi
 
