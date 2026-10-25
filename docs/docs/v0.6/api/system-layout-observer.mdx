@@ -84,11 +84,12 @@ The observer reports once it knows `hasHinge`, so on an iPhone with a hinge its 
 
 ## Props
 
-| Prop                                                         | Default | Meaning                                                             |
-| ------------------------------------------------------------ | ------- | ------------------------------------------------------------------- |
-| `children`                                                   | none    | Content that reads the layout with `useSystemLayout`                |
-| `onSystemLayoutChange`                                       | none    | Called with each new [`SystemLayout`](#systemlayout)                |
-| [`barExtents`](#barextents) <PlatformBadge platform="ios" /> | none    | The bars to report `barInsets` for, as an extent in points per edge |
+| Prop                                                                   | Default | Meaning                                                             |
+| ---------------------------------------------------------------------- | ------- | ------------------------------------------------------------------- |
+| `children`                                                             | none    | Content that reads the layout with `useSystemLayout`                |
+| `onSystemLayoutChange`                                                 | none    | Called with each new [`SystemLayout`](#systemlayout)                |
+| [`barExtents`](#barextents) <PlatformBadge platform="ios" />           | none    | The bars to report `barInsets` for, as an extent in points per edge |
+| [`foldThreshold`](#foldthreshold) <PlatformBadge platform="android" /> | none    | The hinge angles at which each fold's `state` turns, in degrees     |
 
 ### `barExtents` <PlatformBadge platform="ios" />
 
@@ -108,6 +109,41 @@ function BottomControls() {
   return <Toolbar style={{ position: 'absolute', bottom: bottom ?? 0 }} />;
 }
 ```
+
+### `foldThreshold` <PlatformBadge platform="android" />
+
+`{ halfOpenAtDegrees: number; flatAtDegrees: number }`, Android only. iOS ignores it.
+
+Decides each fold's `state` by the hinge angle, instead of by WindowManager's posture. A fold reads `"halfOpen"` once the angle is at or below `halfOpenAtDegrees`, and `"flat"` again once it is at or above `flatAtDegrees`. Between the two it keeps its state, so a hinge that rests near one of them doesn't flip the layout back and forth.
+
+Use it to lay out around a fold before WindowManager separates it. On the Pixel 10 Pro Fold emulator, WindowManager calls a fold flat down to 150°.
+
+```tsx
+const BOOK_FOLD = { halfOpenAtDegrees: 170, flatAtDegrees: 175 };
+
+<SystemLayoutObserver foldThreshold={BOOK_FOLD}>
+  <Spread />
+</SystemLayoutObserver>;
+
+const bentFold = (layout: SystemLayout) =>
+  layout.folds.find(
+    (fold) => fold.orientation === 'vertical' && fold.state === 'halfOpen'
+  ) ?? null;
+
+function Spread() {
+  const fold = useSystemLayout(bentFold);
+  return fold ? <TwoPages leftWidth={fold.x} gap={fold.width} /> : <OnePage />;
+}
+```
+
+With this threshold, a fold that bends from 180° reads `"flat"` at 175° and 172°, and `"halfOpen"` from 170°. Opening again, it still reads `"halfOpen"` at 172°, and `"flat"` from 175°.
+
+- The threshold changes only `state`. `separating` stays WindowManager's.
+- The window keeps one history per threshold, so every observer in it with the same threshold reports the same state.
+- A history starts at `"flat"` and takes the latest angle at once, or the hinge angle sensor's first reading. It starts over when the fold turns between vertical and horizontal, when the window loses its fold, and when the window's last observer with the threshold leaves it, as when the observer unmounts.
+- The library listens to the hinge angle sensor only while an observer in the window has a threshold and the window has a fold. The angle never reaches JavaScript, so an angle that doesn't turn a fold's state sends no report.
+- On a device without a hinge angle sensor, `state` stays WindowManager's.
+- The threshold needs `0 < halfOpenAtDegrees < flatAtDegrees <= 180`, with the two still different as 32-bit floats, which Android compares. An invalid one throws a `RangeError` when the observer renders, on iOS too.
 
 ## SystemLayout
 
@@ -166,7 +202,7 @@ type Fold = {
 - `window` is the whole fold, in the coordinates `measureInWindow` returns. Every observer in a window reports the same `window` for a fold.
 - `orientation` is `"vertical"` when the fold runs from top to bottom, as in book posture. It comes from the whole fold, so a fold clipped by a short view keeps its orientation.
 - `separating` is true while the system divides content at the fold. On iOS, the division region is active, which is when UIKit moves its own columns to it. On Android, it is `FoldingFeature.isSeparating`, which is true while a folding screen is half-open, and always true for a hinge between two screens.
-- `state` <PlatformBadge platform="android" /> is WindowManager's posture for the fold, `"flat"` or `"halfOpen"`. It is `null` on iOS, which gives a region no posture. Read the hinge's posture from [`HingeState.status`](./use-hinge-change#hingestate).
+- `state` <PlatformBadge platform="android" /> is WindowManager's posture for the fold, `"flat"` or `"halfOpen"`, or the hinge angle's under a [`foldThreshold`](#foldthreshold). It is `null` on iOS, which gives a region no posture. Read the hinge's posture from [`HingeState.status`](./use-hinge-change#hingestate).
 
 ### A fold in every posture
 
@@ -179,7 +215,7 @@ The observer reports a fold in every posture the system lists it, flat included,
 | Closed                                           | None: the app is on the outer display | None: the app is on the cover display           |
 | The view on one side of the fold, or touching it | None                                  | None                                            |
 
-The system decides when a fold starts to separate. On the iPhone Duo simulator, UIKit activates the division as soon as the hinge leaves 180°. On the Pixel 10 Pro Fold emulator, WindowManager calls the fold flat down to 150° and half-open from 145°, so a fold bent to 160° is still reported with `separating: false`.
+The system decides when a fold starts to separate. On the iPhone Duo simulator, UIKit activates the division as soon as the hinge leaves 180°. On the Pixel 10 Pro Fold emulator, WindowManager calls the fold flat down to 150° and half-open from 145°, so a fold bent to 160° is still reported with `separating: false`. To lay out around it sooner, give the observer a [`foldThreshold`](#foldthreshold).
 
 ### Bands and lines
 
@@ -187,7 +223,7 @@ On iOS, a fold is the band UIKit reserves for it, which includes the margins it 
 
 ## Reports come only on change
 
-Nothing in the layout follows the hinge angle, so a device that folds sends a report only when a fold appears, moves, or turns separating, or when the view's size, safe area or traits change. For the angle and the hinge's posture, use a [`HingeObserver`](./hinge-observer).
+Nothing in the layout follows the hinge angle, so a device that folds sends a report only when a fold appears, moves, turns separating, or changes `state`, or when the view's size, safe area or traits change. Under a [`foldThreshold`](#foldthreshold), a fold that bends from 180° to 90° sends two reports on the Pixel 10 Pro Fold emulator, one when `state` turns at the threshold and one when WindowManager separates the fold. For the angle and the hinge's posture, use a [`HingeObserver`](./hinge-observer).
 
 ## Let a window with a hinge rotate <PlatformBadge platform="ios" />
 
