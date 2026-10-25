@@ -68,7 +68,7 @@ When you deliberately change what `arrange()` promises, such as a new option, a 
 What a pass means: on every input in the grid, and on the 500,000 random inputs, every property held. It is a bounded check, not a proof for all inputs. The grid covers:
 
 - **Options:** every combination of `arrangement`, `axes`, `hingePolicy`, `primaryEdge` and `rtl`. The `primaryEdge` values are: unset, each of the four sides, all four `[horizontal, vertical]` pairs, and one out-of-order pair.
-- **Window sizes:** 839 and 840 dp wide, and 479, 480, 899 and 900 dp tall, which puts every window on each side of the breakpoints in `arrange()`: `COMPACT_HEIGHT`, `EXPANDED_WIDTH` and `EXPANDED_HEIGHT`.
+- **Window sizes:** 839 and 840 dp wide, and 479, 480, 899 and 900 dp tall, which puts every window on each side of the breakpoints in `arrange()`: `HEIGHT_DP_MEDIUM_LOWER_BOUND`, `WIDTH_DP_EXPANDED_LOWER_BOUND` and `HEIGHT_DP_EXPANDED_LOWER_BOUND`.
 - **Arrangement:** 1 to 8 dp along the fold's axis, and 1 or 3 dp across it.
 - **Fold:** vertical and horizontal, from 1 dp before the arrangement to 1 dp past it, 0 to 3 dp wide, and flat, separating, or half-open.
 - **`hingeGap`:** 0 to 4, 6, and 24.
