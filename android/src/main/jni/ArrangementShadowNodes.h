@@ -46,10 +46,6 @@ struct PanePlacement {
 
 inline constexpr char ArrangementPaneComponentName[] = "RNArrangementPane";
 
-/**
- * A pane, positioned by the ArrangementView that holds it. The placement is a member, not state:
- * the ArrangementView derives it in every commit and is its only writer.
- */
 class ArrangementPaneShadowNode final
     : public ConcreteViewShadowNode<ArrangementPaneComponentName, RNArrangementPaneProps, RNArrangementPaneEventEmitter> {
  public:
@@ -63,9 +59,11 @@ class ArrangementPaneShadowNode final
     return placement_;
   }
 
+ private:
+  friend class ArrangementViewShadowNode;
+
   void place(const PanePlacement &placement);
 
- private:
   void applyPlacement();
 
   PanePlacement placement_;
