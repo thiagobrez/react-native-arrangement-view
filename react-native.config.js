@@ -8,6 +8,7 @@ module.exports = {
           'ArrangementViewComponentDescriptor',
           'ArrangementPaneComponentDescriptor',
           'RNHingeObserverComponentDescriptor',
+          'RNSystemLayoutObserverComponentDescriptor',
         ],
       },
     },

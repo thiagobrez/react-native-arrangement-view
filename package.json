@@ -147,6 +147,9 @@
         },
         "RNHingeObserver": {
           "className": "RNHingeObserver"
+        },
+        "RNSystemLayoutObserver": {
+          "className": "RNSystemLayoutObserver"
         }
       }
     },
