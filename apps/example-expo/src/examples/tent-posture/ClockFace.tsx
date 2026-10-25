@@ -6,18 +6,16 @@ import {
   StyleSheet,
   Text,
   View,
+  type StyleProp,
+  type ViewStyle,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface Props {
+  style?: StyleProp<ViewStyle>;
   alarm: Date;
   glow: Animated.Value;
   ringing: boolean;
-  /**
-   * The whole display is the clock, as on a nightstand: it keeps clear of the
-   * display's corners itself, and is red, like StandBy at night.
-   */
-  standBy: boolean;
+  night: boolean;
   onStop: () => void;
 }
 
@@ -27,29 +25,25 @@ const colors = {
   dawn: '#ffd7a3',
 };
 
-export function ClockFace({ alarm, glow, ringing, standBy, onStop }: Props) {
+export function ClockFace({
+  style,
+  alarm,
+  glow,
+  ringing,
+  night,
+  onStop,
+}: Props) {
   const [size, setSize] = useState({ width: 0, height: 0 });
-  const insets = useSafeAreaInsets();
   const now = useNow();
   const ink = glow.interpolate({
     inputRange: [0, 1],
-    outputRange: [standBy ? colors.night : colors.day, colors.dawn],
+    outputRange: [night ? colors.night : colors.day, colors.dawn],
   });
-  const [time, period] = formatTime(now).split(/\s/);
+  const [time, amPm] = formatTime(now).split(/\s/);
   const fontSize = Math.min(size.width / 2.8, size.height * 0.48);
 
   return (
-    <View
-      testID="clock-face"
-      style={[
-        styles.face,
-        // The same on both sides, so the clock stays centred on the display.
-        standBy && {
-          paddingVertical: Math.max(insets.top, insets.bottom),
-          paddingHorizontal: Math.max(insets.left, insets.right),
-        },
-      ]}
-    >
+    <View testID="clock-face" style={[styles.face, style]}>
       <Animated.View style={[styles.glow, { opacity: glow }]} />
       <View
         style={styles.content}
@@ -73,9 +67,8 @@ export function ClockFace({ alarm, glow, ringing, standBy, onStop }: Props) {
               adjustsFontSizeToFit
             >
               {time}
-              {/* AM or PM, where the locale has one. */}
-              {period && (
-                <Text style={{ fontSize: fontSize * 0.22 }}> {period}</Text>
+              {amPm && (
+                <Text style={{ fontSize: fontSize * 0.22 }}> {amPm}</Text>
               )}
             </Animated.Text>
             {ringing ? (

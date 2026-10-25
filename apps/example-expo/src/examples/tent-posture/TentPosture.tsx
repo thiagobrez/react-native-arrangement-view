@@ -5,7 +5,10 @@ import {
   useAnimatedValue,
   useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import {
   ArrangementView,
@@ -16,20 +19,15 @@ import { ClockFace } from './ClockFace';
 
 const PREVIEW_LEAD_SECONDS = 8;
 const PREVIEW_GLOW_SECONDS = 15;
+const HINGE_OPEN_RADIANS = 0.5;
+const COMPACT_HEIGHT = 480;
 
 export function TentPosture() {
   const [alarm, setAlarm] = useState(() => new Date(2026, 0, 1, 6, 30));
   const [wake, setWake] = useState<'asleep' | 'waking' | 'ringing'>('asleep');
   const glow = useAnimatedValue(0);
-
-  // iOS has no tent posture, and the hinge's status can't tell one apart: it
-  // lags behind the angle, so a tent reads `closed` when reached from closed
-  // and `partiallyOpen` when reached from open. What a tent is, is the hinge
-  // open while the app is on the outer display, in landscape: a window with a
-  // compact height, under 480 pt. The inner display is never that short.
-  const hingeOpen = useHingeSelector((hinge) => (hinge.angle ?? 0) > 0.5); // radians, about 30°
-  const { height } = useWindowDimensions();
-  const tent = hingeOpen && height < 480;
+  const tent = useTentPosture();
+  const symmetricSafeArea = useSymmetricSafeArea();
 
   const stop = () => {
     glow.stopAnimation();
@@ -58,16 +56,16 @@ export function TentPosture() {
   return (
     <SafeAreaView
       style={styles.screen}
-      // In a tent the clock reaches every edge and keeps clear of them itself.
       edges={tent ? [] : ['left', 'right', 'bottom']}
     >
       <ArrangementView style={styles.screen}>
         <ArrangementView.Primary>
           <ClockFace
+            style={tent && symmetricSafeArea}
             alarm={alarm}
             glow={glow}
             ringing={wake === 'ringing'}
-            standBy={tent}
+            night={tent}
             onStop={stop}
           />
         </ArrangementView.Primary>
@@ -82,6 +80,25 @@ export function TentPosture() {
       </ArrangementView>
     </SafeAreaView>
   );
+}
+
+// iOS has no tent posture, and the hinge's status lags behind its angle, so a
+// tent reads `closed` when reached from closed and `partiallyOpen` when
+// reached from open.
+function useTentPosture() {
+  const hingeOpen = useHingeSelector(
+    (hinge) => (hinge.angle ?? 0) > HINGE_OPEN_RADIANS
+  );
+  const outerDisplayInLandscape = useWindowDimensions().height < COMPACT_HEIGHT;
+  return hingeOpen && outerDisplayInLandscape;
+}
+
+function useSymmetricSafeArea() {
+  const insets = useSafeAreaInsets();
+  return {
+    paddingVertical: Math.max(insets.top, insets.bottom),
+    paddingHorizontal: Math.max(insets.left, insets.right),
+  };
 }
 
 const styles = StyleSheet.create({

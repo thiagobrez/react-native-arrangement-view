@@ -56,11 +56,10 @@ export function StepTracker() {
 
 type TabIcon = NonNullable<NativeBottomTabNavigationOptions['tabBarIcon']>;
 
-// Each tab's SF Symbol, and the Material Design icon drawn for Android.
 const glyphs = {
-  steps: ['shoeprints.fill', 'shoe-print'],
-  activities: ['flame.fill', 'fire'],
-  insights: ['sparkles', 'creation'],
+  steps: { sfSymbol: 'shoeprints.fill', materialIcon: 'shoe-print' },
+  activities: { sfSymbol: 'flame.fill', materialIcon: 'fire' },
+  insights: { sfSymbol: 'sparkles', materialIcon: 'creation' },
 } as const;
 
 function useTabIcons(): Record<keyof typeof glyphs, TabIcon> {
@@ -68,9 +67,9 @@ function useTabIcons(): Record<keyof typeof glyphs, TabIcon> {
   useEffect(() => {
     if (Platform.OS !== 'android') return;
     Promise.all(
-      Object.entries(glyphs).map(async ([tab, [, name]]) => [
+      Object.entries(glyphs).map(async ([tab, { materialIcon }]) => [
         tab,
-        await MaterialDesignIcons.getImageSource(name, 24, colors.text),
+        await MaterialDesignIcons.getImageSource(materialIcon, 24, colors.text),
       ])
     ).then((entries) => setImages(Object.fromEntries(entries)));
   }, []);
@@ -78,7 +77,7 @@ function useTabIcons(): Record<keyof typeof glyphs, TabIcon> {
     (tab: keyof typeof glyphs): TabIcon =>
     () =>
       Platform.OS === 'ios'
-        ? { sfSymbol: glyphs[tab][0] }
+        ? { sfSymbol: glyphs[tab].sfSymbol }
         : (images[tab] ?? { uri: '' });
   return {
     steps: icon('steps'),
