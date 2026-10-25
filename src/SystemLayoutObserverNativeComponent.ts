@@ -53,6 +53,8 @@ export interface NativeProps extends ViewProps {
   barExtentBottom?: CodegenTypes.WithDefault<CodegenTypes.Double, -1>;
   barExtentLeading?: CodegenTypes.WithDefault<CodegenTypes.Double, -1>;
   barExtentTrailing?: CodegenTypes.WithDefault<CodegenTypes.Double, -1>;
+  halfOpenAtDegrees?: CodegenTypes.WithDefault<CodegenTypes.Double, -1>;
+  flatAtDegrees?: CodegenTypes.WithDefault<CodegenTypes.Double, -1>;
   onSystemLayoutChange?: CodegenTypes.DirectEventHandler<SystemLayoutEvent>;
 }
 

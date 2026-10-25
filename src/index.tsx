@@ -14,6 +14,7 @@ export type {
   BarEdge,
   Fold,
   FoldState,
+  FoldThreshold,
   HingeChangeHandler,
   HingeObserverProps,
   HingePolicy,

@@ -1,10 +1,6 @@
 package com.arrangementview
 
-import android.content.Context
 import android.graphics.Point
-import android.hardware.Sensor
-import android.hardware.SensorManager
-import android.os.Build
 import android.view.View
 import android.view.ViewTreeObserver
 import androidx.core.view.ViewCompat
@@ -18,10 +14,9 @@ import com.facebook.react.uimanager.ThemedReactContext
 class SystemLayoutObserverView(private val reactContext: ThemedReactContext) :
   View(reactContext), WindowFolds.Listener {
 
-  private val hasHingeSensor =
-    Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
-      (reactContext.getSystemService(Context.SENSOR_SERVICE) as SensorManager)
-        .getDefaultSensor(Sensor.TYPE_HINGE_ANGLE) != null
+  var halfOpenAtDegrees = -1.0
+  var flatAtDegrees = -1.0
+  private var threshold: FoldThreshold? = null
   private var folds: WindowFolds? = null
   private var sawFold = false
   private var reported: Report? = null
@@ -48,24 +43,36 @@ class SystemLayoutObserverView(private val reactContext: ThemedReactContext) :
 
   override fun onWindowFoldsChanged() = report()
 
+  /** Called once per props update, so the two degrees always change together. */
+  fun updateThreshold() {
+    val next =
+      if (halfOpenAtDegrees < 0) null
+      else FoldThreshold(halfOpenAtDegrees.toFloat(), flatAtDegrees.toFloat())
+    if (next == threshold) return
+    threshold = next
+    folds?.subscribe(this, next)
+    report()
+  }
+
   private fun report() {
     // The activity can be missing when the view first attaches, so every frame retries.
     if (folds == null) {
       val activity = reactContext.currentActivity
       if (activity == null || !isAttachedToWindow) return
-      folds = WindowFolds.of(activity).also { it.subscribe(this) }
+      folds = WindowFolds.of(activity).also { it.subscribe(this, threshold) }
     }
-    val features = folds?.features ?: return
+    val folds = folds ?: return
+    val features = folds.features ?: return
     if (width == 0 || height == 0) return
     sawFold = sawFold || features.isNotEmpty()
-    val report = measure(features)
+    val report = measure(folds, features)
     if (report == reported) return
     reported = report
     dispatchReactEvent(reactContext, EVENT, report.toEvent())
   }
 
   /** In dp, each divided by the density once, after the pixel arithmetic. */
-  private fun measure(features: List<FoldingFeature>): Report {
+  private fun measure(folds: WindowFolds, features: List<FoldingFeature>): Report {
     val density = resources.displayMetrics.density
     val location = IntArray(2).also { getLocationInWindow(it) }
     val window = rootView
@@ -78,7 +85,7 @@ class SystemLayoutObserverView(private val reactContext: ThemedReactContext) :
     return Report(
       width = width / density,
       height = height / density,
-      hasHinge = hasHingeSensor || sawFold,
+      hasHinge = folds.hasHingeSensor || sawFold,
       safeArea =
         Edges(
           top = maxOf(0, (bars?.top ?: 0) - location[1]) / density,
@@ -102,7 +109,7 @@ class SystemLayoutObserverView(private val reactContext: ThemedReactContext) :
                 bounds.width() / density,
                 bounds.height() / density),
             separating = feature.isSeparating,
-            state = if (feature.state == FoldingFeature.State.HALF_OPENED) "halfOpen" else "flat")
+            state = folds.state(feature, threshold))
         },
       occlusions =
         insets?.displayCutout?.boundingRects.orEmpty().map { rect ->

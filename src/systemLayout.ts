@@ -4,6 +4,7 @@ import type {
   BarEdge,
   Fold,
   FoldState,
+  FoldThreshold,
   HorizontalEdge,
   Rect,
   SystemLayout,
@@ -125,6 +126,26 @@ export function parseSystemLayout(
     verticalBarEdge: oneOf(barEdges, event.verticalBarEdge),
     barInsets,
   });
+}
+
+/**
+ * The native props for an observer's `foldThreshold`, -1 each without one.
+ * Throws a `RangeError` unless `0 < halfOpenAtDegrees < flatAtDegrees <= 180`.
+ */
+export function parseFoldThreshold(threshold: FoldThreshold | undefined): {
+  halfOpenAtDegrees: number;
+  flatAtDegrees: number;
+} {
+  if (!threshold) return { halfOpenAtDegrees: -1, flatAtDegrees: -1 };
+  const { halfOpenAtDegrees, flatAtDegrees } = threshold;
+  // Android compares the angle in 32-bit floats, where two close degrees can be one value.
+  const orderedAsFloats =
+    Math.fround(halfOpenAtDegrees) < Math.fround(flatAtDegrees);
+  if (!(halfOpenAtDegrees > 0 && orderedAsFloats && flatAtDegrees <= 180))
+    throw new RangeError(
+      `foldThreshold needs 0 < halfOpenAtDegrees < flatAtDegrees <= 180, and got ${halfOpenAtDegrees} and ${flatAtDegrees}.`
+    );
+  return { halfOpenAtDegrees, flatAtDegrees };
 }
 
 export function createSystemLayoutStore() {
