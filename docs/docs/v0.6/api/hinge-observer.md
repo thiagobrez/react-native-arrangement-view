@@ -37,3 +37,5 @@ function Camera() {
 ```
 
 When running below iOS 27.1, building with an older SDK, or on unsupported platforms, the hinge state remains unavailable.
+
+For where the fold is, in a view's own coordinates, use a [`SystemLayoutObserver`](./system-layout-observer).

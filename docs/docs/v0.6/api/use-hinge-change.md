@@ -34,3 +34,5 @@ type HingeState = {
 ```
 
 Before the first native update, or without hardware, the state is `{ available: false, angle: null, status: 'unknown' }`.
+
+The hinge state has no position. For where the fold is, in a view's own coordinates, use a [`SystemLayoutObserver`](./system-layout-observer).
