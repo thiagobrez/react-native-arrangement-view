@@ -1,6 +1,3 @@
-// Runs cpp/arrange.h on cases read from stdin and writes the frames to
-// stdout, for tests/harness/arrange.ts. Each case is IN doubles and each
-// result OUT doubles, in the order arrange.ts packs and unpacks them.
 #include <arrange.h>
 
 #include <cstdio>
@@ -8,8 +5,8 @@
 
 using namespace arrangementview;
 
-constexpr size_t IN = 19;
-constexpr size_t OUT = 9;
+constexpr size_t DOUBLES_PER_CASE = 19;
+constexpr size_t DOUBLES_PER_RESULT = 9;
 
 int main() {
   std::vector<double> in;
@@ -18,10 +15,10 @@ int main() {
   while ((read = fread(buffer, sizeof(double), 4096, stdin)) > 0) {
     in.insert(in.end(), buffer, buffer + read);
   }
-  const size_t count = in.size() / IN;
-  std::vector<double> out(count * OUT);
+  const size_t count = in.size() / DOUBLES_PER_CASE;
+  std::vector<double> out(count * DOUBLES_PER_RESULT);
   for (size_t i = 0; i < count; i++) {
-    const double *r = &in[i * IN];
+    const double *r = &in[i * DOUBLES_PER_CASE];
     Geometry geometry{r[0], r[1], {r[2], r[3]}, std::nullopt};
     if (r[4] != 0) {
       geometry.fold = Fold{
@@ -42,7 +39,7 @@ int main() {
         static_cast<VerticalEdge>(r[17]),
         r[18] != 0};
     const PaneFrames frames = arrange(geometry, options);
-    double *w = &out[i * OUT];
+    double *w = &out[i * DOUBLES_PER_RESULT];
     w[0] = frames.primary.left;
     w[1] = frames.primary.top;
     w[2] = frames.primary.width;
