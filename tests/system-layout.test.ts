@@ -5,6 +5,7 @@ import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import type { SystemLayoutEvent } from '../src/SystemLayoutObserverNativeComponent.ts';
 import {
   createSystemLayoutStore,
+  parseFoldThreshold,
   parseSystemLayout,
   SystemLayoutContext,
   useSystemLayout,
@@ -267,6 +268,42 @@ test('a new layout keeps the identity of every part that did not change', () => 
   assert.notEqual(oneFoldMoved.folds[1], first.folds[1]);
   assert.equal(oneFoldMoved.folds[1]?.window, first.folds[1]?.window);
   assert.equal(oneFoldMoved.safeArea, first.safeArea);
+});
+
+test('a fold threshold maps to its two native props, and none to -1 for each', () => {
+  assert.deepEqual(parseFoldThreshold(undefined), {
+    halfOpenAtDegrees: -1,
+    flatAtDegrees: -1,
+  });
+  assert.deepEqual(
+    parseFoldThreshold({ halfOpenAtDegrees: 170, flatAtDegrees: 175 }),
+    { halfOpenAtDegrees: 170, flatAtDegrees: 175 }
+  );
+  assert.deepEqual(
+    parseFoldThreshold({ halfOpenAtDegrees: 0.5, flatAtDegrees: 180 }),
+    { halfOpenAtDegrees: 0.5, flatAtDegrees: 180 }
+  );
+});
+
+test('a fold threshold outside 0 < halfOpenAtDegrees < flatAtDegrees <= 180 throws', () => {
+  const invalid: [number, number][] = [
+    [175, 170],
+    [170, 170],
+    [0, 175],
+    [-10, 175],
+    [170, 180.5],
+    [170, 180.000001],
+    [NaN, 175],
+    [170, NaN],
+    [170, Infinity],
+    [170.000001, 170.000002],
+  ];
+  for (const [halfOpenAtDegrees, flatAtDegrees] of invalid)
+    assert.throws(
+      () => parseFoldThreshold({ halfOpenAtDegrees, flatAtDegrees }),
+      RangeError,
+      `${halfOpenAtDegrees}, ${flatAtDegrees}`
+    );
 });
 
 test('the store notifies only for a changed layout, and says which', () => {

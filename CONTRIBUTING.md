@@ -62,6 +62,13 @@ SwiftUI arranges the panes on iOS. Android has no equivalent container. There, `
 
 `yarn test` and `yarn verify:arrange` build `cpp/arrange.h` into a small program with your C++ compiler, so they need one that supports C++20: `c++` by default, or the one `CXX` names. On macOS, Xcode's command line tools include one.
 
+The Kotlin that decides a fold's state under a fold threshold has JVM unit tests in `android/src/test/`. Run them from the example's generated Android project:
+
+```sh
+cd apps/example-expo/android
+./gradlew :react-native-arrangement-view:testDebugUnitTest
+```
+
 The Android script runs on an AVD named `Pixel_10_Pro_Fold`; create it with Android Studio's Pixel 10 Pro Fold profile, or `avdmanager create avd -n Pixel_10_Pro_Fold -d pixel_10_pro_fold -k <system image>`. Drive the posture through the emulator console:
 
 ```sh
