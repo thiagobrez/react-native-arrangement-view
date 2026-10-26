@@ -32,6 +32,8 @@ public final class RNSystemLayoutReader: NSObject {
         guard self.hasHinge != hasHinge else { return }
         self.hasHinge = hasHinge
         self.publish()
+        // UIKit lays a view out for a fold only if its last layoutSubviews read reservedRegions, and publish() skipped them until now.
+        self.view?.setNeedsLayout()
       })
       view.registerForTraitChanges(UITraitCollection.systemTraitsAffectingVerticalBarEdge) {
         [weak self] (_: UIView, _: UITraitCollection) in
