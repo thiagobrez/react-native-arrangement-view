@@ -7,6 +7,7 @@ import { TentPosture } from './tent-posture/TentPosture';
 import { VideoPlayer } from './video-player/VideoPlayer';
 import { SplitViewExample } from './split-view/SplitViewExample';
 import { NativeComponents } from './native-components/NativeComponents';
+import { FoldControls } from './fold-controls/FoldControls';
 
 export interface Example {
   name: string;
@@ -61,5 +62,10 @@ export const examples: Example[] = [
     name: 'native-components',
     title: 'Native components',
     component: NativeComponents,
+  },
+  {
+    name: 'fold-controls',
+    title: 'Controls beside the fold',
+    component: FoldControls,
   },
 ];
