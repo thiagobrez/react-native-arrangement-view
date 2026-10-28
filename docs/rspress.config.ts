@@ -80,6 +80,10 @@ export default defineConfig({
     ['meta', { property: 'og:image', content: `${site}og-image.png` }],
     ['meta', { property: 'og:image:width', content: '1200' }],
     ['meta', { property: 'og:image:height', content: '630' }],
+    ['meta', { property: 'og:video', content: `${site}og-video.mp4` }],
+    ['meta', { property: 'og:video:type', content: 'video/mp4' }],
+    ['meta', { property: 'og:video:width', content: '1200' }],
+    ['meta', { property: 'og:video:height', content: '630' }],
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
     (route) =>
       route.version === released
