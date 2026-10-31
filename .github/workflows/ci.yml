@@ -15,6 +15,50 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Picks the platforms a pull request can affect, so the native jobs for the
+  # others are skipped. Pushes to main and the merge queue run both.
+  changes:
+    runs-on: ubuntu-latest
+
+    outputs:
+      ios: ${{ steps.platforms.outputs.ios }}
+      android: ${{ steps.platforms.outputs.android }}
+      platforms: ${{ steps.platforms.outputs.platforms }}
+
+    steps:
+      - name: Pick platforms from changed files
+        id: platforms
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          ios=true
+          android=true
+          if [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then
+            ios=false
+            android=false
+            files=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files" --jq '.[] | .filename, .previous_filename // empty')
+            while read -r file; do
+              case "$file" in
+                docs/* | tests/* | .changeset/* | .claude/* | *.md) ;;
+                ios/* | *.podspec) ios=true ;;
+                android/*) android=true ;;
+                *)
+                  ios=true
+                  android=true
+                  ;;
+              esac
+            done <<< "$files"
+          fi
+
+          platforms=$(jq -cn --argjson ios "$ios" --argjson android "$android" \
+            '[if $ios then "ios" else empty end, if $android then "android" else empty end]')
+          {
+            echo "ios=$ios"
+            echo "android=$android"
+            echo "platforms=$platforms"
+          } >> "$GITHUB_OUTPUT"
+
   lint:
     runs-on: ubuntu-latest
 
@@ -59,6 +103,8 @@ jobs:
           retention-days: 7
 
   build-android:
+    needs: changes
+    if: needs.changes.outputs.android == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -175,6 +221,8 @@ jobs:
 
   build-ios:
     name: build-ios (Xcode ${{ matrix.xcode }})
+    needs: changes
+    if: needs.changes.outputs.ios == 'true'
     runs-on: ${{ matrix.runner }}
 
     strategy:
@@ -232,17 +280,14 @@ jobs:
   # monorepo, as an end user would, so nothing resolves through the workspace or src/.
   consumer:
     name: consumer (${{ matrix.platform }})
-    needs: build-library
-    runs-on: ${{ matrix.runner }}
+    needs: [build-library, changes]
+    if: needs.changes.outputs.platforms != '[]'
+    runs-on: ${{ matrix.platform == 'ios' && 'xcode-27' || 'ubuntu-latest' }}
 
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - platform: ios
-            runner: xcode-27
-          - platform: android
-            runner: ubuntu-latest
+        platform: ${{ fromJSON(needs.changes.outputs.platforms) }}
 
     env:
       APP_DIR: ${{ github.workspace }}/../consumer
@@ -328,3 +373,16 @@ jobs:
           JAVA_OPTS: '-XX:MaxHeapSize=6g'
         run: |
           ./gradlew assembleDebug -PreactNativeArchitectures=arm64-v8a --build-cache --no-daemon --console=plain
+
+  # The one check main requires. A skipped matrix job never reports its
+  # expanded names, such as build-ios (Xcode 26), so requiring those would
+  # leave them pending on a pull request that skips them.
+  all-green:
+    if: always()
+    needs: [changes, lint, build-library, build-android, build-ios, consumer]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Fail if a needed job failed or was cancelled
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
