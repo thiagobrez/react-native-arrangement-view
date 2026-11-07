@@ -24,9 +24,21 @@ function Screen() {
 
 Like [`useHingeChange`](./use-hinge-change), call it inside a [`HingeObserver`](./hinge-observer) or a pane of an [`ArrangementView`](./arrangement-view).
 
+The hook returns `null` until the platform [first reports](./use-hinge-change#when-the-first-report-comes) the hinge, and calls the selector only with a report. A selector that returns `null` itself reads the same as no report yet.
+
 The selector returns a string, a number, a boolean, `null` or `undefined`. Do not return an object, as it would never compare equal to the last one, breaking the optimization.
 
 ```tsx
 const available = useHingeSelector((hinge) => hinge.available);
 const status = useHingeSelector((hinge) => hinge.status);
+```
+
+## Migrate from 0.5
+
+In 0.5, the hook called the selector with the unavailable state until the first report. Where the result must be a boolean, give the `null` a value:
+
+```diff
+- const tabletop = useHingeSelector((hinge) => hinge.status === 'partiallyOpen');
++ const tabletop =
++   useHingeSelector((hinge) => hinge.status === 'partiallyOpen') ?? false;
 ```

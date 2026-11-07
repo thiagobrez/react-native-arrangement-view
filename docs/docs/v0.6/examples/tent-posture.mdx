@@ -18,7 +18,7 @@ function Primary() {
   const { height } = useWindowDimensions();
   // Open past 30° (0.5 rad), yet in a window under 480 pt tall, a compact
   // height: the outer display, in landscape. The inner one is never that short.
-  const tent = (hinge.angle ?? 0) > 0.5 && height < 480;
+  const tent = (hinge?.angle ?? 0) > 0.5 && height < 480;
 
   return tent ? <TentView /> : <NormalPrimary />;
 }
@@ -36,7 +36,7 @@ The header and the safe area belong to the screen, which is outside the panes. M
 
 ```tsx
 function Screen() {
-  const open = useHingeSelector((hinge) => (hinge.angle ?? 0) > 0.5);
+  const open = useHingeSelector((hinge) => (hinge.angle ?? 0) > 0.5) ?? false;
   const { height } = useWindowDimensions();
   const tent = open && height < 480;
 

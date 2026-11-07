@@ -47,6 +47,7 @@ function Player() {
   // Called inside a pane, the hook observes the nearest ArrangementView.
   const hinge = useHingeChange();
 
+  if (hinge === null) return null;
   return (
     <Text>
       {hinge.angle === null

@@ -32,8 +32,44 @@ export default function App() {
 
 function Camera() {
   const hinge = useHingeChange();
-  return hinge.status === 'partiallyOpen' ? <TabletopCamera /> : <FullCamera />;
+  return hinge?.status === 'partiallyOpen' ? (
+    <TabletopCamera />
+  ) : (
+    <FullCamera />
+  );
 }
 ```
 
-When running below iOS 27.1, building with an older SDK, or on unsupported platforms, the hinge state remains unavailable.
+The hooks return `null` until the [first report](./use-hinge-change#when-the-first-report-comes). Below iOS 27.1, when the app is built with an older SDK, and on platforms other than iOS and Android, the first report says there is no hinge.
+
+## Let a window with a hinge rotate on iOS
+
+An app that keeps phones in portrait can still let a window with a hinge rotate. The library's pod has a Swift class, `HingeWindows`, that knows the windows a `HingeObserver` or an `ArrangementView` has found a hinge in. Each registers its window when it finds a hinge there, before its report reaches JavaScript, and the first time a window registers, `HingeWindows` posts `HingeWindows.didFindHingeNotification` with the window.
+
+```swift
+import ArrangementView
+
+final class AppDelegate: UIResponder, UIApplicationDelegate {
+  func application(
+    _ application: UIApplication,
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+  ) -> Bool {
+    NotificationCenter.default.addObserver(
+      forName: HingeWindows.didFindHingeNotification, object: nil, queue: nil
+    ) { notification in
+      (notification.object as? UIWindow)?.rootViewController?
+        .setNeedsUpdateOfSupportedInterfaceOrientations()
+    }
+    return true
+  }
+
+  func application(
+    _ application: UIApplication,
+    supportedInterfaceOrientationsFor window: UIWindow?
+  ) -> UIInterfaceOrientationMask {
+    window.map(HingeWindows.hasHinge) == true ? .allButUpsideDown : .portrait
+  }
+}
+```
+
+In an Expo app, put these two methods in an `ExpoAppDelegateSubscriber` of a local module whose podspec depends on `ArrangementView`.
