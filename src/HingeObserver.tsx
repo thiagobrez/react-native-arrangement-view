@@ -1,5 +1,5 @@
-import { useState, type JSX } from 'react';
-import { createHingeStore, HingeContext } from './hinge';
+import type { JSX } from 'react';
+import { HingeContext, unavailableHingeStore } from './hinge';
 import type { HingeObserverProps } from './types';
 
 /**
@@ -10,6 +10,5 @@ import type { HingeObserverProps } from './types';
  * still render and the state stays unavailable.
  */
 export function HingeObserver({ children }: HingeObserverProps): JSX.Element {
-  const [store] = useState(createHingeStore);
-  return <HingeContext value={store}>{children}</HingeContext>;
+  return <HingeContext value={unavailableHingeStore}>{children}</HingeContext>;
 }
