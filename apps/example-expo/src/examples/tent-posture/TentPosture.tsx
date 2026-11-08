@@ -77,10 +77,8 @@ export function TentPosture() {
   );
 }
 
-// iOS has no tent posture, and the hinge's status lags behind its angle, so a
-// tent reads `closed` when reached from closed and `partiallyOpen` when
-// reached from open. No fold runs through the outer display, which also shows
-// the app in portrait on the way into and out of a tent.
+// iOS has no tent posture. No fold runs through the outer display, which also
+// shows the app in portrait on the way into and out of a tent.
 function useTentPosture() {
   const hingeOpen =
     useHingeSelector((hinge) => (hinge.angle ?? 0) > HINGE_OPEN_RADIANS) ??
