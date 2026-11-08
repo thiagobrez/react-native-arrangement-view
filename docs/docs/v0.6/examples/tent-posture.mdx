@@ -26,8 +26,6 @@ function Primary() {
 }
 ```
 
-`useSystemLayout` reads the nearest [`SystemLayoutObserver`](../api/system-layout-observer) above it. Keep the orientation in the check: on the way into and out of a tent, the outer display shows the app in portrait while the hinge is open. The horizontal size class can't stand in for the fold. It is compact on the outer display in either orientation, and on the simulator it turns compact on the inner display just before the app moves from there into a tent.
-
 This follows Apple's guidance for iPhone Duo: there is no system pose, so infer one from the hinge angle, the orientation and the window's traits together, and keep the hinge for interactions and effects while the arrangement does the layout. The 0.5 rad threshold is a heuristic. Apple does not guarantee the precision or update rate of `angle`, so check the behavior on hardware.
 
 Android has no tent posture either. A Pixel foldable hands over to its inner display as soon as it is open a little way, about 30° on the emulator, and from there WindowManager reports a half-open fold, which `ArrangementView` splits across. So the check above is true on Android only for a moment, with the cover display outwards.
