@@ -7,7 +7,7 @@ import { PostureShots } from '../../../components/PostureShots';
 
 # Tent posture
 
-Stood up as a tent, with the inner display folded inwards, iPhone Duo keeps the app on the outer display, in landscape. iOS has no tent state. [`useHingeChange`](../api/use-hinge-change) reports the angle the hinge is open at, around 81°, but its status lags behind the angle: a tent reached from closed reads `closed`, and one reached from open reads `partiallyOpen`. So don't look for a status. What makes a tent is the hinge being open while the app is on the outer display, in landscape. [`useSystemLayout`](../api/system-layout-observer) tells the displays apart: it reports the inner display's fold in every posture, flat included, and no fold runs through the outer one:
+Stood up as a tent, with the inner display folded inwards, iPhone Duo keeps the app on the outer display, in landscape. iOS has no tent state. What makes a tent is the hinge being open while the app is on the outer display, in landscape. [`useSystemLayout`](../api/system-layout-observer) tells the displays apart: it reports the inner display's fold in every posture, flat included, and no fold runs through the outer one:
 
 ```tsx
 import { useHingeChange, useSystemLayout } from 'react-native-arrangement-view';
