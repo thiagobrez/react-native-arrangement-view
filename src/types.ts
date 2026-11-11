@@ -109,8 +109,8 @@ export type SystemLayout = Readonly<{
   verticalBarEdge: HorizontalEdge | null;
   /**
    * iOS 27.1 and later: with the observer's `barExtents.bottom`, how far from
-   * the bottom edge UIKit floats a bar of that extent. Absent without it, and
-   * on Android.
+   * the bottom edge UIKit floats a bar of that extent: the part of the window's
+   * bar inset that reaches into the view. Absent without it, and on Android.
    */
   barInsets: Readonly<{ bottom?: number }>;
 }>;

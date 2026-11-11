@@ -56,8 +56,13 @@ public final class RNSystemLayoutReader: NSObject {
       case .trailing: verticalBarEdge = "trailing"
       default: break
       }
-      if barExtentBottom >= 0 {
-        barInsetBottom = view.edgeInsets(for: .bar(onEdge: UIRectEdge.bottom, extent: barExtentBottom)).bottom
+      if barExtentBottom >= 0, let window = view.window {
+        // A view's own answer keeps what it was when the view joined a pushed
+        // screen until the view next moves, so measure the window's bar instead.
+        let windowInset = window.edgeInsets(for: .bar(onEdge: UIRectEdge.bottom, extent: barExtentBottom)).bottom
+        let below = window.bounds.maxY - view.convert(view.bounds, to: window).maxY
+        let scale = max(view.traitCollection.displayScale, 1)
+        barInsetBottom = min(max(((windowInset - below) * scale).rounded() / scale, 0), view.bounds.height)
       }
       for region in view.reservedRegions(kind: .division, options: .includeInactive) {
         var fold = Self.rect(region.frame)
