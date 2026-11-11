@@ -17,8 +17,6 @@ class SystemLayoutObserverView(private val reactContext: ThemedReactContext) :
   private var folds: WindowFolds? = null
   private var reported: Report? = null
 
-  // Fabric moves views without a layout pass, so an ancestor can move this view without any
-  // callback reaching it.
   private val onPreDraw = ViewTreeObserver.OnPreDrawListener {
     report()
     true
@@ -40,7 +38,6 @@ class SystemLayoutObserverView(private val reactContext: ThemedReactContext) :
   override fun onWindowFoldsChanged() = report()
 
   private fun report() {
-    // The activity can be missing when the view first attaches, so every frame retries.
     if (folds == null) {
       val activity = reactContext.currentActivity
       if (activity == null || !isAttachedToWindow) return
@@ -54,7 +51,6 @@ class SystemLayoutObserverView(private val reactContext: ThemedReactContext) :
     dispatchReactEvent(reactContext, EVENT, report.toEvent())
   }
 
-  /** In dp, each divided by the density once, after the pixel arithmetic. */
   private fun measure(features: List<FoldingFeature>): Report {
     val density = resources.displayMetrics.density
     val location = IntArray(2).also { getLocationInWindow(it) }
@@ -104,7 +100,6 @@ class SystemLayoutObserverView(private val reactContext: ThemedReactContext) :
         })
   }
 
-  /** From window pixels to the pixels measureInWindow counts from. */
   private fun measureInWindowOffset(): Point {
     val root = RootViewUtil.getRootView(this) as? View ?: return Point()
     val location = IntArray(2).also { root.getLocationInWindow(it) }

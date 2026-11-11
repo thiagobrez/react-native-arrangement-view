@@ -1,8 +1,5 @@
 import UIKit
 
-/// Reads what the system reserves in a view, in the view's coordinates, and
-/// reports it when it changes. The view calls `viewDidMoveToWindow()` and
-/// `publish()` from its own UIKit callbacks.
 @MainActor @objc(RNSystemLayoutReader)
 public final class RNSystemLayoutReader: NSObject {
   @objc public var onLayoutChange: ((NSDictionary) -> Void)?
@@ -31,7 +28,6 @@ public final class RNSystemLayoutReader: NSObject {
     #endif
   }
 
-  /// In points. A negative extent asks for no bar.
   @objc public func setBarExtentBottom(_ extent: CGFloat) {
     guard extent != barExtentBottom else { return }
     barExtentBottom = extent

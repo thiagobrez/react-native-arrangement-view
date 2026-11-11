@@ -10,16 +10,6 @@ import type {
 
 type Span = { start: number; length: number };
 
-/**
- * The part of a span inside `[0, size]`, or null when it covers less than a
- * pixel of the interior. Layout puts a view's edges on whole pixels, but a
- * region can start between them, as the iPhone Duo's division does at
- * 455.5 pt on a 3x display, so a region beside a view can overlap it by part
- * of a pixel. A band that only touches an edge is dropped as well. It clips
- * with min and max only, so the result has the bits `CGRect.intersection`
- * gives. A line, 0 long, is kept only where the platform reports folds as
- * lines, and only a pixel or more inside. iOS drops it as an empty rect.
- */
 function insideSpan(
   start: number,
   length: number,
@@ -27,7 +17,6 @@ function insideSpan(
   keepsLines: boolean,
   pixel: number
 ): Span | null {
-  // A tolerance for float error, which can leave a whole pixel a hair short.
   const reaches = (distance: number) =>
     distance > 0 && distance > pixel - 0.001;
   if (length === 0)
@@ -70,10 +59,6 @@ const foldStates: readonly FoldState[] = ['flat', 'halfOpen'];
 const sizeClasses = ['compact', 'regular'] as const;
 const barEdges: readonly HorizontalEdge[] = ['leading', 'trailing'];
 
-/**
- * Returns `previous` where `next` has the same values, so every unchanged
- * part of a layout keeps its identity.
- */
 function reuse<T>(previous: T | null | undefined, next: T): T {
   if (
     typeof next !== 'object' ||
@@ -96,11 +81,6 @@ function reuse<T>(previous: T | null | undefined, next: T): T {
   return unchanged ? previous : (shared as T);
 }
 
-/**
- * Turns one native report into the layout the view sees, and reuses every
- * part of `previous` that is unchanged. Returns `previous` itself when nothing
- * changed.
- */
 export function parseSystemLayout(
   event: SystemLayoutEvent,
   previous: SystemLayout | null
@@ -154,7 +134,6 @@ export function createSystemLayoutStore() {
         listeners.delete(listener);
       };
     },
-    /** Returns the new layout, or null when the report changed nothing. */
     update(event: SystemLayoutEvent): SystemLayout | null {
       const next = parseSystemLayout(event, current);
       if (next === current) return null;

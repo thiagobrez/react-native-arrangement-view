@@ -9,14 +9,12 @@ import androidx.window.layout.WindowInfoTracker
 import androidx.window.layout.WindowLayoutInfo
 import java.util.WeakHashMap
 
-/** An activity window's folds, from one WindowManager listener that every observer in it shares. */
 internal class WindowFolds private constructor(private val activity: Activity) {
 
   fun interface Listener {
     fun onWindowFoldsChanged()
   }
 
-  /** In WindowManager's order and the window's pixels. Null until WindowManager reports the window's layout. */
   var features: List<FoldingFeature>? = null
     private set
 

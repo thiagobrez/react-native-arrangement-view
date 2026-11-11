@@ -5,13 +5,11 @@ import {
 } from 'react-native';
 
 // Codegen needs event objects written out, and has no optional values, so
-// strings are '' and insets -1 where the platform has none. Folds are whole,
-// in the view's coordinates. parseSystemLayout clips them.
+// strings are '' and insets -1 where the platform has none.
 export type SystemLayoutEvent = Readonly<{
   width: CodegenTypes.Double;
   height: CodegenTypes.Double;
   keepsLines: boolean;
-  // Pixels per point on iOS, per dp on Android.
   scale: CodegenTypes.Double;
   safeArea: Readonly<{
     top: CodegenTypes.Double;

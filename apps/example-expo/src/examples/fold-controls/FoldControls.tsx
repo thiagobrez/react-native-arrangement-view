@@ -100,12 +100,6 @@ function Controls(props: {
   );
 }
 
-/**
- * Where the controls go, as insets from the observed view's edges. They keep
- * to the left of a vertical fold the system divides at, and below a
- * horizontal one, so nothing sits across the crease. iOS floats them level
- * with its own bars.
- */
 function controlsArea(layout: SystemLayout) {
   const divisions = layout.folds.filter((fold) => fold.separating);
   const book = divisions.find((fold) => fold.orientation === 'vertical');

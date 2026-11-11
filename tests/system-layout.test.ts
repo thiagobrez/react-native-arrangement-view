@@ -19,7 +19,6 @@ type NativeFold = SystemLayoutEvent['folds'][number];
 
 const noBar = { bottom: -1 };
 
-/** The iPhone Duo's inner display in landscape, as T3 Code's fixtures have it. */
 function duoEvent(
   overrides: Partial<SystemLayoutEvent> = {}
 ): SystemLayoutEvent {
@@ -38,7 +37,6 @@ function duoEvent(
   };
 }
 
-/** A Pixel Fold's inner display, in dp. */
 function pixelEvent(
   overrides: Partial<SystemLayoutEvent> = {}
 ): SystemLayoutEvent {
@@ -79,7 +77,6 @@ function fold(
 const parse = (event: SystemLayoutEvent) => parseSystemLayout(event, null);
 
 test('iOS clips a division to the view with the bits CGRect.intersection gives', () => {
-  // Expected values printed by CoreGraphics for these rects intersected with the view's bounds.
   const layout = parse(
     duoEvent({
       width: 960,
@@ -151,14 +148,11 @@ test('Android keeps a fold line a pixel or more inside the view, and drops one o
 });
 
 test('drops a region that covers less than a pixel of the view', () => {
-  // Measured on the iPhone Duo simulator at 3x: the division starts on a half
-  // pixel, at 455.5 pt, and the primary pane beside it ends on a whole one.
   const primary = duoEvent({
     width: 1367 / 3,
     folds: [fold(455.5, 0, 40, 553)],
   });
   assert.deepEqual(parse(primary).folds, [], 'half a pixel of the division');
-  // The pane's edge and the occlusion's edge are one line, apart by float error.
   const secondary = duoEvent({
     width: 371.3333435058594,
     occlusions: [{ x: 371.3333333333333, y: 0, width: 84, height: 38 }],
