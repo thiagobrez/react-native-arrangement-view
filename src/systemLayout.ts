@@ -11,29 +11,50 @@ import type {
 type Span = { start: number; length: number };
 
 /**
- * The part of a span inside `[0, size]`, or null when it doesn't run through
- * the interior. With a length, it must overlap the interior, so a band that
- * only touches an edge is dropped. It clips with min and max only, so the
- * result has the bits `CGRect.intersection` gives. A line, 0 long, is kept
- * only where the platform reports folds as lines, and only strictly inside.
- * iOS drops it as an empty rect.
+ * The part of a span inside `[0, size]`, or null when it covers less than a
+ * pixel of the interior. Layout puts a view's edges on whole pixels, but a
+ * region can start between them, as the iPhone Duo's division does at
+ * 455.5 pt on a 3x display, so a region beside a view can overlap it by part
+ * of a pixel. A band that only touches an edge is dropped as well. It clips
+ * with min and max only, so the result has the bits `CGRect.intersection`
+ * gives. A line, 0 long, is kept only where the platform reports folds as
+ * lines, and only a pixel or more inside. iOS drops it as an empty rect.
  */
 function insideSpan(
   start: number,
   length: number,
   size: number,
-  keepsLines: boolean
+  keepsLines: boolean,
+  pixel: number
 ): Span | null {
+  // A tolerance for float error, which can leave a whole pixel a hair short.
+  const reaches = (distance: number) =>
+    distance > 0 && distance > pixel - 0.001;
   if (length === 0)
-    return keepsLines && start > 0 && start < size ? { start, length } : null;
+    return keepsLines && reaches(start) && reaches(size - start)
+      ? { start, length }
+      : null;
   const from = Math.max(start, 0);
   const to = Math.min(start + length, size);
-  return to > from ? { start: from, length: to - from } : null;
+  return reaches(to - from) ? { start: from, length: to - from } : null;
 }
 
 function insideView(rect: Rect, event: SystemLayoutEvent): Rect | null {
-  const x = insideSpan(rect.x, rect.width, event.width, event.keepsLines);
-  const y = insideSpan(rect.y, rect.height, event.height, event.keepsLines);
+  const pixel = event.scale > 0 ? 1 / event.scale : 0;
+  const x = insideSpan(
+    rect.x,
+    rect.width,
+    event.width,
+    event.keepsLines,
+    pixel
+  );
+  const y = insideSpan(
+    rect.y,
+    rect.height,
+    event.height,
+    event.keepsLines,
+    pixel
+  );
   if (!x || !y) return null;
   return { x: x.start, y: y.start, width: x.length, height: y.length };
 }

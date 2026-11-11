@@ -66,6 +66,7 @@ class SystemLayoutObserverView(private val reactContext: ThemedReactContext) :
     val right = window.width - location[0] - width
     val bottom = window.height - location[1] - height
     return Report(
+      scale = density,
       width = width / density,
       height = height / density,
       safeArea =
@@ -126,6 +127,7 @@ class SystemLayoutObserverView(private val reactContext: ThemedReactContext) :
   private data class Fold(val inView: Box, val inWindow: Box, val separating: Boolean, val state: String)
 
   private data class Report(
+    val scale: Float,
     val width: Float,
     val height: Float,
     val safeArea: Edges,
@@ -137,6 +139,7 @@ class SystemLayoutObserverView(private val reactContext: ThemedReactContext) :
         putDouble("width", width.toDouble())
         putDouble("height", height.toDouble())
         putBoolean("keepsLines", true)
+        putDouble("scale", scale.toDouble())
         putMap(
           "safeArea",
           Arguments.createMap().apply {

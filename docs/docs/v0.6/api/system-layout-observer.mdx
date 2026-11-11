@@ -124,7 +124,7 @@ Values are in points on iOS and dp on Android, in the observed view's coordinate
 | `verticalBarEdge`     | The edge where the system places its vertical bar, whether or not one shows, iOS 27.1 and later. `null` where it never does | `null`                                                                   |
 | `barInsets`           | `bottom` when [`barExtents`](#barextents) has one, iOS 27.1 and later                                                       | Empty                                                                    |
 
-Folds and occlusions keep the order the platform lists them in. Each is the part inside the view. One that only touches the view's edge isn't reported.
+Folds and occlusions keep the order the platform lists them in. Each is the part inside the view, and one that covers less than a pixel of it isn't reported. That leaves out a band that only touches the view's edge, and one beside the view that starts between two pixels and overlaps it by part of one, as the iPhone Duo's division can.
 
 ## Fold
 
@@ -162,7 +162,7 @@ The system decides when a fold starts to separate. On the iPhone Duo simulator, 
 
 ### Bands and lines
 
-On iOS, a fold is the band UIKit reserves for it, which includes the margins it keeps clear for touch on each side of the crease. The band is 40 pt wide on the iPhone Duo simulator. On Android, a folding screen's fold is a line, `0` wide or tall, reported while it runs strictly inside the view. A hinge between two screens is the band it hides.
+On iOS, a fold is the band UIKit reserves for it, which includes the margins it keeps clear for touch on each side of the crease. The band is 40 pt wide on the iPhone Duo simulator. On Android, a folding screen's fold is a line, `0` wide or tall, reported while it runs a pixel or more inside the view. A hinge between two screens is the band it hides.
 
 ## Reports come only on change
 

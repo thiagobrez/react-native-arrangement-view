@@ -11,6 +11,8 @@ export type SystemLayoutEvent = Readonly<{
   width: CodegenTypes.Double;
   height: CodegenTypes.Double;
   keepsLines: boolean;
+  // Pixels per point on iOS, per dp on Android.
+  scale: CodegenTypes.Double;
   safeArea: Readonly<{
     top: CodegenTypes.Double;
     right: CodegenTypes.Double;

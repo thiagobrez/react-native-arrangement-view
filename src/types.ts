@@ -39,9 +39,10 @@ export type FoldState = 'flat' | 'halfOpen';
  * division.
  *
  * `x`, `y`, `width` and `height` are the part of the fold inside the view, in
- * the view's coordinates. A band that only touches the view's edge is not
- * reported. An Android folding screen's fold is a line, 0 wide or tall, and is
- * reported when it runs strictly inside the view.
+ * the view's coordinates. A fold that covers less than a pixel of the view,
+ * such as a band that only touches its edge, is not reported. An Android
+ * folding screen's fold is a line, 0 wide or tall, and is reported when it runs
+ * a pixel or more inside the view.
  *
  * The object keeps its identity until one of its values changes.
  */

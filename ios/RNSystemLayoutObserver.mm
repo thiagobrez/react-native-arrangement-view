@@ -17,6 +17,7 @@ static Emitter::OnSystemLayoutChange RNSystemLayoutEvent(NSDictionary *layout) {
   event.width = [layout[@"width"] doubleValue];
   event.height = [layout[@"height"] doubleValue];
   event.keepsLines = [layout[@"keepsLines"] boolValue];
+  event.scale = [layout[@"scale"] doubleValue];
   NSDictionary *safeArea = layout[@"safeArea"];
   event.safeArea = {[safeArea[@"top"] doubleValue], [safeArea[@"right"] doubleValue],
                     [safeArea[@"bottom"] doubleValue], [safeArea[@"left"] doubleValue]};

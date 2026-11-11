@@ -27,6 +27,7 @@ function duoEvent(
     width: 960,
     height: 560,
     keepsLines: false,
+    scale: 3,
     safeArea: { top: 0, right: 72, bottom: 20, left: 8 },
     folds: [],
     occlusions: [],
@@ -45,6 +46,7 @@ function pixelEvent(
     width: 841,
     height: 900,
     keepsLines: true,
+    scale: 2.625,
     safeArea: { top: 24, right: 0, bottom: 16, left: 0 },
     folds: [],
     occlusions: [],
@@ -119,7 +121,7 @@ test('iOS drops a region that only touches the view, or is empty, as T3 Code did
   assert.deepEqual(parse(column).occlusions, []);
 });
 
-test('Android keeps a fold line strictly inside the view, and drops one on its edge', () => {
+test('Android keeps a fold line a pixel or more inside the view, and drops one on its edge', () => {
   const inside = parse(pixelEvent({ folds: [fold(420.5, 0, 0, 900)] }));
   assert.deepEqual(inside.folds[0], {
     x: 420.5,
@@ -137,6 +139,36 @@ test('Android keeps a fold line strictly inside the view, and drops one on its e
   assert.deepEqual(onEdges.folds, []);
   const band = parse(pixelEvent({ folds: [fold(841, 0, 24, 900)] }));
   assert.deepEqual(band.folds, [], 'a hinge band touching the edge');
+  const pixel = 1 / 2.625;
+  const nearEdges = parse(
+    pixelEvent({
+      folds: [fold(pixel / 2, 0, 0, 900), fold(841 - 1e-5, 0, 0, 900)],
+    })
+  );
+  assert.deepEqual(nearEdges.folds, [], 'lines under a pixel from an edge');
+  const pixelIn = parse(pixelEvent({ folds: [fold(pixel, 0, 0, 900)] }));
+  assert.equal(pixelIn.folds.length, 1, 'a line one pixel in');
+});
+
+test('drops a region that covers less than a pixel of the view', () => {
+  // Measured on the iPhone Duo simulator at 3x: the division starts on a half
+  // pixel, at 455.5 pt, and the primary pane beside it ends on a whole one.
+  const primary = duoEvent({
+    width: 1367 / 3,
+    folds: [fold(455.5, 0, 40, 553)],
+  });
+  assert.deepEqual(parse(primary).folds, [], 'half a pixel of the division');
+  // The pane's edge and the occlusion's edge are one line, apart by float error.
+  const secondary = duoEvent({
+    width: 371.3333435058594,
+    occlusions: [{ x: 371.3333333333333, y: 0, width: 84, height: 38 }],
+  });
+  assert.deepEqual(parse(secondary).occlusions, [], 'float error');
+  const onePixel = parse(
+    duoEvent({ width: 1368 / 3, folds: [fold(1367 / 3, 0, 40, 553)] })
+  );
+  assert.equal(onePixel.folds.length, 1, 'one whole pixel of the division');
+  assert.equal(onePixel.folds[0]!.width, 1368 / 3 - 1367 / 3);
 });
 
 test('a fold taller than the view is clipped to it, and its orientation comes from the whole fold', () => {
