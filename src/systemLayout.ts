@@ -10,22 +10,40 @@ import type {
 
 type Span = { start: number; length: number };
 
+const FLOAT_ERROR = 0.001;
+
+function coversAPixel(distance: number, pixel: number): boolean {
+  return distance > 0 && distance > pixel - FLOAT_ERROR;
+}
+
+function bandInside(
+  start: number,
+  length: number,
+  size: number,
+  pixel: number
+): Span | null {
+  const from = Math.max(start, 0);
+  const to = Math.min(start + length, size);
+  return coversAPixel(to - from, pixel)
+    ? { start: from, length: to - from }
+    : null;
+}
+
+function lineInside(at: number, size: number, pixel: number): Span | null {
+  return coversAPixel(at, pixel) && coversAPixel(size - at, pixel)
+    ? { start: at, length: 0 }
+    : null;
+}
+
 function insideSpan(
   start: number,
   length: number,
   size: number,
-  keepsLines: boolean,
+  foldsAreLines: boolean,
   pixel: number
 ): Span | null {
-  const reaches = (distance: number) =>
-    distance > 0 && distance > pixel - 0.001;
-  if (length === 0)
-    return keepsLines && reaches(start) && reaches(size - start)
-      ? { start, length }
-      : null;
-  const from = Math.max(start, 0);
-  const to = Math.min(start + length, size);
-  return reaches(to - from) ? { start: from, length: to - from } : null;
+  if (length > 0) return bandInside(start, length, size, pixel);
+  return foldsAreLines ? lineInside(start, size, pixel) : null;
 }
 
 function insideView(rect: Rect, event: SystemLayoutEvent): Rect | null {
@@ -34,14 +52,14 @@ function insideView(rect: Rect, event: SystemLayoutEvent): Rect | null {
     rect.x,
     rect.width,
     event.width,
-    event.keepsLines,
+    event.foldsAreLines,
     pixel
   );
   const y = insideSpan(
     rect.y,
     rect.height,
     event.height,
-    event.keepsLines,
+    event.foldsAreLines,
     pixel
   );
   if (!x || !y) return null;
@@ -59,7 +77,7 @@ const foldStates: readonly FoldState[] = ['flat', 'halfOpen'];
 const sizeClasses = ['compact', 'regular'] as const;
 const barEdges: readonly HorizontalEdge[] = ['leading', 'trailing'];
 
-function reuse<T>(previous: T | null | undefined, next: T): T {
+function shareUnchanged<T>(previous: T | null | undefined, next: T): T {
   if (
     typeof next !== 'object' ||
     next === null ||
@@ -75,7 +93,7 @@ function reuse<T>(previous: T | null | undefined, next: T): T {
   let unchanged = true;
   const shared = (Array.isArray(next) ? [] : {}) as Record<string, unknown>;
   for (const key of keys) {
-    shared[key] = reuse(before[key], after[key]);
+    shared[key] = shareUnchanged(before[key], after[key]);
     if (shared[key] !== before[key]) unchanged = false;
   }
   return unchanged ? previous : (shared as T);
@@ -103,7 +121,7 @@ export function parseSystemLayout(
       },
     ];
   });
-  return reuse(previous, {
+  return shareUnchanged(previous, {
     width: event.width,
     height: event.height,
     safeArea: {

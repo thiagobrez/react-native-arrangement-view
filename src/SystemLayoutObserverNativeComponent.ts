@@ -9,7 +9,7 @@ import {
 export type SystemLayoutEvent = Readonly<{
   width: CodegenTypes.Double;
   height: CodegenTypes.Double;
-  keepsLines: boolean;
+  foldsAreLines: boolean;
   scale: CodegenTypes.Double;
   safeArea: Readonly<{
     top: CodegenTypes.Double;

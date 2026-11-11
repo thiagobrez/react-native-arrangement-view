@@ -25,7 +25,7 @@ function duoEvent(
   return {
     width: 960,
     height: 560,
-    keepsLines: false,
+    foldsAreLines: false,
     scale: 3,
     safeArea: { top: 0, right: 72, bottom: 20, left: 8 },
     folds: [],
@@ -37,13 +37,13 @@ function duoEvent(
   };
 }
 
-function pixelEvent(
+function pixelFoldEvent(
   overrides: Partial<SystemLayoutEvent> = {}
 ): SystemLayoutEvent {
   return {
     width: 841,
     height: 900,
-    keepsLines: true,
+    foldsAreLines: true,
     scale: 2.625,
     safeArea: { top: 24, right: 0, bottom: 16, left: 0 },
     folds: [],
@@ -119,7 +119,7 @@ test('iOS drops a region that only touches the view, or is empty, as T3 Code did
 });
 
 test('Android keeps a fold line a pixel or more inside the view, and drops one on its edge', () => {
-  const inside = parse(pixelEvent({ folds: [fold(420.5, 0, 0, 900)] }));
+  const inside = parse(pixelFoldEvent({ folds: [fold(420.5, 0, 0, 900)] }));
   assert.deepEqual(inside.folds[0], {
     x: 420.5,
     y: 0,
@@ -131,26 +131,29 @@ test('Android keeps a fold line a pixel or more inside the view, and drops one o
     state: null,
   });
   const onEdges = parse(
-    pixelEvent({ folds: [fold(0, 0, 0, 900), fold(841, 0, 0, 900)] })
+    pixelFoldEvent({ folds: [fold(0, 0, 0, 900), fold(841, 0, 0, 900)] })
   );
   assert.deepEqual(onEdges.folds, []);
-  const band = parse(pixelEvent({ folds: [fold(841, 0, 24, 900)] }));
+  const band = parse(pixelFoldEvent({ folds: [fold(841, 0, 24, 900)] }));
   assert.deepEqual(band.folds, [], 'a hinge band touching the edge');
   const pixel = 1 / 2.625;
   const nearEdges = parse(
-    pixelEvent({
+    pixelFoldEvent({
       folds: [fold(pixel / 2, 0, 0, 900), fold(841 - 1e-5, 0, 0, 900)],
     })
   );
   assert.deepEqual(nearEdges.folds, [], 'lines under a pixel from an edge');
-  const pixelIn = parse(pixelEvent({ folds: [fold(pixel, 0, 0, 900)] }));
+  const pixelIn = parse(pixelFoldEvent({ folds: [fold(pixel, 0, 0, 900)] }));
   assert.equal(pixelIn.folds.length, 1, 'a line one pixel in');
 });
 
 test('drops a region that covers less than a pixel of the view', () => {
+  const halfPixel = 455.5;
+  const wholePixel = 1367 / 3;
+  const nextWholePixel = 1368 / 3;
   const primary = duoEvent({
-    width: 1367 / 3,
-    folds: [fold(455.5, 0, 40, 553)],
+    width: wholePixel,
+    folds: [fold(halfPixel, 0, 40, 553)],
   });
   assert.deepEqual(parse(primary).folds, [], 'half a pixel of the division');
   const secondary = duoEvent({
@@ -159,15 +162,15 @@ test('drops a region that covers less than a pixel of the view', () => {
   });
   assert.deepEqual(parse(secondary).occlusions, [], 'float error');
   const onePixel = parse(
-    duoEvent({ width: 1368 / 3, folds: [fold(1367 / 3, 0, 40, 553)] })
+    duoEvent({ width: nextWholePixel, folds: [fold(wholePixel, 0, 40, 553)] })
   );
   assert.equal(onePixel.folds.length, 1, 'one whole pixel of the division');
-  assert.equal(onePixel.folds[0]!.width, 1368 / 3 - 1367 / 3);
+  assert.equal(onePixel.folds[0]!.width, nextWholePixel - wholePixel);
 });
 
 test('a fold taller than the view is clipped to it, and its orientation comes from the whole fold', () => {
   const shortRow = parse(
-    pixelEvent({
+    pixelFoldEvent({
       height: 30,
       folds: [fold(420.5, -100, 0, 900), fold(0, 15, 841, 0)],
     })
@@ -226,7 +229,7 @@ test('wire values map to the public ones, and empty or unknown ones to null or a
   assert.deepEqual(ios.barInsets, { bottom: 34 });
 
   const android = parse(
-    pixelEvent({
+    pixelFoldEvent({
       folds: [
         fold(420.5, 0, 0, 900, { state: 'halfOpen' }),
         fold(420.5, 0, 0, 900, { state: 'flat' }),

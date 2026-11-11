@@ -17,19 +17,19 @@ class SystemLayoutObserverView(private val reactContext: ThemedReactContext) :
   private var folds: WindowFolds? = null
   private var reported: Report? = null
 
-  private val onPreDraw = ViewTreeObserver.OnPreDrawListener {
+  private val reportAfterAncestorMoves = ViewTreeObserver.OnPreDrawListener {
     report()
     true
   }
 
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
-    viewTreeObserver.addOnPreDrawListener(onPreDraw)
+    viewTreeObserver.addOnPreDrawListener(reportAfterAncestorMoves)
     report()
   }
 
   override fun onDetachedFromWindow() {
-    viewTreeObserver.removeOnPreDrawListener(onPreDraw)
+    viewTreeObserver.removeOnPreDrawListener(reportAfterAncestorMoves)
     folds?.unsubscribe(this)
     folds = null
     super.onDetachedFromWindow()
@@ -38,20 +38,25 @@ class SystemLayoutObserverView(private val reactContext: ThemedReactContext) :
   override fun onWindowFoldsChanged() = report()
 
   private fun report() {
-    if (folds == null) {
-      val activity = reactContext.currentActivity
-      if (activity == null || !isAttachedToWindow) return
-      folds = WindowFolds.of(activity).also { it.subscribe(this) }
-    }
-    val features = folds?.features ?: return
+    val features = subscribedFolds()?.features ?: return
     if (width == 0 || height == 0) return
-    val report = measure(features)
+    val report = measureInDp(features)
     if (report == reported) return
     reported = report
     dispatchReactEvent(reactContext, EVENT, report.toEvent())
   }
 
-  private fun measure(features: List<FoldingFeature>): Report {
+  private fun subscribedFolds(): WindowFolds? {
+    folds?.let { return it }
+    val activity = reactContext.currentActivity ?: return null
+    if (!isAttachedToWindow) return null
+    return WindowFolds.of(activity).also {
+      it.subscribe(this)
+      folds = it
+    }
+  }
+
+  private fun measureInDp(features: List<FoldingFeature>): Report {
     val density = resources.displayMetrics.density
     val location = IntArray(2).also { getLocationInWindow(it) }
     val window = rootView
@@ -133,7 +138,7 @@ class SystemLayoutObserverView(private val reactContext: ThemedReactContext) :
       Arguments.createMap().apply {
         putDouble("width", width.toDouble())
         putDouble("height", height.toDouble())
-        putBoolean("keepsLines", true)
+        putBoolean("foldsAreLines", true)
         putDouble("scale", scale.toDouble())
         putMap(
           "safeArea",

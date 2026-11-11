@@ -74,7 +74,7 @@ public final class RNSystemLayoutReader: NSObject {
     #endif
     let layout: NSDictionary = [
       "width": view.bounds.width, "height": view.bounds.height,
-      "keepsLines": false,
+      "foldsAreLines": false,
       "scale": view.traitCollection.displayScale,
       "horizontalSizeClass": view.traitCollection.horizontalSizeClass == .regular ? "regular" : "compact",
       "verticalBarEdge": verticalBarEdge,
