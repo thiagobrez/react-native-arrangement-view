@@ -77,16 +77,14 @@ export function TentPosture() {
   );
 }
 
-// iOS has no tent posture. No fold runs through the outer display, which also
-// shows the app in portrait on the way into and out of a tent.
 function useTentPosture() {
   const hingeOpen =
     useHingeSelector((hinge) => (hinge.angle ?? 0) > HINGE_OPEN_RADIANS) ??
     false;
   const layout = useSystemLayout();
-  const outerDisplayInLandscape =
-    layout?.folds.length === 0 && layout.width > layout.height;
-  return hingeOpen && outerDisplayInLandscape;
+  const onOuterDisplay = layout?.folds.length === 0;
+  const landscape = !!layout && layout.width > layout.height;
+  return hingeOpen && onOuterDisplay && landscape;
 }
 
 function useSymmetricSafeArea() {
