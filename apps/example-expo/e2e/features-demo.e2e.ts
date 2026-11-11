@@ -71,21 +71,18 @@ describe('primaryEdge', () => {
   });
 });
 
-// The segments of each control in the props sheet, in order.
 const segments = {
   'arrangement': ['Split', 'Overlay'],
   'axes': ['Both', 'Horizontal', 'Vertical'],
   'primary-edge-horizontal': ['Default', 'Leading', 'Trailing'],
 } as const;
 
-/** Opens the props sheet, picks one segment of a control, and closes the sheet. */
 async function setProp<C extends keyof typeof segments>(
   screen: Screen,
   control: C,
   segment: (typeof segments)[C][number]
 ) {
   await screen.getByRole('button', 'Props').tap();
-  // The sheet slides in; wait until it has settled with its Done button showing.
   await expect(screen.getByTestId('props-done')).toBeVisible();
   const options: readonly string[] = segments[control];
   await tapAt(
@@ -97,8 +94,7 @@ async function setProp<C extends keyof typeof segments>(
 }
 
 // Android's segmented buttons and the sheet's Done button are unnamed controls
-// inside a group, which the engine won't tap through, so tap a point of the
-// group: `fraction` of the way across, halfway down.
+// inside a group, which the engine won't tap through.
 async function tapAt(target: Locator, fraction: number) {
   const box = await target.boundingBox();
   if (!box) throw new Error('The control has no box to tap');

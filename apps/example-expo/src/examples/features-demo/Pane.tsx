@@ -11,7 +11,6 @@ import {
   type SystemLayout,
 } from 'react-native-arrangement-view';
 
-// Asks for `barInsets.bottom`: where UIKit floats a bar this tall.
 const BAR_EXTENTS = { bottom: 44 };
 
 export interface PaneProps {
@@ -93,7 +92,7 @@ function SystemLayoutValues({
     <View testID={`${id}-system-layout`} style={styles.values}>
       <Value
         name="safeArea"
-        value={`top ${n(top)}, right ${n(right)}, bottom ${n(bottom)}, left ${n(left)}`}
+        value={`top ${twoDecimals(top)}, right ${twoDecimals(right)}, bottom ${twoDecimals(bottom)}, left ${twoDecimals(left)}`}
       />
       {layout.folds.length === 0 ? (
         <Value name="folds" value="none" />
@@ -125,7 +124,7 @@ function SystemLayoutValues({
           value={
             layout.barInsets.bottom === undefined
               ? 'none'
-              : n(layout.barInsets.bottom)
+              : twoDecimals(layout.barInsets.bottom)
           }
         />
       </View>
@@ -148,16 +147,15 @@ function describeFold(fold: Fold) {
     fold.orientation,
     fold.separating ? 'separating' : 'not separating',
     ...(fold.state ? [fold.state] : []),
-    `window x ${n(fold.window.x)}, y ${n(fold.window.y)}`,
+    `window x ${twoDecimals(fold.window.x)}, y ${twoDecimals(fold.window.y)}`,
   ].join(', ');
 }
 
 function describeRect(rect: SystemLayout['occlusions'][number]) {
-  return `x ${n(rect.x)}, y ${n(rect.y)}, ${n(rect.width)} × ${n(rect.height)}`;
+  return `x ${twoDecimals(rect.x)}, y ${twoDecimals(rect.y)}, ${twoDecimals(rect.width)} × ${twoDecimals(rect.height)}`;
 }
 
-// Two decimals, so a sliver of a fold under a point still shows its size.
-function n(value: number) {
+function twoDecimals(value: number) {
   return String(Number(value.toFixed(2)));
 }
 
