@@ -43,7 +43,6 @@ internal class WindowFolds private constructor(private val activity: Activity) :
     notifyListeners()
   }
 
-  /** Adds the listener, or changes the threshold it reads its folds' states with. */
   fun subscribe(listener: Listener, threshold: FoldThreshold?) {
     if (listeners.isEmpty()) {
       windowInfo.addWindowLayoutInfoListener(
@@ -103,25 +102,15 @@ internal data class FoldThreshold(val halfOpenAtDegrees: Float, val flatAtDegree
     if (wasHalfOpen) degrees < flatAtDegrees else degrees <= halfOpenAtDegrees
 }
 
-/**
- * The states of one window's folds. A fold reads WindowManager's state, or under a threshold on a
- * device with a hinge angle sensor, a history of the angle. There is one history per threshold and
- * fold orientation, so a fold that turns starts over.
- */
 internal class FoldStates(private val hasHingeSensor: Boolean) {
   private var degrees: Float? = null
   private val halfOpen = HashSet<Pair<FoldThreshold, FoldingFeature.Orientation>>()
 
-  /** Takes a reading from the hinge angle sensor. Returns whether a history turned. */
   fun read(degrees: Float, thresholds: Set<FoldThreshold>, features: List<FoldingFeature>): Boolean {
     this.degrees = degrees
     return update(thresholds, features)
   }
 
-  /**
-   * Drops the histories that no threshold and fold orientation need any more, so one that comes back
-   * starts flat. Returns whether a history turned.
-   */
   fun update(thresholds: Set<FoldThreshold>, features: List<FoldingFeature>): Boolean {
     val histories = thresholds.flatMap { threshold -> features.map { threshold to it.orientation } }
     halfOpen.retainAll(histories.toSet())
@@ -137,7 +126,6 @@ internal class FoldStates(private val hasHingeSensor: Boolean) {
     return turned
   }
 
-  /** Forgets the angle and every history, since the hinge can move while nothing listens. */
   fun reset() {
     degrees = null
     halfOpen.clear()

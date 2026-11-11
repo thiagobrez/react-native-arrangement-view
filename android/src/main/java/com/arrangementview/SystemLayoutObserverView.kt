@@ -40,7 +40,6 @@ class SystemLayoutObserverView(private val reactContext: ThemedReactContext) :
 
   override fun onWindowFoldsChanged() = report()
 
-  /** Called once per props update, so the two degrees always change together. */
   fun updateThreshold() {
     val next =
       if (halfOpenAtDegrees < 0) null
