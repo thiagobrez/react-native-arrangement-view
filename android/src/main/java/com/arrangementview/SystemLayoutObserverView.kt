@@ -14,8 +14,8 @@ import com.facebook.react.uimanager.ThemedReactContext
 class SystemLayoutObserverView(private val reactContext: ThemedReactContext) :
   View(reactContext), WindowFolds.Listener {
 
-  var halfOpenAtDegrees = -1.0
-  var flatAtDegrees = -1.0
+  internal var stagedHalfOpenAtDegrees = -1.0
+  internal var stagedFlatAtDegrees = -1.0
   private var threshold: FoldThreshold? = null
   private var folds: WindowFolds? = null
   private var reported: Report? = null
@@ -40,13 +40,13 @@ class SystemLayoutObserverView(private val reactContext: ThemedReactContext) :
 
   override fun onWindowFoldsChanged() = report()
 
-  fun updateThreshold() {
+  fun onPropsUpdated() {
     val next =
-      if (halfOpenAtDegrees < 0) null
-      else FoldThreshold(halfOpenAtDegrees.toFloat(), flatAtDegrees.toFloat())
+      if (stagedHalfOpenAtDegrees < 0) null
+      else FoldThreshold(stagedHalfOpenAtDegrees, stagedFlatAtDegrees)
     if (next == threshold) return
     threshold = next
-    folds?.subscribe(this, next)
+    folds?.setThreshold(this, next)
     report()
   }
 

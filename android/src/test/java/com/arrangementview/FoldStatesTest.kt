@@ -10,7 +10,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class FoldStatesTest {
-  private val book = FoldThreshold(halfOpenAtDegrees = 170f, flatAtDegrees = 175f)
+  private val book = FoldThreshold(halfOpenAtDegrees = 170.0, flatAtDegrees = 175.0)
   private val vertical = Fold(Orientation.VERTICAL)
   private val horizontal = Fold(Orientation.HORIZONTAL)
 
@@ -25,9 +25,9 @@ class FoldStatesTest {
     override val occlusionType = FoldingFeature.OcclusionType.NONE
   }
 
-  private fun FoldStates.sweep(vararg degrees: Float, fold: Fold = vertical): List<String> =
+  private fun FoldStates.sweep(vararg degrees: Double, fold: Fold = vertical): List<String> =
     degrees.map { angle ->
-      read(angle, setOf(book), listOf(fold))
+      readAngle(angle, setOf(book), listOf(fold))
       state(fold, book)
     }
 
@@ -36,7 +36,7 @@ class FoldStatesTest {
     val states = FoldStates(hasHingeSensor = true)
     assertEquals(
       listOf("flat", "flat", "flat", "halfOpen", "halfOpen", "flat"),
-      states.sweep(180f, 175f, 172f, 170f, 172f, 175f))
+      states.sweep(180.0, 175.0, 172.0, 170.0, 172.0, 175.0))
   }
 
   @Test
@@ -44,26 +44,26 @@ class FoldStatesTest {
     val states = FoldStates(hasHingeSensor = true)
     assertEquals(
       listOf("flat", "flat", "halfOpen", "halfOpen", "flat"),
-      states.sweep(175f, 170f.nextUp(), 170f, 175f.nextDown(), 175f))
+      states.sweep(175.0, 170.0.nextUp(), 170.0, 175.0.nextDown(), 175.0))
   }
 
   @Test
   fun `a rotation at 172 starts over`() {
     val states = FoldStates(hasHingeSensor = true)
-    assertEquals(listOf("flat", "halfOpen", "halfOpen"), states.sweep(180f, 170f, 172f))
+    assertEquals(listOf("flat", "halfOpen", "halfOpen"), states.sweep(180.0, 170.0, 172.0))
 
     states.update(setOf(book), listOf(horizontal))
     assertEquals("flat", states.state(horizontal, book))
     states.update(setOf(book), listOf(vertical))
     assertEquals("flat", states.state(vertical, book))
 
-    assertEquals(listOf("flat", "halfOpen"), states.sweep(172f, 170f))
+    assertEquals(listOf("flat", "halfOpen"), states.sweep(172.0, 170.0))
   }
 
   @Test
   fun `a fold that turns takes the latest angle at once`() {
     val states = FoldStates(hasHingeSensor = true)
-    states.sweep(180f, 160f)
+    states.sweep(180.0, 160.0)
 
     assertEquals(true, states.update(setOf(book), listOf(horizontal)))
     assertEquals("halfOpen", states.state(horizontal, book))
@@ -72,23 +72,23 @@ class FoldStatesTest {
   @Test
   fun `a reattach at 172 starts over`() {
     val states = FoldStates(hasHingeSensor = true)
-    assertEquals(listOf("flat", "halfOpen", "halfOpen"), states.sweep(180f, 170f, 172f))
+    assertEquals(listOf("flat", "halfOpen", "halfOpen"), states.sweep(180.0, 170.0, 172.0))
 
     states.reset()
     states.update(emptySet(), listOf(vertical))
     states.update(setOf(book), listOf(vertical))
     assertEquals("flat", states.state(vertical, book))
 
-    assertEquals(listOf("flat", "halfOpen"), states.sweep(172f, 170f))
+    assertEquals(listOf("flat", "halfOpen"), states.sweep(172.0, 170.0))
   }
 
   @Test
   fun `a threshold that leaves and comes back starts over, though another kept the sensor on`() {
     val states = FoldStates(hasHingeSensor = true)
-    val tight = FoldThreshold(halfOpenAtDegrees = 150f, flatAtDegrees = 160f)
-    states.read(180f, setOf(book, tight), listOf(vertical))
-    states.read(170f, setOf(book, tight), listOf(vertical))
-    states.read(172f, setOf(book, tight), listOf(vertical))
+    val tight = FoldThreshold(halfOpenAtDegrees = 150.0, flatAtDegrees = 160.0)
+    states.readAngle(180.0, setOf(book, tight), listOf(vertical))
+    states.readAngle(170.0, setOf(book, tight), listOf(vertical))
+    states.readAngle(172.0, setOf(book, tight), listOf(vertical))
     assertEquals("halfOpen", states.state(vertical, book))
 
     states.update(setOf(tight), listOf(vertical))
@@ -99,13 +99,13 @@ class FoldStatesTest {
   @Test
   fun `a fold reads flat after the sensor stops, until its next reading`() {
     val states = FoldStates(hasHingeSensor = true)
-    states.sweep(180f, 165f)
+    states.sweep(180.0, 165.0)
 
     states.reset()
     states.update(setOf(book), listOf(vertical))
     assertEquals("flat", states.state(vertical, book))
 
-    assertEquals(listOf("halfOpen"), states.sweep(165f))
+    assertEquals(listOf("halfOpen"), states.sweep(165.0))
   }
 
   @Test
@@ -122,26 +122,26 @@ class FoldStatesTest {
   fun `without a threshold a fold reads WindowManager's state`() {
     val states = FoldStates(hasHingeSensor = true)
     val halfOpened = Fold(Orientation.VERTICAL, State.HALF_OPENED)
-    states.read(100f, emptySet(), listOf(halfOpened))
+    states.readAngle(100.0, emptySet(), listOf(halfOpened))
 
     assertEquals("halfOpen", states.state(halfOpened, null))
-    states.read(160f, emptySet(), listOf(vertical))
+    states.readAngle(160.0, emptySet(), listOf(vertical))
     assertEquals("flat", states.state(vertical, null))
   }
 
   @Test
   fun `each threshold keeps its own history, and says when it turns`() {
     val states = FoldStates(hasHingeSensor = true)
-    val tight = FoldThreshold(halfOpenAtDegrees = 150f, flatAtDegrees = 160f)
+    val tight = FoldThreshold(halfOpenAtDegrees = 150.0, flatAtDegrees = 160.0)
     val both = setOf(book, tight)
 
-    assertEquals(false, states.read(180f, both, listOf(vertical)))
-    assertEquals(true, states.read(165f, both, listOf(vertical)))
+    assertEquals(false, states.readAngle(180.0, both, listOf(vertical)))
+    assertEquals(true, states.readAngle(165.0, both, listOf(vertical)))
     assertEquals("halfOpen", states.state(vertical, book))
     assertEquals("flat", states.state(vertical, tight))
 
-    assertEquals(true, states.read(150f, both, listOf(vertical)))
-    assertEquals(false, states.read(155f, both, listOf(vertical)))
+    assertEquals(true, states.readAngle(150.0, both, listOf(vertical)))
+    assertEquals(false, states.readAngle(155.0, both, listOf(vertical)))
     assertEquals(listOf("halfOpen", "halfOpen"), both.map { states.state(vertical, it) })
   }
 }

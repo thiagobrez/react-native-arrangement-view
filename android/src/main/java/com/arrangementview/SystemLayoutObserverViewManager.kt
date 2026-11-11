@@ -14,17 +14,17 @@ class SystemLayoutObserverViewManager : SimpleViewManager<SystemLayoutObserverVi
 
   @ReactProp(name = "halfOpenAtDegrees", defaultDouble = -1.0)
   fun setHalfOpenAtDegrees(view: SystemLayoutObserverView, degrees: Double) {
-    view.halfOpenAtDegrees = degrees
+    view.stagedHalfOpenAtDegrees = degrees
   }
 
   @ReactProp(name = "flatAtDegrees", defaultDouble = -1.0)
   fun setFlatAtDegrees(view: SystemLayoutObserverView, degrees: Double) {
-    view.flatAtDegrees = degrees
+    view.stagedFlatAtDegrees = degrees
   }
 
   override fun onAfterUpdateTransaction(view: SystemLayoutObserverView) {
     super.onAfterUpdateTransaction(view)
-    view.updateThreshold()
+    view.onPropsUpdated()
   }
 
   override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Any> =

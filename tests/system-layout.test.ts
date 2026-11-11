@@ -310,6 +310,13 @@ test('a fold threshold maps to its two native props, and none to -1 for each', (
     parseFoldThreshold({ halfOpenAtDegrees: 0.5, flatAtDegrees: 180 }),
     { halfOpenAtDegrees: 0.5, flatAtDegrees: 180 }
   );
+  assert.deepEqual(
+    parseFoldThreshold({
+      halfOpenAtDegrees: 170.000001,
+      flatAtDegrees: 170.000002,
+    }),
+    { halfOpenAtDegrees: 170.000001, flatAtDegrees: 170.000002 }
+  );
 });
 
 test('a fold threshold outside 0 < halfOpenAtDegrees < flatAtDegrees <= 180 throws', () => {
@@ -323,7 +330,6 @@ test('a fold threshold outside 0 < halfOpenAtDegrees < flatAtDegrees <= 180 thro
     [NaN, 175],
     [170, NaN],
     [170, Infinity],
-    [170.000001, 170.000002],
   ];
   for (const [halfOpenAtDegrees, flatAtDegrees] of invalid)
     assert.throws(

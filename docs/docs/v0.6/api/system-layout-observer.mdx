@@ -132,7 +132,7 @@ With this threshold, a fold that bends from 180° reads `"flat"` at 175° and 17
 - A history starts at `"flat"` and takes the latest angle at once, or the hinge angle sensor's first reading. It starts over when the fold turns between vertical and horizontal, when the window loses its fold, and when the window's last observer with the threshold leaves it, as when the observer unmounts.
 - The library listens to the hinge angle sensor only while an observer in the window has a threshold and the window has a fold. The angle never reaches JavaScript, so an angle that doesn't turn a fold's state sends no report.
 - On a device without a hinge angle sensor, `state` stays WindowManager's.
-- The threshold needs `0 < halfOpenAtDegrees < flatAtDegrees <= 180`, with the two still different as 32-bit floats, which Android compares. An invalid one throws a `RangeError` when the observer renders, on iOS too.
+- The threshold needs `0 < halfOpenAtDegrees < flatAtDegrees <= 180`. An invalid one throws a `RangeError` when the observer renders, on iOS too.
 
 ## SystemLayout
 

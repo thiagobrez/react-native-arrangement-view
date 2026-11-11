@@ -148,9 +148,11 @@ export function parseFoldThreshold(threshold: FoldThreshold | undefined): {
 } {
   if (!threshold) return { halfOpenAtDegrees: -1, flatAtDegrees: -1 };
   const { halfOpenAtDegrees, flatAtDegrees } = threshold;
-  const orderedAsFloats =
-    Math.fround(halfOpenAtDegrees) < Math.fround(flatAtDegrees);
-  if (!(halfOpenAtDegrees > 0 && orderedAsFloats && flatAtDegrees <= 180))
+  if (!(
+    halfOpenAtDegrees > 0 &&
+    halfOpenAtDegrees < flatAtDegrees &&
+    flatAtDegrees <= 180
+  ))
     throw new RangeError(
       `foldThreshold needs 0 < halfOpenAtDegrees < flatAtDegrees <= 180, and got ${halfOpenAtDegrees} and ${flatAtDegrees}.`
     );

@@ -52,6 +52,12 @@ internal class WindowFolds private constructor(private val activity: Activity) :
     update()
   }
 
+  fun setThreshold(listener: Listener, threshold: FoldThreshold?) {
+    if (!listeners.containsKey(listener)) return
+    listeners[listener] = threshold
+    update()
+  }
+
   fun unsubscribe(listener: Listener) {
     if (!listeners.containsKey(listener)) return
     listeners.remove(listener)
@@ -65,7 +71,8 @@ internal class WindowFolds private constructor(private val activity: Activity) :
     states.state(feature, threshold)
 
   override fun onSensorChanged(event: SensorEvent) {
-    if (states.read(event.values[0], thresholds(), features.orEmpty())) notifyListeners()
+    val anyTurned = states.readAngle(event.values[0].toDouble(), thresholds(), features.orEmpty())
+    if (anyTurned) notifyListeners()
   }
 
   override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) = Unit
@@ -97,38 +104,54 @@ internal class WindowFolds private constructor(private val activity: Activity) :
   }
 }
 
-internal data class FoldThreshold(val halfOpenAtDegrees: Float, val flatAtDegrees: Float) {
-  fun isHalfOpen(wasHalfOpen: Boolean, degrees: Float): Boolean =
+internal data class FoldThreshold(val halfOpenAtDegrees: Double, val flatAtDegrees: Double) {
+  fun isHalfOpen(wasHalfOpen: Boolean, degrees: Double): Boolean =
     if (wasHalfOpen) degrees < flatAtDegrees else degrees <= halfOpenAtDegrees
 }
 
-internal class FoldStates(private val hasHingeSensor: Boolean) {
-  private var degrees: Float? = null
-  private val halfOpen = HashSet<Pair<FoldThreshold, FoldingFeature.Orientation>>()
+internal data class FoldHistory(
+  val threshold: FoldThreshold,
+  val orientation: FoldingFeature.Orientation
+)
 
-  fun read(degrees: Float, thresholds: Set<FoldThreshold>, features: List<FoldingFeature>): Boolean {
+internal class FoldStates(private val hasHingeSensor: Boolean) {
+  private var degrees: Double? = null
+  private val halfOpenHistories = HashSet<FoldHistory>()
+
+  fun readAngle(
+    degrees: Double,
+    thresholds: Set<FoldThreshold>,
+    features: List<FoldingFeature>
+  ): Boolean {
     this.degrees = degrees
     return update(thresholds, features)
   }
 
   fun update(thresholds: Set<FoldThreshold>, features: List<FoldingFeature>): Boolean {
-    val histories = thresholds.flatMap { threshold -> features.map { threshold to it.orientation } }
-    halfOpen.retainAll(histories.toSet())
+    val histories =
+      thresholds.flatMapTo(HashSet()) { threshold ->
+        features.map { FoldHistory(threshold, it.orientation) }
+      }
+    halfOpenHistories.retainAll(histories)
+    return turnHistories(histories)
+  }
+
+  private fun turnHistories(histories: Set<FoldHistory>): Boolean {
     val degrees = degrees ?: return false
-    var turned = false
+    var anyTurned = false
     for (history in histories) {
-      val was = history in halfOpen
-      val now = history.first.isHalfOpen(was, degrees)
+      val was = history in halfOpenHistories
+      val now = history.threshold.isHalfOpen(was, degrees)
       if (now == was) continue
-      turned = true
-      if (now) halfOpen.add(history) else halfOpen.remove(history)
+      anyTurned = true
+      if (now) halfOpenHistories.add(history) else halfOpenHistories.remove(history)
     }
-    return turned
+    return anyTurned
   }
 
   fun reset() {
     degrees = null
-    halfOpen.clear()
+    halfOpenHistories.clear()
   }
 
   fun state(feature: FoldingFeature, threshold: FoldThreshold?): String {
@@ -136,7 +159,7 @@ internal class FoldStates(private val hasHingeSensor: Boolean) {
       if (threshold == null || !hasHingeSensor) {
         feature.state == FoldingFeature.State.HALF_OPENED
       } else {
-        (threshold to feature.orientation) in halfOpen
+        FoldHistory(threshold, feature.orientation) in halfOpenHistories
       }
     return if (isHalfOpen) "halfOpen" else "flat"
   }

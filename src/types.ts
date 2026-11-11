@@ -48,8 +48,7 @@ export type FoldState = 'flat' | 'halfOpen';
  * threshold leaves it, as when the observer unmounts. On a device without a
  * hinge angle sensor, `state` stays WindowManager's.
  *
- * Requires `0 < halfOpenAtDegrees < flatAtDegrees <= 180`, with the two
- * still different as 32-bit floats, which Android compares. An invalid
+ * Requires `0 < halfOpenAtDegrees < flatAtDegrees <= 180`. An invalid
  * threshold throws when the observer renders, on iOS too.
  */
 export type FoldThreshold = Readonly<{
