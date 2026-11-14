@@ -42,8 +42,6 @@ function Camera() {
 
 The hooks return `null` until the [first report](./use-hinge-change#when-the-first-report-comes). Below iOS 27.1, when the app is built with an older SDK, and on platforms other than iOS and Android, the first report says there is no hinge.
 
-For where the fold is, in a view's own coordinates, use a [`SystemLayoutObserver`](./system-layout-observer).
-
 ## React to a hinge in native code on iOS
 
 Some decisions about a window are made in native code, at a moment that we can't wait for JavaScript. For example, automatically setting the app orientation based on whether the device has a hinge.
