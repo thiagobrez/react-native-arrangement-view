@@ -21,6 +21,14 @@ yarn lint
 yarn build
 ```
 
+## Work budgets
+
+`yarn budgets` (`tests/budgets/work.test.ts`, run in CI's lint job) replays native hinge events, pane events and parent renders through the real Android and iOS `ArrangementView` and the `HingeObserver`, and counts what they make React and native do: renders of each reader inside the panes, the callbacks the library calls, and each host prop that changes after mount, which React sends to native in a Fabric commit. On a Mac, the library's own work per event took tens of nanoseconds, while one more render of a small reader took about 300 µs in React's development build, and a fold sends 30 to 60 hinge events a second. So the budgets count how often work happens and never time it, and counts are exact on any machine.
+
+Each scenario is a list of steps and one `assert.deepEqual` on the whole work record, with the expected counts written from the steps, such as one render per angle change plus the mount. A new key fails too, so a prop newly sent to native shows up in the diff. To add a scenario, add a test that calls `measure()` from `tests/budgets/measure.ts` with a host and its steps, and write the counts its contract promises. A change that makes the library do more or less work on purpose changes those expectations in the same diff, which is where a reviewer sees its cost.
+
+`yarn budgets:mutants` checks the budgets themselves: it applies each bug in `tests/budgets/work.mutants.ts` to a copy of `src/` and expects the budgets to fail. Run it after changing the budgets or the stand-in for `react-native` they load `src/` with.
+
 ## End-to-end tests
 
 The example app has end-to-end tests in `apps/example-expo/e2e/`, written with [e2e](https://e2e.tester.army/docs). They run on the iPhone Duo simulator and the booted Android emulator (use the `Pixel_10_Pro_Fold` AVD), and open whatever build is installed there, so install a Release build first and again after changing the app:

@@ -31,6 +31,9 @@ jobs:
       - name: Test hinge contract
         run: yarn test
 
+      - name: Check render and native update budgets
+        run: yarn budgets
+
       - name: Typecheck files
         run: yarn typecheck
 
