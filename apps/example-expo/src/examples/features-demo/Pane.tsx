@@ -1,17 +1,17 @@
 import { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  type LayoutChangeEvent,
-} from 'react-native';
-import {
+  SystemLayoutObserver,
   useArrangementLayout,
   useHingeChange,
+  useSystemLayout,
   type Arrangement,
   type ArrangementLayout,
+  type Fold,
+  type SystemLayout,
 } from 'react-native-arrangement-view';
+
+const BAR_EXTENTS = { bottom: 44 };
 
 export interface PaneProps {
   primary: boolean;
@@ -19,25 +19,12 @@ export interface PaneProps {
 }
 
 export function Pane({ primary, arrangement }: PaneProps) {
-  const [size, setSize] = useState({ width: 0, height: 0 });
-  const hinge = useHingeChange();
-  const arrangementLayout = useArrangementLayout();
-  const [taps, setTaps] = useState(0);
   const name = primary ? 'Primary' : 'Secondary';
-  const id = name.toLowerCase();
   const overlay = primary && arrangement === 'overlay';
-  const onLayout = ({ nativeEvent: { layout } }: LayoutChangeEvent) =>
-    setSize({
-      width: Math.round(layout.width),
-      height: Math.round(layout.height),
-    });
-  const angle = hinge?.angle ?? null;
-  const degrees = angle === null ? null : Math.round((angle * 180) / Math.PI);
 
   return (
     <View
-      testID={`${id}-pane`}
-      onLayout={onLayout}
+      testID={`${name.toLowerCase()}-pane`}
       pointerEvents={overlay ? 'box-none' : 'auto'}
       style={[
         styles.pane,
@@ -45,33 +32,131 @@ export function Pane({ primary, arrangement }: PaneProps) {
         overlay && styles.overlay,
       ]}
     >
-      <View style={[styles.paneHeader, overlay && styles.overlayPanel]}>
-        <Text style={styles.paneTitle}>{name}</Text>
-        <Text testID={`${id}-dimensions`} style={styles.dimensions}>
-          {size.width} × {size.height} pt
+      <SystemLayoutObserver barExtents={BAR_EXTENTS}>
+        <PaneHeader name={name} overlay={overlay} />
+      </SystemLayoutObserver>
+    </View>
+  );
+}
+
+function PaneHeader({ name, overlay }: { name: string; overlay: boolean }) {
+  const layout = useSystemLayout();
+  const hinge = useHingeChange();
+  const arrangementLayout = useArrangementLayout();
+  const [taps, setTaps] = useState(0);
+  const id = name.toLowerCase();
+  const angle = hinge?.angle ?? null;
+  const degrees = angle === null ? null : Math.round((angle * 180) / Math.PI);
+
+  return (
+    <View style={[styles.paneHeader, overlay && styles.overlayPanel]}>
+      <Text style={styles.paneTitle}>{name}</Text>
+      <Text testID={`${id}-dimensions`} style={styles.dimensions}>
+        {layout
+          ? `${Math.round(layout.width)} × ${Math.round(layout.height)} pt`
+          : 'Size unknown'}
+      </Text>
+      <View style={styles.hingeRow}>
+        <Text testID={`${id}-hinge-angle`} style={styles.hingeAngle}>
+          {degrees === null ? 'No hinge' : `${degrees}°`}
         </Text>
-        <View style={styles.hingeRow}>
-          <Text testID={`${id}-hinge-angle`} style={styles.hingeAngle}>
-            {degrees === null ? 'No hinge' : `${degrees}°`}
-          </Text>
-          <Text testID={`${id}-hinge-status`} style={styles.hingeStatus}>
-            {hinge?.status}
-          </Text>
-        </View>
-        <Text testID={`${id}-layout`} style={styles.dimensions}>
-          {describe(arrangementLayout)}
+        <Text testID={`${id}-hinge-status`} style={styles.hingeStatus}>
+          {hinge?.status}
         </Text>
-        <Pressable
-          testID={`${id}-tap`}
-          accessibilityRole="button"
-          onPress={() => setTaps((count) => count + 1)}
-          style={styles.tap}
-        >
-          <Text style={styles.tapText}>Taps: {taps}</Text>
-        </Pressable>
+      </View>
+      <Text testID={`${id}-layout`} style={styles.dimensions}>
+        {describe(arrangementLayout)}
+      </Text>
+      {layout && <SystemLayoutValues id={id} layout={layout} />}
+      <Pressable
+        testID={`${id}-tap`}
+        accessibilityRole="button"
+        onPress={() => setTaps((count) => count + 1)}
+        style={styles.tap}
+      >
+        <Text style={styles.tapText}>Taps: {taps}</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function SystemLayoutValues({
+  id,
+  layout,
+}: {
+  id: string;
+  layout: SystemLayout;
+}) {
+  const { top, right, bottom, left } = layout.safeArea;
+  return (
+    <View testID={`${id}-system-layout`} style={styles.values}>
+      <Value
+        name="safeArea"
+        value={`top ${twoDecimals(top)}, right ${twoDecimals(right)}, bottom ${twoDecimals(bottom)}, left ${twoDecimals(left)}`}
+      />
+      {layout.folds.length === 0 ? (
+        <Value name="folds" value="none" />
+      ) : (
+        layout.folds.map((fold, index) => (
+          <Value
+            key={index}
+            name={`folds[${index}]`}
+            value={describeFold(fold)}
+          />
+        ))
+      )}
+      <Value
+        name="occlusions"
+        value={
+          layout.occlusions.length === 0
+            ? 'none'
+            : layout.occlusions.map(describeRect).join('; ')
+        }
+      />
+      <View style={styles.traits}>
+        <Value
+          name="horizontalSizeClass"
+          value={String(layout.horizontalSizeClass)}
+        />
+        <Value name="verticalBarEdge" value={String(layout.verticalBarEdge)} />
+        <Value
+          name="barInsets.bottom"
+          value={
+            layout.barInsets.bottom === undefined
+              ? 'none'
+              : twoDecimals(layout.barInsets.bottom)
+          }
+        />
       </View>
     </View>
   );
+}
+
+function Value({ name, value }: { name: string; value: string }) {
+  return (
+    <Text style={styles.value}>
+      <Text style={styles.valueName}>{name} </Text>
+      {value}
+    </Text>
+  );
+}
+
+function describeFold(fold: Fold) {
+  return [
+    describeRect(fold),
+    fold.orientation,
+    fold.separating ? 'separating' : 'not separating',
+    ...(fold.state ? [fold.state] : []),
+    `window x ${twoDecimals(fold.window.x)}, y ${twoDecimals(fold.window.y)}`,
+  ].join(', ');
+}
+
+function describeRect(rect: SystemLayout['occlusions'][number]) {
+  return `x ${twoDecimals(rect.x)}, y ${twoDecimals(rect.y)}, ${twoDecimals(rect.width)} × ${twoDecimals(rect.height)}`;
+}
+
+function twoDecimals(value: number) {
+  return String(Number(value.toFixed(2)));
 }
 
 function describe(layout: ArrangementLayout | null) {
@@ -107,6 +192,22 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   hingeStatus: { color: '#e2d9ff', fontSize: 14, fontWeight: '600' },
+  values: {
+    alignSelf: 'flex-start',
+    gap: 3,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 14,
+    backgroundColor: '#00000033',
+  },
+  traits: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 14, rowGap: 3 },
+  value: {
+    color: '#f4f2fb',
+    fontSize: 11,
+    lineHeight: 15,
+    fontVariant: ['tabular-nums'],
+  },
+  valueName: { color: '#aaa3c9', fontWeight: '600' },
   tap: {
     alignSelf: 'flex-start',
     paddingHorizontal: 16,
