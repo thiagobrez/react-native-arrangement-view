@@ -1,9 +1,12 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { registerHooks } from 'node:module';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import ts from 'typescript';
 
 const reactNative = new URL('./react-native.ts', import.meta.url).href;
+const source = new URL('../../src/', import.meta.url).href;
+const mutant =
+  process.env.BUDGETS_SRC && pathToFileURL(`${process.env.BUDGETS_SRC}/`).href;
 
 registerHooks({
   resolve(specifier, context, next) {
@@ -13,9 +16,12 @@ registerHooks({
     // only ever means the shared .ts or .tsx file.
     const extensionless =
       specifier.startsWith('.') && !/\.[cm]?[jt]sx?$/.test(specifier);
-    return extensionless
+    const resolved = extensionless
       ? resolveExtension(specifier, context.parentURL)
       : next(specifier, context);
+    if (mutant && resolved.url.startsWith(source))
+      return { ...resolved, url: mutant + resolved.url.slice(source.length) };
+    return resolved;
   },
   load(url, context, next) {
     if (!url.endsWith('.tsx')) return next(url, context);

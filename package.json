@@ -41,6 +41,7 @@
     "build": "bob build",
     "test": "node --test tests/*.test.ts",
     "budgets": "node --no-warnings --import ./tests/budgets/loader.ts --test tests/budgets/*.test.ts",
+    "budgets:mutants": "node --no-warnings tests/budgets/work.mutants.ts",
     "verify:arrange": "node --no-warnings tests/properties/arrange.check.ts",
     "verify:arrange:mutants": "node --no-warnings tests/properties/arrange.mutants.ts",
     "version-packages": "changeset version && yarn install --no-immutable",
