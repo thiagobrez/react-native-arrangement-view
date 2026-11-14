@@ -37,6 +37,22 @@ yarn example test:e2e:android
 
 Results are written to `apps/example-expo/.e2e/`. The CI workflow runs the Android tests. The iOS tests run locally only, because GitHub's Mac runners can't run the iPhone Duo simulator yet ([#23](https://github.com/thiagobrez/react-native-arrangement-view/issues/23)).
 
+## Nightly exploratory QA
+
+`.github/workflows/nightly.yml` runs every night at 03:00 UTC. Its `explore` job lets e2e's agent explore the example app on the Pixel 10 Pro Fold emulator, two charters a night. A charter, in `apps/example-expo/qa/charters.ts`, names an example, the postures to fold it through, and what the library promises there. The explorer is the `explorer` agent in `e2e.config.ts`: it folds and rotates the device with its `fold` and `set_orientation` tools, and judges what it sees against the promises in `qa/explorer.ts`. Each issue it reports runs again as a repro test, and it counts as confirmed only when the repro's closing check fails.
+
+When a bug is confirmed, the `fix` job starts Claude Code with `.github/nightly/fix.md`: it opens a `nightly-qa` pull request with a regression test and the fix, or an issue when it can't fix it. The `docs` job reviews one page of the newest docs version a night against the code, with `.github/nightly/docs.md`, and opens a `nightly-docs` pull request. A pull request that changes the pipeline runs it all as a dry run, on one charter, without pushing or opening anything.
+
+To explore on your own device, boot it, install a Release build as for the end-to-end tests, and set `ANTHROPIC_API_KEY`:
+
+```sh
+yarn example qa:explore --target ios                                # tonight's two charters
+yarn example qa:explore --target android --charters features-split --max-steps 4
+yarn example qa:explore --target ios --charters all
+```
+
+The report is `apps/example-expo/.e2e/qa/report.json`, with a summary beside it, and each charter's screenshots, videos and traces are in its folder there. The workflow needs two repository secrets: `ANTHROPIC_API_KEY`, an API key for the explorer's model, and `CLAUDE_CODE_OAUTH_TOKEN`, from `claude setup-token`, for the fix and docs agents. The Claude GitHub App must be installed on the repository, so the agents' pull requests run CI.
+
 ## Docs
 
 The documentation site in `docs/` is built with [Rspress](https://rspress.rs) and deployed to GitHub Pages from `main`. The logo and screenshots it shows are served from `docs/public/`, which the README also uses. The README keeps only installation and a quick start; document everything else on the site.

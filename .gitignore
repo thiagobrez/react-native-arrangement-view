@@ -91,3 +91,6 @@ apps/example-expo/android/
 
 # Scratch copies made by tests/properties/arrange.mutants.ts
 tests/properties/.mutants/
+
+# Summaries the nightly QA agents write for the job summary
+.nightly/
