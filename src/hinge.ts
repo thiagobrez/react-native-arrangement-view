@@ -31,8 +31,8 @@ export function normalizeHinge(event: {
   };
 }
 
-export function createHingeStore() {
-  let current = unavailableHinge;
+export function createHingeStore(initial: HingeState | null = null) {
+  let current = initial;
   const listeners = new Set<() => void>();
   return {
     getSnapshot: () => current,
@@ -44,9 +44,9 @@ export function createHingeStore() {
     },
     update(next: HingeState) {
       if (
-        next.available === current.available &&
-        next.angle === current.angle &&
-        next.status === current.status
+        next.available === current?.available &&
+        next.angle === current?.angle &&
+        next.status === current?.status
       )
         return;
       current = next;
@@ -54,6 +54,7 @@ export function createHingeStore() {
     },
   };
 }
+export const unavailableHingeStore = createHingeStore(unavailableHinge);
 export const HingeContext = createContext<ReturnType<
   typeof createHingeStore
 > | null>(null);
@@ -79,9 +80,12 @@ function useNearestHingeStore(hook: string) {
 
 /**
  * Observe the nearest HingeObserver, or the ArrangementView whose pane this is,
- * whichever is closer.
+ * whichever is closer. Null until the platform first reports the hinge, or
+ * that there is none. `onChange` runs for each report.
  */
-export function useHingeChange(onChange?: HingeChangeHandler): HingeState {
+export function useHingeChange(
+  onChange?: HingeChangeHandler
+): HingeState | null {
   const store = useNearestHingeStore('useHingeChange');
   const callback = useRef(onChange);
   useEffect(() => {
@@ -93,7 +97,7 @@ export function useHingeChange(onChange?: HingeChangeHandler): HingeState {
     store.getSnapshot
   );
   useEffect(() => {
-    callback.current?.(hinge);
+    if (hinge) callback.current?.(hinge);
   }, [hinge]);
   return hinge;
 }
@@ -102,12 +106,16 @@ export function useHingeChange(onChange?: HingeChangeHandler): HingeState {
  * Observe one value derived from the hinge, such as whether it is half-open.
  * The component renders again only when that value changes, however often the
  * angle does. The selector returns a primitive: an object built on each call
- * would never compare equal to the last one.
+ * would never compare equal to the last one. Null until the first report,
+ * which is also the first time the selector runs.
  */
 export function useHingeSelector<
   T extends string | number | boolean | null | undefined,
->(selector: (hinge: HingeState) => T): T {
+>(selector: (hinge: HingeState) => T): T | null {
   const store = useNearestHingeStore('useHingeSelector');
-  const select = () => selector(store.getSnapshot());
+  const select = () => {
+    const hinge = store.getSnapshot();
+    return hinge === null ? null : selector(hinge);
+  };
   return useSyncExternalStore(store.subscribe, select, select);
 }

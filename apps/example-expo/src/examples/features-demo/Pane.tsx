@@ -31,8 +31,8 @@ export function Pane({ primary, arrangement }: PaneProps) {
       width: Math.round(layout.width),
       height: Math.round(layout.height),
     });
-  const degrees =
-    hinge.angle === null ? null : Math.round((hinge.angle * 180) / Math.PI);
+  const angle = hinge?.angle ?? null;
+  const degrees = angle === null ? null : Math.round((angle * 180) / Math.PI);
 
   return (
     <View
@@ -55,7 +55,7 @@ export function Pane({ primary, arrangement }: PaneProps) {
             {degrees === null ? 'No hinge' : `${degrees}°`}
           </Text>
           <Text testID={`${id}-hinge-status`} style={styles.hingeStatus}>
-            {hinge.status}
+            {hinge?.status}
           </Text>
         </View>
         <Text testID={`${id}-layout`} style={styles.dimensions}>

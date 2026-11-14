@@ -1,0 +1,21 @@
+[
+  {
+    "text": "Guide",
+    "link": "/guide/installation",
+    "activeMatch": "/guide/"
+  },
+  {
+    "text": "API",
+    "link": "/api/arrangement-view",
+    "activeMatch": "/api/"
+  },
+  {
+    "text": "Examples",
+    "link": "/examples/tent-posture",
+    "activeMatch": "/examples/"
+  },
+  {
+    "text": "Changelog",
+    "link": "https://github.com/thiagobrez/react-native-arrangement-view/blob/main/CHANGELOG.md"
+  }
+]
