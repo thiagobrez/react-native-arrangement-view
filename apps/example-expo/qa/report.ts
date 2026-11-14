@@ -105,7 +105,12 @@ export function explorationError(result: ExploreResult): string | undefined {
   const runError = report.run.errors[0];
   if (runError) return `${runError.code}: ${runError.message}`;
   if (status === 'error' || status === 'blocked' || status === 'interrupted') {
-    return `the exploration ended ${status}`;
+    const attemptError = report.run.results
+      .flatMap((record) => record.attempts)
+      .find((attempt) => attempt.error)?.error;
+    return attemptError
+      ? `${attemptError.code}: ${attemptError.message}`
+      : `the exploration ended ${status}`;
   }
   const failed = explore.steps.filter(
     (step) => step.status === 'failed' || step.status === 'blocked'
