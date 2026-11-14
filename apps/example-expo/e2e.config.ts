@@ -11,7 +11,14 @@ export default {
       engine: mobile({ platform: 'ios', device: 'iPhone Duo' }),
       app,
     },
-    { name: 'android', engine: mobile({ platform: 'android' }), app },
+    {
+      name: 'android',
+      engine: mobile({
+        platform: 'android',
+        device: process.env.ANDROID_SERIAL,
+      }),
+      app,
+    },
   ],
   workers: 1,
 } satisfies E2EConfig;

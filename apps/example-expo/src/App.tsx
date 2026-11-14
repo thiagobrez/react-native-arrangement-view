@@ -5,8 +5,14 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { HingeObserver } from 'react-native-arrangement-view';
 import { ExamplesList } from './ExamplesList';
 import { examples } from './examples';
+import { FrameBench } from './FrameBench';
 
 const Stack = createNativeStackNavigator();
+
+const linking = {
+  prefixes: ['arrangementview://'],
+  config: { screens: { frames: 'frames' } },
+};
 
 const theme = {
   ...DarkTheme,
@@ -23,7 +29,7 @@ export default function App() {
   return (
     <SafeAreaProvider style={styles.root}>
       <HingeObserver>
-        <NavigationContainer theme={theme}>
+        <NavigationContainer theme={theme} linking={linking}>
           <Stack.Navigator
             screenOptions={{
               headerShadowVisible: false,
@@ -43,6 +49,15 @@ export default function App() {
                 options={{ title: example.title, ...example.options }}
               />
             ))}
+            {/* With a header, every resize draws one frame of panes placed
+              for the whole window inside the shorter screen. The bench leaves
+              it out until the library fixes that, to measure the library
+              alone. */}
+            <Stack.Screen
+              name="frames"
+              component={FrameBench}
+              options={{ headerShown: false }}
+            />
           </Stack.Navigator>
         </NavigationContainer>
       </HingeObserver>

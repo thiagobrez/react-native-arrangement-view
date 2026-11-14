@@ -2,6 +2,7 @@
   "expo": {
     "name": "ArrangementView Example",
     "slug": "react-native-arrangement-view-example",
+    "scheme": "arrangementview",
     "version": "1.0.0",
     "orientation": "default",
     "icon": "./assets/icon.png",

@@ -39,7 +39,7 @@
     "typecheck": "tsc",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "build": "bob build",
-    "test": "node --test tests/*.test.ts",
+    "test": "node --test tests/*.test.ts apps/example-expo/e2e/*.test.ts",
     "verify:arrange": "node --no-warnings tests/properties/arrange.check.ts",
     "verify:arrange:mutants": "node --no-warnings tests/properties/arrange.mutants.ts",
     "version-packages": "changeset version && yarn install --no-immutable",

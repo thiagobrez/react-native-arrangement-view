@@ -37,6 +37,24 @@ yarn example test:e2e:android
 
 Results are written to `apps/example-expo/.e2e/`. The CI workflow runs the Android tests. The iOS tests run locally only, because GitHub's Mac runners can't run the iPhone Duo simulator yet ([#23](https://github.com/thiagobrez/react-native-arrangement-view/issues/23)).
 
+### Frame budgets
+
+On Android, `e2e/frames.e2e.ts` fails when a frame draws the panes somewhere other than where they settle, or when the panes wait for JavaScript. It opens a hidden bench screen (`arrangementview://frames`), whose probe in `apps/example-expo/modules/frame-probe/` logs the pane rects of every frame the window draws. `e2e/frames.ts` judges that log. Each scenario is one row of its `scenarios` table:
+
+- **Fold while JavaScript is held.** The panes for the new window size must be drawn before JavaScript runs again.
+- **Window resize.** No frame may draw the panes elsewhere once the window and the arrangement have their new size.
+- **New arrangement.** A remounted ArrangementView must draw its panes, where the old one had them, on its first frame.
+
+A scenario also fails when a change it drove didn't happen, or when the panes never moved, so a silent probe or a missed fold can't pass. The budgets run with the other Android tests, on CI too. To run only them, with a release build installed:
+
+```sh
+yarn example test:e2e:android --tag frames
+```
+
+With more than one device connected, name one with `ANDROID_SERIAL=emulator-5554`. A failure names the change and the frame, for example `fold-closed: 1 frame(s) drew the panes out of place; the first, 0.0 ms after the window change, drew …`. Each scenario's log is in `apps/example-expo/.e2e/frames/`, and `yarn test` runs the judge's own tests in `e2e/frames.test.ts`.
+
+To check that the budgets still catch the regressions they exist for, run `yarn example verify:frames:mutants`. It builds and installs the release app once per library mutant listed in `e2e/frames.mutants.ts`, runs the budgets, and puts the source back.
+
 ## Docs
 
 The documentation site in `docs/` is built with [Rspress](https://rspress.rs) and deployed to GitHub Pages from `main`. The logo and screenshots it shows are served from `docs/public/`, which the README also uses. The README keeps only installation and a quick start; document everything else on the site.
