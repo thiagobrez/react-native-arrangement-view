@@ -23,7 +23,7 @@ yarn build
 
 ## End-to-end tests
 
-The example app has end-to-end tests in `apps/example-expo/e2e/`, written with [e2e](https://e2e.tester.army/docs). They run on the iPhone Duo simulator and the booted Android emulator (use the `Pixel_10_Pro_Fold` AVD), and open whatever build is installed there, so install a Release build first and again after changing the app:
+The example app has end-to-end tests in `apps/example-expo/e2e/`, written with [e2e](https://e2e.com/docs). They run on the iPhone Duo simulator and the booted Android emulator (use the `Pixel_10_Pro_Fold` AVD), and open whatever build is installed there, so install a Release build first and again after changing the app:
 
 ```sh
 yarn example expo prebuild --platform ios
