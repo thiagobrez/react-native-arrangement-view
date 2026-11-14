@@ -21,6 +21,111 @@ export type HingeChangeHandler = (hinge: HingeState) => void;
 export interface HingeObserverProps {
   children?: ReactNode;
 }
+/** Points on iOS, dp on Android. */
+export type Rect = Readonly<{
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}>;
+/**
+ * WindowManager's posture for a fold, `FoldingFeature.State`, which is `FLAT`
+ * or `HALF_OPENED`. Android only.
+ */
+export type FoldState = 'flat' | 'halfOpen';
+/**
+ * A fold that runs through the observing view, in every posture the system
+ * reports it. On Android it is flat or half-open, on iOS an inactive or active
+ * division.
+ *
+ * `x`, `y`, `width` and `height` are the part of the fold inside the view, in
+ * the view's coordinates. A fold that covers less than a pixel of the view,
+ * such as a band that only touches its edge, is not reported. An Android
+ * folding screen's fold is a line, 0 wide or tall, and is reported when it runs
+ * a pixel or more inside the view.
+ *
+ * The object keeps its identity until one of its values changes.
+ */
+export type Fold = Readonly<{
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  /** The whole fold, in the coordinates `measureInWindow` returns. Every observer in a window reports the same rect. */
+  window: Rect;
+  /** `vertical` when the fold runs from top to bottom, as in book posture. Read from the whole fold, whose height is at least its width. */
+  orientation: 'vertical' | 'horizontal';
+  /**
+   * The system divides content at the fold now. On iOS, the division region
+   * is active, which is when UIKit moves its own columns to it. On Android,
+   * `FoldingFeature.isSeparating`, true while half-open, and always for a hinge
+   * between two screens.
+   */
+  separating: boolean;
+  /**
+   * Android: WindowManager's posture for the fold. iOS: always `null`, since
+   * UIKit gives a region no posture. The hinge's posture is
+   * `HingeState.status`.
+   */
+  state: FoldState | null;
+}>;
+/**
+ * What the system reserves in the observing view, and the traits that decide
+ * how to lay out around it, in the view's coordinates. `Fold.window` is the
+ * only rect in the window's.
+ *
+ * A new object means a value changed. Unchanged parts (`safeArea`, `folds`,
+ * each `Fold`, `occlusions`, `barInsets`) keep their identity. `folds` and
+ * `occlusions` keep the platform's order. Nothing follows the hinge angle.
+ */
+export type SystemLayout = Readonly<{
+  width: number;
+  height: number;
+  /**
+   * iOS: the view's `safeAreaInsets`. Android: the window's system bars and
+   * display cutout, where they overlap the view.
+   */
+  safeArea: Readonly<{
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  }>;
+  /** Folds that run through the view, in every posture. Empty without a fold, or while closed. */
+  folds: readonly Fold[];
+  /**
+   * The parts of the view something physical covers, under the same rule as
+   * a fold. iOS 27.1 and later: active occlusion regions, such as the iPhone
+   * Duo's sensor housing. Android: the display cutout.
+   */
+  occlusions: readonly Rect[];
+  /** iOS: the view's horizontal size class. Android: `null`. */
+  horizontalSizeClass: 'compact' | 'regular' | null;
+  /**
+   * iOS 27.1 and later: the edge where the system places its vertical bar,
+   * whether or not one shows. `null` where it never places one, and on
+   * Android.
+   */
+  verticalBarEdge: HorizontalEdge | null;
+  /**
+   * iOS 27.1 and later: with the observer's `barExtents.bottom`, how far from
+   * the bottom edge UIKit floats a bar of that extent: the part of the window's
+   * bar inset that reaches into the view. Absent without it, and on Android.
+   */
+  barInsets: Readonly<{ bottom?: number }>;
+}>;
+export type SystemLayoutHandler = (layout: SystemLayout) => void;
+export interface SystemLayoutObserverProps {
+  /** Children read the layout with `useSystemLayout`. */
+  children?: ReactNode;
+  /**
+   * Called with each new layout, starting from the first. For the component
+   * that renders the observer, which can't read `useSystemLayout`.
+   */
+  onSystemLayoutChange?: SystemLayoutHandler;
+  /** iOS 27.1 and later. The extent in points of a bar on the bottom edge, to report `barInsets.bottom` for. */
+  barExtents?: Readonly<{ bottom?: number }>;
+}
 export type ArrangementLayout = Readonly<{
   /** The secondary pane is on screen: beside the primary, or behind it in overlay. */
   secondaryVisible: boolean;

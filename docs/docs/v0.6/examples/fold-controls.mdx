@@ -1,0 +1,102 @@
+---
+description: 'Floating controls on a foldable keep to one side of the fold. A SystemLayoutObserver reports where the system divides the screen, so a toolbar and its popover never sit across the crease, on iOS and Android.'
+---
+
+import { PostureShots } from '../../../components/PostureShots';
+
+# Controls beside the fold
+
+A toolbar that floats over content shouldn't sit across the fold. When a device is held like a book, its buttons would straddle the crease, and in tabletop posture a popover that opens upward would climb over it. Keep floating controls to one side of a fold the system divides at.
+
+This example floats a toolbar over a canvas, and opens a popover of colors from it. The full example is in the [example app](https://github.com/thiagobrez/react-native-arrangement-view/tree/main/apps/example-expo/src/examples/fold-controls).
+
+## Observe the screen
+
+A [`SystemLayoutObserver`](../api/system-layout-observer) reports the folds in the view that contains it, in that view's coordinates. Mount it in the screen, around the controls that read it:
+
+```tsx
+import { View } from 'react-native';
+import { SystemLayoutObserver } from 'react-native-arrangement-view';
+
+const TOOLBAR_HEIGHT = 56;
+
+export function FoldControls() {
+  return (
+    <View style={{ flex: 1 }}>
+      <SystemLayoutObserver barExtents={{ bottom: TOOLBAR_HEIGHT }}>
+        <Canvas />
+        <Controls />
+      </SystemLayoutObserver>
+    </View>
+  );
+}
+```
+
+`barExtents` asks iOS where it floats a bar as tall as the toolbar, so the toolbar sits level with the system's own bars.
+
+## Keep the controls on one side
+
+Find the folds the system divides at. A vertical one, in book posture, ends the toolbar on its left. A horizontal one, in tabletop posture, is a ceiling for the popover:
+
+```tsx
+import {
+  useSystemLayout,
+  type SystemLayout,
+} from 'react-native-arrangement-view';
+
+function controlsArea(layout: SystemLayout) {
+  const divisions = layout.folds.filter((fold) => fold.separating);
+  const book = divisions.find((fold) => fold.orientation === 'vertical');
+  const tabletop = divisions.find((fold) => fold.orientation === 'horizontal');
+  return {
+    left: layout.safeArea.left + MARGIN,
+    right: book
+      ? layout.width - book.x + MARGIN
+      : layout.safeArea.right + MARGIN,
+    bottom: (layout.barInsets.bottom ?? layout.safeArea.bottom) + MARGIN,
+    top: tabletop
+      ? tabletop.y + tabletop.height + MARGIN
+      : layout.safeArea.top + MARGIN,
+  };
+}
+
+function Controls() {
+  const layout = useSystemLayout();
+  if (!layout) return null;
+  const { left, right, bottom, top } = controlsArea(layout);
+  const paletteBottom = bottom + TOOLBAR_HEIGHT + MARGIN;
+  return (
+    <>
+      <Palette
+        style={{
+          left,
+          bottom: paletteBottom,
+          maxHeight: layout.height - top - paletteBottom,
+        }}
+      />
+      <Toolbar style={{ left, right, bottom }} />
+    </>
+  );
+}
+```
+
+The palette is a `ScrollView`, so when a horizontal fold leaves it less room than its colors need, it scrolls instead of reaching over the crease. A fold that is flat doesn't divide the screen, so `separating` is false and the toolbar spans the whole width. The layout doesn't follow the hinge angle, so while the device folds, `Controls` renders again only when a fold starts or stops dividing the screen, not at every angle.
+
+## Screenshots
+
+| Posture   | iOS                                                     | Android                        |
+| --------- | ------------------------------------------------------- | ------------------------------ |
+| Closed    | The toolbar spans the outer display                     | The same, on the cover display |
+| Open flat | The toolbar spans both halves: the fold divides nothing | The same                       |
+| Book      | The toolbar ends before the fold, on the left half      | The same                       |
+| Tabletop  | The popover stays below the fold                        | The same                       |
+
+<PostureShots
+  publicFolder="examples/fold-controls"
+  postures={[
+    { file: 'closed', label: 'Closed' },
+    { file: 'open', label: 'Open' },
+    { file: 'book', label: 'Book' },
+    { file: 'tabletop', label: 'Tabletop' },
+  ]}
+/>
