@@ -53,8 +53,6 @@ For those, we provide `HingeWindows`:
 
 A window is found only when a `HingeObserver` or an `ArrangementView` in it receives a hinge from iOS, which needs iOS 27.1 and a device with a hinge. Elsewhere, `hasHinge(_:)` returns `false` and the notification never comes.
 
-What the app does with a hinge is up to the app. The usual use is rotation.
-
 ### Let a window with a hinge rotate
 
 An app that keeps phones in portrait can let a window rotate once it has a hinge. iOS asks the app delegate which orientations each window allows. The answer comes from `hasHinge(_:)`, and the notification makes iOS ask again.
