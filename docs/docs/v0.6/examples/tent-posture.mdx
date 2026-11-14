@@ -1,5 +1,5 @@
 ---
-description: Detect tent posture on the iPhone Duo foldable in React Native from the hinge angle and the window's height, then hide the header and home indicator for full-screen content.
+description: Detect tent posture on the iPhone Duo foldable in React Native from the hinge angle and the system layout, then hide the header and home indicator for full-screen content.
 tag: ios
 ---
 
@@ -7,24 +7,26 @@ import { PostureShots } from '../../../components/PostureShots';
 
 # Tent posture
 
-Stood up as a tent, with the inner display folded inwards, iPhone Duo keeps the app on the outer display, in landscape. iOS has no tent state. [`useHingeChange`](../api/use-hinge-change) reports the angle the hinge is open at, around 81°, but its status lags behind the angle: a tent reached from closed reads `closed`, and one reached from open reads `partiallyOpen`. So don't look for a status. What makes a tent is the hinge being open while the app is on the outer display, which in landscape is a window with a compact height:
+Stood up as a tent, with the inner display folded inwards, iPhone Duo keeps the app on the outer display, in landscape. iOS has no tent state. What makes a tent is the hinge being open while the app is on the outer display, in landscape. [`useSystemLayout`](../api/system-layout-observer) tells the displays apart: it reports the inner display's fold in every posture, flat included, and no fold runs through the outer one:
 
 ```tsx
-import { useWindowDimensions } from 'react-native';
-import { useHingeChange } from 'react-native-arrangement-view';
+import { useHingeChange, useSystemLayout } from 'react-native-arrangement-view';
 
 function Primary() {
   const hinge = useHingeChange();
-  const { height } = useWindowDimensions();
-  // Open past 30° (0.5 rad), yet in a window under 480 pt tall, a compact
-  // height: the outer display, in landscape. The inner one is never that short.
-  const tent = (hinge?.angle ?? 0) > 0.5 && height < 480;
+  const layout = useSystemLayout();
+  // Open past 30° (0.5 rad), yet on a display with no fold, and wider than
+  // tall: the outer display, in landscape.
+  const tent =
+    (hinge?.angle ?? 0) > 0.5 &&
+    layout?.folds.length === 0 &&
+    layout.width > layout.height;
 
   return tent ? <TentView /> : <NormalPrimary />;
 }
 ```
 
-This follows Apple's guidance for iPhone Duo: there is no system pose, so infer one from the hinge angle, the orientation and the size class together, and keep the hinge for interactions and effects while the arrangement does the layout. Both thresholds are heuristics. Apple does not guarantee the precision or update rate of `angle`, so check the behavior on hardware.
+This follows Apple's guidance for iPhone Duo: there is no system pose, so infer one from the hinge angle, the orientation and the window's traits together, and keep the hinge for interactions and effects while the arrangement does the layout. The 0.5 rad threshold is a heuristic. Apple does not guarantee the precision or update rate of `angle`, so check the behavior on hardware.
 
 Android has no tent posture either. A Pixel foldable hands over to its inner display as soon as it is open a little way, about 30° on the emulator, and from there WindowManager reports a half-open fold, which `ArrangementView` splits across. So the check above is true on Android only for a moment, with the cover display outwards.
 
@@ -32,13 +34,14 @@ Android has no tent posture either. A Pixel foldable hands over to its inner dis
 
 Usually in Tent posture, we want a fullscreen without distractions. Use the tent state to hide the navigation header, auto-hide the home indicator, and remove safe areas.
 
-The header and the safe area belong to the screen, which is outside the panes. Mount a [`HingeObserver`](../api/hinge-observer) above your navigator, and the screen can read the hinge itself. [`useHingeSelector`](../api/use-hinge-selector) keeps it from rendering again at every angle on the way:
+The header and the safe area belong to the screen, which is outside the panes. Mount a [`HingeObserver`](../api/hinge-observer) and a [`SystemLayoutObserver`](../api/system-layout-observer) above your navigator, and the screen can read the hinge and the layout itself. [`useHingeSelector`](../api/use-hinge-selector) keeps it from rendering again at every angle on the way:
 
 ```tsx
 function Screen() {
   const open = useHingeSelector((hinge) => (hinge.angle ?? 0) > 0.5) ?? false;
-  const { height } = useWindowDimensions();
-  const tent = open && height < 480;
+  const layout = useSystemLayout();
+  const tent =
+    open && layout?.folds.length === 0 && layout.width > layout.height;
 
   const navigation = useNavigation();
   useLayoutEffect(() => {
