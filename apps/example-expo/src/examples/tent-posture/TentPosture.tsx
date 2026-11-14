@@ -1,10 +1,5 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
-import {
-  Animated,
-  StyleSheet,
-  useAnimatedValue,
-  useWindowDimensions,
-} from 'react-native';
+import { Animated, StyleSheet, useAnimatedValue } from 'react-native';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -13,6 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import {
   ArrangementView,
   useHingeSelector,
+  useSystemLayout,
 } from 'react-native-arrangement-view';
 import { AlarmSettings } from './AlarmSettings';
 import { ClockFace } from './ClockFace';
@@ -20,7 +16,6 @@ import { ClockFace } from './ClockFace';
 const PREVIEW_LEAD_SECONDS = 8;
 const PREVIEW_GLOW_SECONDS = 15;
 const HINGE_OPEN_RADIANS = 0.5;
-const COMPACT_HEIGHT = 480;
 
 export function TentPosture() {
   const [alarm, setAlarm] = useState(() => new Date(2026, 0, 1, 6, 30));
@@ -82,15 +77,14 @@ export function TentPosture() {
   );
 }
 
-// iOS has no tent posture, and the hinge's status lags behind its angle, so a
-// tent reads `closed` when reached from closed and `partiallyOpen` when
-// reached from open.
 function useTentPosture() {
   const hingeOpen =
     useHingeSelector((hinge) => (hinge.angle ?? 0) > HINGE_OPEN_RADIANS) ??
     false;
-  const outerDisplayInLandscape = useWindowDimensions().height < COMPACT_HEIGHT;
-  return hingeOpen && outerDisplayInLandscape;
+  const layout = useSystemLayout();
+  const onOuterDisplay = layout?.folds.length === 0;
+  const landscape = !!layout && layout.width > layout.height;
+  return hingeOpen && onOuterDisplay && landscape;
 }
 
 function useSymmetricSafeArea() {
