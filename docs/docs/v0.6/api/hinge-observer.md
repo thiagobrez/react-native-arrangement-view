@@ -44,7 +44,9 @@ The hooks return `null` until the [first report](./use-hinge-change#when-the-fir
 
 ## React to a hinge in native code on iOS
 
-Some decisions about a window are made in native code, at a moment that can't wait for JavaScript. For those, the library's pod has a Swift class, `HingeWindows`. A `HingeObserver` or an `ArrangementView` adds its window to `HingeWindows` when it finds a hinge there, before its report reaches JavaScript.
+Some decisions about a window are made in native code, at a moment that we can't wait for JavaScript. For example, automatically setting the app orientation based on whether the device has a hinge.
+
+For those, we provide `HingeWindows`:
 
 - `HingeWindows.didFindHingeNotification` is posted on the main thread the first time a window is found to have a hinge. The notification's `object` is the `UIWindow`.
 - `HingeWindows.hasHinge(_:)` returns whether a window has been found to have a hinge. Once true, it stays true.
