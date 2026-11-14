@@ -32,8 +32,56 @@ export default function App() {
 
 function Camera() {
   const hinge = useHingeChange();
-  return hinge.status === 'partiallyOpen' ? <TabletopCamera /> : <FullCamera />;
+  return hinge?.status === 'partiallyOpen' ? (
+    <TabletopCamera />
+  ) : (
+    <FullCamera />
+  );
 }
 ```
 
-When running below iOS 27.1, building with an older SDK, or on unsupported platforms, the hinge state remains unavailable.
+The hooks return `null` until the [first report](./use-hinge-change#when-the-first-report-comes). Below iOS 27.1, when the app is built with an older SDK, and on platforms other than iOS and Android, the first report says there is no hinge.
+
+## React to a hinge in native code on iOS
+
+Some decisions about a window are made in native code, at a moment that we can't wait for JavaScript. For example, automatically setting the app orientation based on whether the device has a hinge.
+
+For those, we provide `HingeWindows`:
+
+- `HingeWindows.didFindHingeNotification` is posted on the main thread the first time a window is found to have a hinge. The notification's `object` is the `UIWindow`.
+- `HingeWindows.hasHinge(_:)` returns whether a window has been found to have a hinge. Once true, it stays true.
+
+A window is found only when a `HingeObserver` or an `ArrangementView` in it receives a hinge from iOS, which needs iOS 27.1 and a device with a hinge. Elsewhere, `hasHinge(_:)` returns `false` and the notification never comes.
+
+### Let a window with a hinge rotate
+
+An app that keeps phones in portrait can let a window rotate once it has a hinge. iOS asks the app delegate which orientations each window allows. The answer comes from `hasHinge(_:)`, and the notification makes iOS ask again.
+
+The [example app](https://github.com/thiagobrez/react-native-arrangement-view/tree/main/apps/example-expo/modules/hinge-rotation) does this in an Expo app delegate subscriber:
+
+```swift
+import ArrangementView
+import ExpoModulesCore
+import UIKit
+
+public final class HingeRotationSubscriber: ExpoAppDelegateSubscriber {
+  public func subscriberDidRegister() {
+    NotificationCenter.default.addObserver(
+      forName: HingeWindows.didFindHingeNotification, object: nil, queue: nil
+    ) { notification in
+      (notification.object as? UIWindow)?.rootViewController?
+        .setNeedsUpdateOfSupportedInterfaceOrientations()
+    }
+  }
+
+  public func application(
+    _ application: UIApplication,
+    supportedInterfaceOrientationsFor window: UIWindow?
+  ) -> UIInterfaceOrientationMask {
+    guard UIDevice.current.userInterfaceIdiom == .phone else { return .all }
+    return window.map(HingeWindows.hasHinge) == true ? .allButUpsideDown : .portrait
+  }
+}
+```
+
+The module's `expo-module.config.json` lists the subscriber under `apple.appDelegateSubscribers`, and its podspec depends on `ArrangementView`. In an app with its own `AppDelegate`, add the observer in `application(_:didFinishLaunchingWithOptions:)` and the orientation method to the delegate.

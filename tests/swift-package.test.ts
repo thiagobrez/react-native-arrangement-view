@@ -30,3 +30,15 @@ test("Objective-C++ in ios/ doesn't import the generated Swift header", () => {
     );
   }
 });
+
+test('ios/include/ArrangementView.h imports every protocol in ios/include/', () => {
+  const include = new URL('include/', ios);
+  const umbrella = readFileSync(new URL('ArrangementView.h', include), 'utf8');
+  for (const header of readdirSync(include)) {
+    if (header === 'ArrangementView.h') continue;
+    assert.ok(
+      umbrella.includes(`#import "${header}"`),
+      `ArrangementView.h must import ${header}: Swift's generated header reaches the protocols its classes conform to through it`
+    );
+  }
+});

@@ -24,6 +24,8 @@ function Screen() {
 
 Like [`useHingeChange`](./use-hinge-change), call it inside a [`HingeObserver`](./hinge-observer) or a pane of an [`ArrangementView`](./arrangement-view).
 
+The hook returns `null` until the platform [first reports](./use-hinge-change#when-the-first-report-comes) the hinge, and calls the selector only with a report. A selector that returns `null` itself reads the same as no report yet.
+
 The selector returns a string, a number, a boolean, `null` or `undefined`. Do not return an object, as it would never compare equal to the last one, breaking the optimization.
 
 ```tsx

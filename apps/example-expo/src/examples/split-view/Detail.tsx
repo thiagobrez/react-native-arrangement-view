@@ -28,8 +28,8 @@ export function Detail({ trail }: { trail: Trail }) {
 
 function Overview({ trail }: { trail: Trail }) {
   const hinge = useHingeChange();
-  const degrees =
-    hinge.angle === null ? null : Math.round((hinge.angle * 180) / Math.PI);
+  const angle = hinge?.angle ?? null;
+  const degrees = angle === null ? null : Math.round((angle * 180) / Math.PI);
   return (
     <Measured id="overview" style={{ backgroundColor: trail.color }}>
       <Text style={styles.region}>{trail.region}</Text>
@@ -46,7 +46,7 @@ function Overview({ trail }: { trail: Trail }) {
         />
       </View>
       <Text testID="overview-hinge-status" style={styles.caption}>
-        {hinge.status}
+        {hinge?.status}
       </Text>
     </Measured>
   );

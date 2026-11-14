@@ -6,10 +6,9 @@ import {
 } from 'react-native-arrangement-view';
 
 function Hinge() {
-  const hinge: HingeState = useHingeChange(() => {});
-  return (
-    <Text>{hinge.angle === null ? 'No hinge' : `${hinge.angle} rad`}</Text>
-  );
+  const hinge: HingeState | null = useHingeChange(() => {});
+  const angle = hinge?.angle ?? null;
+  return <Text>{angle === null ? 'No hinge' : `${angle} rad`}</Text>;
 }
 
 export default function App() {

@@ -9,6 +9,11 @@ using namespace facebook::react;
 #define RAV_SDK_HAS_HINGE_INTERACTION 1
 #endif
 
+// RNHingeWindows is Swift and keeps registerWindow: internal to the library.
+@protocol RNHingeWindowsRegistration
++ (void)registerWindow:(UIWindow *)window;
+@end
+
 @implementation RNHingeObserver {
   std::optional<RNHingeObserverEventEmitter::OnHingeChange> _sentHinge;
   NSUInteger _updates;
@@ -33,6 +38,10 @@ using namespace facebook::react;
           [strongSelf reportNoHingeUnlessLeavingWindow:current];
           return;
         }
+        if (strongSelf.window) {
+          Class<RNHingeWindowsRegistration> windows = NSClassFromString(@"RNHingeWindows");
+          [windows registerWindow:strongSelf.window];
+        }
         std::string status = "unknown";
         switch (hinge.status) {
           case UIHingeStatusClosed: status = "closed"; break;
@@ -46,6 +55,25 @@ using namespace facebook::react;
 #endif
   }
   return self;
+}
+- (void)didMoveToWindow {
+  [super didMoveToWindow];
+  if (!self.window || _sentHinge) return;
+#ifdef RAV_SDK_HAS_HINGE_INTERACTION
+  if (@available(iOS 27.1, *)) {
+    [self reportNoHingeIfSilentSince:_updates];
+    return;
+  }
+#endif
+  [self emitIfChanged:{false, 0, "unknown"}];
+}
+// UIKit sends hinge updates only where there is a hinge.
+- (void)reportNoHingeIfSilentSince:(NSUInteger)update {
+  __weak RNHingeObserver *weakSelf = self;
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 250 * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
+    RNHingeObserver *view = weakSelf;
+    if (view.window && view->_updates == update) [view emitIfChanged:{false, 0, "unknown"}];
+  });
 }
 - (void)reportNoHingeUnlessLeavingWindow:(NSUInteger)update {
   // The interaction reports no hinge before the view leaves its window, so decide after the move.

@@ -54,6 +54,8 @@ internal class HingeTracker(
     if (activity != null) {
       windowInfo.addWindowLayoutInfoListener(
         activity, ContextCompat.getMainExecutor(reactContext), windowLayoutListener)
+    } else if (sensor == null) {
+      emitHinge()
     }
   }
 
