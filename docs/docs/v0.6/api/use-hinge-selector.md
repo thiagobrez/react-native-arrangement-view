@@ -32,13 +32,3 @@ The selector returns a string, a number, a boolean, `null` or `undefined`. Do no
 const available = useHingeSelector((hinge) => hinge.available);
 const status = useHingeSelector((hinge) => hinge.status);
 ```
-
-## Migrate from 0.5
-
-In 0.5, the hook called the selector with the unavailable state until the first report. Where the result must be a boolean, give the `null` a value:
-
-```diff
-- const tabletop = useHingeSelector((hinge) => hinge.status === 'partiallyOpen');
-+ const tabletop =
-+   useHingeSelector((hinge) => hinge.status === 'partiallyOpen') ?? false;
-```
