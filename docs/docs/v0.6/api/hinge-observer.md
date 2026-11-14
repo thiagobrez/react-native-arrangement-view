@@ -51,7 +51,7 @@ For those, we provide `HingeWindows`:
 - `HingeWindows.didFindHingeNotification` is posted on the main thread the first time a window is found to have a hinge. The notification's `object` is the `UIWindow`.
 - `HingeWindows.hasHinge(_:)` returns whether a window has been found to have a hinge. Once true, it stays true.
 
-A window is found only when a `HingeObserver` or an `ArrangementView` in it receives a hinge from iOS, which needs iOS 27.1, the iOS 27.1 SDK and a device with a hinge. Elsewhere, `hasHinge(_:)` returns `false` and the notification never comes.
+A window is found only when a `HingeObserver` or an `ArrangementView` in it receives a hinge from iOS, which needs iOS 27.1 and a device with a hinge. Elsewhere, `hasHinge(_:)` returns `false` and the notification never comes.
 
 What the app does with a hinge is up to the app. The usual use is rotation.
 
