@@ -1,0 +1,169 @@
+---
+description: SystemLayoutObserver reports what a foldable reserves in a React Native view, such as the fold, a camera cutout and the safe area, in that view's own coordinates, on iOS and Android.
+---
+
+import { PlatformBadge } from '../../../components/PlatformBadge';
+
+# SystemLayoutObserver
+
+Reports what the system reserves in a view: the folds that run through it, the parts a camera or a sensor housing covers, its safe area, and the traits that decide how to lay out around them. Every rect is in the view's own coordinates, so you can place content beside a fold without measuring anything.
+
+```tsx
+import { View } from 'react-native';
+import {
+  SystemLayoutObserver,
+  useSystemLayout,
+  type SystemLayout,
+} from 'react-native-arrangement-view';
+
+export function Book() {
+  return (
+    <View style={{ flex: 1 }}>
+      <SystemLayoutObserver>
+        <Spread />
+      </SystemLayoutObserver>
+    </View>
+  );
+}
+
+const bookFold = (layout: SystemLayout) =>
+  layout.folds.find(
+    (fold) => fold.separating && fold.orientation === 'vertical'
+  ) ?? null;
+
+function Spread() {
+  const layout = useSystemLayout();
+  const fold = layout && bookFold(layout);
+  return fold ? <TwoPages leftWidth={fold.x} gap={fold.width} /> : <OnePage />;
+}
+```
+
+The [Controls beside the fold](../examples/fold-controls) example keeps a toolbar and its popover on one side of the fold.
+
+## Mount it in the view you want observed
+
+The observer fills its parent with a hidden native view, behind its children, so it reports the parent's box. It takes no space and no touches, and puts no view around its children.
+
+Mount one wherever you need a view's coordinates: the whole screen, one column of a split view, or a row that opens menus. A view that doesn't contain the fold reports none.
+
+## Read the layout
+
+Inside the observer, `useSystemLayout()` returns the layout of the nearest observer above the component. It returns `null` before the observer's first report, and outside any observer. The component renders again for each new layout, never for a report equal to the last.
+
+A new layout keeps every part that didn't change. A `Fold`, `layout.folds` or `layout.safeArea` stays the same object until one of its values changes, so it works as a `useMemo` dependency or as a prop of a `memo` component.
+
+The component that renders the observer is above it, so it reads the layout through `onSystemLayoutChange`:
+
+```tsx
+const [layout, setLayout] = useState<SystemLayout | null>(null);
+
+return (
+  <View style={{ flex: 1 }}>
+    <SystemLayoutObserver onSystemLayoutChange={setLayout} />
+    <Content layout={layout} />
+  </View>
+);
+```
+
+`onSystemLayoutChange` gets each new layout, starting from the first. It never gets one equal to the last.
+
+## When the first report arrives
+
+On iOS, the observer reports as soon as its view is in a window and has a size. On Android, it reports once WindowManager has given the window's layout.
+
+## Props
+
+| Prop                                                         | Default | Meaning                                                                  |
+| ------------------------------------------------------------ | ------- | ------------------------------------------------------------------------ |
+| `children`                                                   | none    | Content that reads the layout with `useSystemLayout`                     |
+| `onSystemLayoutChange`                                       | none    | Called with each new [`SystemLayout`](#systemlayout)                     |
+| [`barExtents`](#barextents) <PlatformBadge platform="ios" /> | none    | The extent of a bar on the bottom edge, to report `barInsets.bottom` for |
+
+### `barExtents` <PlatformBadge platform="ios" />
+
+`{ bottom?: number }`, iOS 27.1 and later.
+
+The extent in points of a bar you float on the bottom edge. The layout's `barInsets.bottom` then says how far from that edge UIKit floats a bar of that extent, so your bar sits level with the system's own. It's how far the window's `edgeInsets(for: .bar(onEdge: .bottom, extent:))` reaches into the view, so a view that ends above the system's bar reads `0`.
+
+```tsx
+<SystemLayoutObserver barExtents={{ bottom: 48 }}>
+  <BottomControls />
+</SystemLayoutObserver>;
+
+function BottomControls() {
+  const layout = useSystemLayout();
+  const bottom = layout?.barInsets.bottom ?? layout?.safeArea.bottom ?? 0;
+  return <Toolbar style={{ position: 'absolute', bottom }} />;
+}
+```
+
+## SystemLayout
+
+```ts
+type SystemLayout = {
+  width: number;
+  height: number;
+  safeArea: { top: number; right: number; bottom: number; left: number };
+  folds: Fold[];
+  occlusions: { x: number; y: number; width: number; height: number }[];
+  horizontalSizeClass: 'compact' | 'regular' | null;
+  verticalBarEdge: 'leading' | 'trailing' | null;
+  barInsets: { bottom?: number };
+};
+```
+
+Values are in points on iOS and dp on Android, in the observed view's coordinates.
+
+| Field                 | iOS                                                                                                                         | Android                                                                  |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `width`, `height`     | The view's size                                                                                                             | The same                                                                 |
+| `safeArea`            | The view's safe area insets                                                                                                 | The window's system bars and display cutout, where they overlap the view |
+| `folds`               | Division regions, active or not, iOS 27.1 and later                                                                         | WindowManager's folding features                                         |
+| `occlusions`          | Active occlusion regions, such as the iPhone Duo's sensor housing, iOS 27.1 and later                                       | The display cutout                                                       |
+| `horizontalSizeClass` | The view's horizontal size class                                                                                            | `null`                                                                   |
+| `verticalBarEdge`     | The edge where the system places its vertical bar, whether or not one shows, iOS 27.1 and later. `null` where it never does | `null`                                                                   |
+| `barInsets`           | `bottom` when [`barExtents`](#barextents) has one, iOS 27.1 and later                                                       | Empty                                                                    |
+
+Folds and occlusions keep the order the platform lists them in. Each is the part inside the view, and one that covers less than a pixel of it isn't reported. That leaves out a band that only touches the view's edge, and one beside the view that starts between two pixels and overlaps it by part of one, as the iPhone Duo's division can.
+
+## Fold
+
+```ts
+type Fold = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  window: { x: number; y: number; width: number; height: number };
+  orientation: 'vertical' | 'horizontal';
+  separating: boolean;
+  state: 'flat' | 'halfOpen' | null;
+};
+```
+
+- `x`, `y`, `width` and `height` are the part of the fold inside the view, in the view's coordinates.
+- `window` is the whole fold, in the coordinates `measureInWindow` returns. Every observer in a window reports the same `window` for a fold.
+- `orientation` is `"vertical"` when the fold runs from top to bottom, as in book posture. It comes from the whole fold, so a fold clipped by a short view keeps its orientation.
+- `separating` is true while the system divides content at the fold. On iOS, the division region is active, which is when UIKit moves its own columns to it. On Android, it is `FoldingFeature.isSeparating`, which is true while a folding screen is half-open, and always true for a hinge between two screens.
+- `state` <PlatformBadge platform="android" /> is WindowManager's posture for the fold, `"flat"` or `"halfOpen"`. It is `null` on iOS, which gives a region no posture. Read the hinge's posture from [`HingeState.status`](./use-hinge-change#hingestate).
+
+### A fold in every posture
+
+The observer reports a fold in every posture the system lists it, flat included, and `separating` says when the system divides content there.
+
+| Situation                                        | iOS                                   | Android                                         |
+| ------------------------------------------------ | ------------------------------------- | ----------------------------------------------- |
+| Open flat, the view across the fold              | A fold, `separating: false`           | A fold, `separating: false`, `state: "flat"`    |
+| Half-open, the view across the fold              | A fold, `separating: true`            | A fold, `separating: true`, `state: "halfOpen"` |
+| Closed                                           | None: the app is on the outer display | None: the app is on the cover display           |
+| The view on one side of the fold, or touching it | None                                  | None                                            |
+
+The system decides when a fold starts to separate. On the iPhone Duo simulator, UIKit activates the division as soon as the hinge leaves 180°. On the Pixel 10 Pro Fold emulator, WindowManager calls the fold flat down to 150° and half-open from 145°, so a fold bent to 160° is still reported with `separating: false`.
+
+### Bands and lines
+
+On iOS, a fold is the band UIKit reserves for it, which includes the margins it keeps clear for touch on each side of the crease. The band is 40 pt wide on the iPhone Duo simulator. On Android, a folding screen's fold is a line, `0` wide or tall, reported while it runs a pixel or more inside the view. A hinge between two screens is the band it hides.
+
+## Reports come only on change
+
+Nothing in the layout follows the hinge angle, so a device that folds sends a report only when a fold appears, moves, or turns separating, or when the view's size, safe area or traits change. For the angle, the hinge's posture, and whether there is a hinge, use a [`HingeObserver`](./hinge-observer).
