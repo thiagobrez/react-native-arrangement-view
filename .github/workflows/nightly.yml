@@ -140,7 +140,7 @@ jobs:
           claude_args: >-
             --model opus
             --permission-mode default
-            --allowedTools "Read,Edit,Write,Glob,Grep,Bash(yarn:*),Bash(git:*),Bash(gh pr:*),Bash(gh issue:*),Bash(gh label:*),Bash(node:*)"
+            --allowedTools "Read,Edit,Write,Glob,Grep,Bash(yarn:*),Bash(git:*),Bash(gh pr create:*),Bash(gh pr list:*),Bash(gh pr view:*),Bash(gh pr comment:*),Bash(gh issue create:*),Bash(gh issue list:*),Bash(gh issue view:*),Bash(gh issue comment:*),Bash(node:*)"
 
       - name: Show what the agent did
         if: ${{ !cancelled() }}
@@ -184,7 +184,7 @@ jobs:
           claude_args: >-
             --model opus
             --permission-mode default
-            --allowedTools "Read,Edit,Write,Glob,Grep,Bash(yarn:*),Bash(git:*),Bash(gh pr:*),Bash(gh issue:*),Bash(node:*)"
+            --allowedTools "Read,Edit,Write,Glob,Grep,Bash(yarn:*),Bash(git:*),Bash(gh pr create:*),Bash(gh pr list:*),Bash(gh pr view:*),Bash(gh pr comment:*),Bash(gh issue create:*),Bash(gh issue list:*),Bash(gh issue view:*),Bash(gh issue comment:*),Bash(node:*)"
 
       - name: Show what the agent did
         if: ${{ !cancelled() }}
