@@ -78,11 +78,11 @@ export function Sidebar({
 /** Its own component, so only this line renders again as the angle changes. */
 function HingeReading() {
   const hinge = useHingeChange();
-  const degrees =
-    hinge.angle === null ? null : Math.round((hinge.angle * 180) / Math.PI);
+  const angle = hinge?.angle ?? null;
+  const degrees = angle === null ? null : Math.round((angle * 180) / Math.PI);
   return (
     <Text testID="sidebar-hinge" style={styles.stateText}>
-      {degrees === null ? 'No hinge' : `Hinge ${degrees}° · ${hinge.status}`}
+      {degrees === null ? 'No hinge' : `Hinge ${degrees}° · ${hinge?.status}`}
     </Text>
   );
 }

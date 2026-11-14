@@ -86,9 +86,9 @@ export function TentPosture() {
 // tent reads `closed` when reached from closed and `partiallyOpen` when
 // reached from open.
 function useTentPosture() {
-  const hingeOpen = useHingeSelector(
-    (hinge) => (hinge.angle ?? 0) > HINGE_OPEN_RADIANS
-  );
+  const hingeOpen =
+    useHingeSelector((hinge) => (hinge.angle ?? 0) > HINGE_OPEN_RADIANS) ??
+    false;
   const outerDisplayInLandscape = useWindowDimensions().height < COMPACT_HEIGHT;
   return hingeOpen && outerDisplayInLandscape;
 }
