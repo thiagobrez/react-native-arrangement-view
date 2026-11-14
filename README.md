@@ -17,6 +17,8 @@ yarn add react-native-arrangement-view
 cd ios && pod install
 ```
 
+An app set up for React Native's experimental Swift Package Manager support (0.88 or later) links it with `cd ios && npx react-native spm` instead of `pod install`.
+
 > Expo Go is not supported. Use a development build (`npx expo run:ios`, `npx expo run:android`).
 
 ## Quick Start

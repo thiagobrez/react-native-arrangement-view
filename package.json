@@ -133,6 +133,9 @@
       ]
     ]
   },
+  "swiftpmConfig": {
+    "name": "ArrangementView"
+  },
   "codegenConfig": {
     "name": "RNArrangementViewSpec",
     "type": "components",
