@@ -40,6 +40,7 @@
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "build": "bob build",
     "test": "node --test tests/*.test.ts",
+    "budgets": "node --no-warnings --import ./tests/budgets/loader.ts --test tests/budgets/*.test.ts",
     "verify:arrange": "node --no-warnings tests/properties/arrange.check.ts",
     "verify:arrange:mutants": "node --no-warnings tests/properties/arrange.mutants.ts",
     "version-packages": "changeset version && yarn install --no-immutable",
