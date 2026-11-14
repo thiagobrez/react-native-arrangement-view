@@ -1,5 +1,4 @@
 #import "RNHingeObserver.h"
-#import "ArrangementView-Swift.h"
 #import <optional>
 #import <react/renderer/components/RNArrangementViewSpec/ComponentDescriptors.h>
 #import <react/renderer/components/RNArrangementViewSpec/EventEmitters.h>
@@ -10,8 +9,8 @@ using namespace facebook::react;
 #define RAV_SDK_HAS_HINGE_INTERACTION 1
 #endif
 
-// Internal to the library, so the generated Swift header leaves it out.
-@interface RNHingeWindows (Registration)
+// RNHingeWindows is Swift and keeps registerWindow: internal to the library.
+@protocol RNHingeWindowsRegistration
 + (void)registerWindow:(UIWindow *)window;
 @end
 
@@ -39,7 +38,10 @@ using namespace facebook::react;
           [strongSelf reportNoHingeUnlessLeavingWindow:current];
           return;
         }
-        if (strongSelf.window) [RNHingeWindows registerWindow:strongSelf.window];
+        if (strongSelf.window) {
+          Class<RNHingeWindowsRegistration> windows = NSClassFromString(@"RNHingeWindows");
+          [windows registerWindow:strongSelf.window];
+        }
         std::string status = "unknown";
         switch (hinge.status) {
           case UIHingeStatusClosed: status = "closed"; break;

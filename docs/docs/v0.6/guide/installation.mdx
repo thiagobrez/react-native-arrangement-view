@@ -8,10 +8,16 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 
 <PackageManagerTabs command="install react-native-arrangement-view" />
 
-Then install the iOS pods:
+Then link it on iOS with CocoaPods:
 
 ```sh
 cd ios && pod install
+```
+
+Or, in an app set up for React Native's [experimental Swift Package Manager support](https://reactnative.dev/blog/2026/10/19/react-native-0.88#experimental-swift-package-manager-support) (0.88 or later), link it with Swift Package Manager instead. The library ships its own `Package.swift`, which autolinking picks up:
+
+```sh
+cd ios && npx react-native spm
 ```
 
 :::warning
@@ -21,7 +27,8 @@ Expo Go is not supported. Use a development build (`npx expo run:ios`, `npx expo
 ## Requirements
 
 - React 19 or later
-- React Native 0.83 or later
+- React Native 0.83 or later, or 0.88 or later to link with Swift Package Manager
+- An iOS deployment target of 16.4 or later
 - On iOS, the native arrangement needs iOS 27.1 and the iOS 27.1 SDK. Older versions use the [fallback](./how-panes-are-arranged#fallback).
 
 ## Usage
