@@ -17,9 +17,25 @@ private final class ArrangementModel: ObservableObject {
   private var sentHinge: (Bool, Double, String)?
 
   func sendHingeIfChanged(_ available: Bool, _ angle: Double, _ status: String) {
+    if available, let window = host?.window { HingeWindows.register(window) }
     if let sentHinge, sentHinge == (available, angle, status) { return }
     sentHinge = (available, angle, status)
     hingeChanged?(available, angle, status)
+  }
+
+  func reportNoHingeIfSilent() {
+    guard sentHinge == nil else { return }
+#if canImport(SwiftUICore, _version: 8.0.85)
+    if #available(iOS 27.1, *) {
+      // SwiftUI reports the hinge only where there is one.
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
+        guard let self, host?.window != nil, sentHinge == nil else { return }
+        sendHingeIfChanged(false, 0, "unknown")
+      }
+      return
+    }
+#endif
+    sendHingeIfChanged(false, 0, "unknown")
   }
 
   func schedulePanesReport() {
@@ -237,7 +253,12 @@ public final class RNArrangementHost: UIView {
   }
   public override func didMoveToWindow() {
     super.didMoveToWindow()
-    if window == nil { detachController() } else { attachController() }
+    if window == nil {
+      detachController()
+    } else {
+      attachController()
+      model.reportNoHingeIfSilent()
+    }
   }
   private func attachController() {
     guard window != nil else { return }

@@ -7,6 +7,7 @@ import {
   HingeContext,
   normalizeHinge,
   unavailableHinge,
+  unavailableHingeStore,
   useHingeChange,
   useHingeSelector,
   useHingeStore,
@@ -53,7 +54,7 @@ test('independent arrangements do not leak events, and unsubscribe stops deliver
   first.update(open);
   first.update({ ...open });
   assert.equal(notifications, 1);
-  assert.equal(second.getSnapshot(), unavailableHinge);
+  assert.equal(second.getSnapshot(), null);
   unsubscribe();
   first.update(unavailableHinge);
   assert.equal(notifications, 1);
@@ -65,7 +66,7 @@ test('hook receives changes, uses the latest callback, and cleans up on unmount'
   const second: HingeState[] = [];
   function Probe({ callback }: { callback: (hinge: HingeState) => void }) {
     const hinge = useHingeChange(callback);
-    return createElement('div', null, hinge.status);
+    return createElement('div', null, hinge?.status);
   }
   const render = (callback: (hinge: HingeState) => void) =>
     createElement(
@@ -76,6 +77,10 @@ test('hook receives changes, uses the latest callback, and cleans up on unmount'
   let root!: ReactTestRenderer;
   await act(() => {
     root = create(render((hinge) => first.push(hinge)));
+  });
+  assert.deepEqual(first, []);
+  await act(() => {
+    store.update(unavailableHinge);
   });
   assert.deepEqual(first, [unavailableHinge]);
   await act(() => {
@@ -106,7 +111,7 @@ test('an arrangement feeds native events to its store, and keeps it across rende
     root = create(createElement(Arrangement));
   });
   const initialStore = store;
-  assert.equal(store.getSnapshot(), unavailableHinge);
+  assert.equal(store.getSnapshot(), null);
 
   const nativeEvent = { available: true, angle: Math.PI, status: 'fullyOpen' };
   onHingeChange({ nativeEvent });
@@ -123,7 +128,7 @@ test('the hook reads the nearest observer, and needs one', async () => {
   const outer = createHingeStore();
   const inner = createHingeStore();
   function Probe() {
-    return createElement('div', null, useHingeChange().status);
+    return createElement('div', null, useHingeChange()?.status ?? 'none');
   }
   let root!: ReactTestRenderer;
   await act(() => {
@@ -138,7 +143,7 @@ test('the hook reads the nearest observer, and needs one', async () => {
   await act(() => {
     outer.update({ available: true, angle: Math.PI, status: 'fullyOpen' });
   });
-  assert.equal(root.root.findByType('div').children[0], 'unknown');
+  assert.equal(root.root.findByType('div').children[0], 'none');
   await act(() => {
     inner.update({ available: true, angle: 1.5, status: 'partiallyOpen' });
   });
@@ -186,4 +191,69 @@ test('a selector renders again only when its value changes', async () => {
   });
   assert.equal(renders, 3);
   assert.equal(root.root.findByType('div').children[0], 'false');
+});
+
+test('the hooks return null until the first report, without calling onChange or the selector', async () => {
+  const reports: HingeState[] = [];
+  const selected: HingeState[] = [];
+  let hinge: HingeState | null | undefined;
+  let halfOpen: boolean | null | undefined;
+  let onHingeChange!: ReturnType<typeof useHingeStore>[1];
+  function Probe() {
+    hinge = useHingeChange((next) => reports.push(next));
+    halfOpen = useHingeSelector((next) => {
+      selected.push(next);
+      return next.status === 'partiallyOpen';
+    });
+    return null;
+  }
+  function Arrangement() {
+    const [store, onChange] = useHingeStore();
+    onHingeChange = onChange;
+    return createElement(HingeContext, { value: store }, createElement(Probe));
+  }
+  await act(() => {
+    create(createElement(Arrangement));
+  });
+  assert.equal(hinge, null);
+  assert.equal(halfOpen, null);
+  assert.deepEqual(reports, []);
+  assert.deepEqual(selected, []);
+
+  const halfOpenHinge = {
+    available: true,
+    angle: 1.5,
+    status: 'partiallyOpen',
+  } as const;
+  await act(() => {
+    onHingeChange({ nativeEvent: halfOpenHinge });
+  });
+  assert.deepEqual(hinge, halfOpenHinge);
+  assert.equal(halfOpen, true);
+  assert.deepEqual(reports, [halfOpenHinge]);
+  assert.ok(selected.length > 0);
+  for (const report of selected) assert.deepEqual(report, halfOpenHinge);
+});
+
+test('where no native view reports, as on web, the hooks start at unavailableHinge', async () => {
+  const reports: HingeState[] = [];
+  let hinge: HingeState | null | undefined;
+  let available: boolean | null | undefined;
+  function Probe() {
+    hinge = useHingeChange((next) => reports.push(next));
+    available = useHingeSelector((next) => next.available);
+    return null;
+  }
+  await act(() => {
+    create(
+      createElement(
+        HingeContext,
+        { value: unavailableHingeStore },
+        createElement(Probe)
+      )
+    );
+  });
+  assert.equal(hinge, unavailableHinge);
+  assert.equal(available, false);
+  assert.deepEqual(reports, [unavailableHinge]);
 });
