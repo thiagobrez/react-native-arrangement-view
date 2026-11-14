@@ -162,7 +162,12 @@ function hasMarks(
 
 /** The probe's logcat tag. adb honours ANDROID_SERIAL, which picks the device when more than one is connected. */
 const probeLog = {
-  clear: () => adb('logcat', '-c'),
+  clear: () => {
+    // The CI emulator logs enough to roll the default 256 KB buffer over
+    // within a minute, taking a scenario's early lines with it.
+    adb('logcat', '-G', '16M');
+    adb('logcat', '-c');
+  },
   write: (line: string) => adb('shell', 'log', '-t', 'RAVFRAMES', line),
   read: () => adb('logcat', '-d', '-v', 'raw', '-s', 'RAVFRAMES:I'),
 };
