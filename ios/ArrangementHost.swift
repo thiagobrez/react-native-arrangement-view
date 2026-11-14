@@ -1,5 +1,8 @@
 import SwiftUI
 import Combine
+#if SWIFT_PACKAGE
+import ArrangementViewFabric
+#endif
 
 private final class ArrangementModel: ObservableObject {
   @Published var primary: UIView?
@@ -191,7 +194,7 @@ private struct ArrangementContent: View {
 }
 
 @objc(RNArrangementHost)
-public final class RNArrangementHost: UIView {
+public final class RNArrangementHost: UIView, RNArrangementHosting {
   private let model = ArrangementModel()
   private var controller: UIHostingController<ArrangementContent>!
 
