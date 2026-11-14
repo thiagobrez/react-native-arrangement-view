@@ -3,9 +3,14 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
   SystemLayoutObserver,
   useSystemLayout,
+  type FoldThreshold,
   type SystemLayout,
 } from 'react-native-arrangement-view';
 
+const FOLD_THRESHOLD: FoldThreshold = {
+  halfOpenAtDegrees: 170,
+  flatAtDegrees: 175,
+};
 const TOOLBAR_HEIGHT = 56;
 const PALETTE_WIDTH = 220;
 const MARGIN = 12;
@@ -26,7 +31,10 @@ export function FoldControls() {
 
   return (
     <View style={styles.screen}>
-      <SystemLayoutObserver barExtents={{ bottom: TOOLBAR_HEIGHT }}>
+      <SystemLayoutObserver
+        barExtents={{ bottom: TOOLBAR_HEIGHT }}
+        foldThreshold={FOLD_THRESHOLD}
+      >
         <View style={[styles.canvas, { backgroundColor: color }]} />
         <Controls
           color={color}
@@ -101,7 +109,9 @@ function Controls(props: {
 }
 
 function controlsArea(layout: SystemLayout) {
-  const divisions = layout.folds.filter((fold) => fold.separating);
+  const divisions = layout.folds.filter(
+    (fold) => fold.separating || fold.state === 'halfOpen'
+  );
   const book = divisions.find((fold) => fold.orientation === 'vertical');
   const tabletop = divisions.find((fold) => fold.orientation === 'horizontal');
   return {

@@ -16,14 +16,24 @@ A [`SystemLayoutObserver`](../api/system-layout-observer) reports the folds in t
 
 ```tsx
 import { View } from 'react-native';
-import { SystemLayoutObserver } from 'react-native-arrangement-view';
+import {
+  SystemLayoutObserver,
+  type FoldThreshold,
+} from 'react-native-arrangement-view';
 
+const FOLD_THRESHOLD: FoldThreshold = {
+  halfOpenAtDegrees: 170,
+  flatAtDegrees: 175,
+};
 const TOOLBAR_HEIGHT = 56;
 
 export function FoldControls() {
   return (
     <View style={{ flex: 1 }}>
-      <SystemLayoutObserver barExtents={{ bottom: TOOLBAR_HEIGHT }}>
+      <SystemLayoutObserver
+        barExtents={{ bottom: TOOLBAR_HEIGHT }}
+        foldThreshold={FOLD_THRESHOLD}
+      >
         <Canvas />
         <Controls />
       </SystemLayoutObserver>
@@ -32,11 +42,11 @@ export function FoldControls() {
 }
 ```
 
-`barExtents` asks iOS where it floats a bar as tall as the toolbar, so the toolbar sits level with the system's own bars.
+`barExtents` asks iOS where it floats a bar as tall as the toolbar, so the toolbar sits level with the system's own bars. `foldThreshold` decides each fold's `state` on Android by the hinge angle. A fold reads `"halfOpen"` from 170°, and `"flat"` again from 175°.
 
 ## Keep the controls on one side
 
-Find the folds the system divides at. A vertical one, in book posture, ends the toolbar on its left. A horizontal one, in tabletop posture, is a ceiling for the popover:
+Find the folds that divide the screen. Those are the folds the system separates content at, and on Android, the folds bent past the threshold. A vertical one, in book posture, ends the toolbar on its left. A horizontal one, in tabletop posture, is a ceiling for the popover:
 
 ```tsx
 import {
@@ -45,7 +55,9 @@ import {
 } from 'react-native-arrangement-view';
 
 function controlsArea(layout: SystemLayout) {
-  const divisions = layout.folds.filter((fold) => fold.separating);
+  const divisions = layout.folds.filter(
+    (fold) => fold.separating || fold.state === 'halfOpen'
+  );
   const book = divisions.find((fold) => fold.orientation === 'vertical');
   const tabletop = divisions.find((fold) => fold.orientation === 'horizontal');
   return {
@@ -80,7 +92,7 @@ function Controls() {
 }
 ```
 
-The palette is a `ScrollView`, so when a horizontal fold leaves it less room than its colors need, it scrolls instead of reaching over the crease. A fold that is flat doesn't divide the screen, so `separating` is false and the toolbar spans the whole width. The layout doesn't follow the hinge angle, so while the device folds, `Controls` renders again only when a fold starts or stops dividing the screen, not at every angle.
+The palette is a `ScrollView`, so when a horizontal fold leaves it less room than its colors need, it scrolls instead of reaching over the crease. A fold that is flat doesn't divide the screen, so `separating` is false and the toolbar spans the whole width. On Android, WindowManager separates content at the fold only below 150°, but the threshold moves the toolbar aside from 170°. The layout doesn't follow the hinge angle, so while the device folds, `Controls` renders again only when a fold's `separating` or `state` changes, not at every angle.
 
 ## Screenshots
 

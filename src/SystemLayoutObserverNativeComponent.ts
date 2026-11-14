@@ -44,6 +44,8 @@ export type SystemLayoutEvent = Readonly<{
 
 export interface NativeProps extends ViewProps {
   barExtentBottom?: CodegenTypes.WithDefault<CodegenTypes.Double, -1>;
+  halfOpenAtDegrees?: CodegenTypes.WithDefault<CodegenTypes.Double, -1>;
+  flatAtDegrees?: CodegenTypes.WithDefault<CodegenTypes.Double, -1>;
   onSystemLayoutChange?: CodegenTypes.DirectEventHandler<SystemLayoutEvent>;
 }
 

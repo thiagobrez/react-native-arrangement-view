@@ -13,6 +13,7 @@ export type {
   ArrangementViewProps,
   Fold,
   FoldState,
+  FoldThreshold,
   HingeChangeHandler,
   HingeObserverProps,
   HingePolicy,
