@@ -1,0 +1,191 @@
+name: Nightly QA
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      charters:
+        description: Charters to explore. Empty for tonight's rotation, "all", or charter ids separated by commas
+        type: string
+        default: ''
+      max_steps:
+        description: Exploration steps per charter
+        type: number
+        default: 8
+  # A dry run of the whole pipeline when a pull request changes it.
+  pull_request:
+    paths:
+      - .github/workflows/nightly.yml
+      - .github/nightly/**
+      - .github/actions/build-android-example/**
+      - .github/actions/foldable-emulator/**
+      - apps/example-expo/qa/**
+      - apps/example-expo/e2e.config.ts
+      - docs/review-page.ts
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || 'nightly' }}
+
+permissions:
+  contents: read
+
+env:
+  DRY_RUN: ${{ github.event_name == 'pull_request' }}
+  RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+jobs:
+  explore:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-26.04
+    timeout-minutes: 150
+
+    outputs:
+      confirmed: ${{ steps.report.outputs.confirmed }}
+
+    steps:
+      - name: Check the model key
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::error::Add the ANTHROPIC_API_KEY repository secret, which the explorer's model reads."
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Test the QA pipeline
+        run: yarn example qa:test
+
+      - name: Build Android example
+        id: build
+        uses: ./.github/actions/build-android-example
+
+      - name: Explore the example app on a Pixel 10 Pro Fold emulator
+        uses: ./.github/actions/foldable-emulator
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          E2E_TELEMETRY_DISABLED: '1'
+          QA_CHARTERS: ${{ inputs.charters }}
+          QA_COUNT: ${{ github.event_name == 'pull_request' && '1' || '2' }}
+          QA_MAX_STEPS: ${{ github.event_name == 'pull_request' && '3' || inputs.max_steps || '8' }}
+        with:
+          apk: ${{ steps.build.outputs.apk }}
+          script: yarn example qa:explore --target android --charters "$QA_CHARTERS" --count "$QA_COUNT" --max-steps "$QA_MAX_STEPS"
+
+      - name: Read the report
+        id: report
+        if: ${{ !cancelled() && hashFiles('apps/example-expo/.e2e/qa/report.json') != '' }}
+        working-directory: apps/example-expo/.e2e/qa
+        run: |
+          cat summary.md >> "$GITHUB_STEP_SUMMARY"
+          echo "confirmed=$(node -p "require('./report.json').confirmed")" >> "$GITHUB_OUTPUT"
+
+      - name: Upload results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: nightly-qa-android
+          path: apps/example-expo/.e2e
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14
+
+  # A dry run starts the agent even with nothing confirmed, to check its setup.
+  fix:
+    needs: explore
+    if: ${{ !cancelled() && needs.explore.outputs.confirmed != '' && (fromJSON(needs.explore.outputs.confirmed || '0') > 0 || github.event_name == 'pull_request') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    # The agent writes with the Claude GitHub App's token, which it gets
+    # through OIDC, so its pull requests run CI. A dry run passes this job's
+    # read-only GITHUB_TOKEN instead.
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Download results
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: nightly-qa-android
+          path: apps/example-expo/.e2e
+
+      - name: Fix the confirmed bugs
+        uses: anthropics/claude-code-action@f3b070c88125d33dbae5653df5f143101d4ea9dc # v1.0.276
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ env.DRY_RUN == 'true' && github.token || '' }}
+          prompt: |
+            Read .github/nightly/fix.md and follow it.
+
+            REPORT=apps/example-expo/.e2e/qa/report.json
+            RUN_URL=${{ env.RUN_URL }}
+            DRY_RUN=${{ env.DRY_RUN }}
+          claude_args: >-
+            --model opus
+            --permission-mode default
+            --allowedTools "Read,Edit,Write,Glob,Grep,Bash(yarn:*),Bash(git:*),Bash(gh pr:*),Bash(gh issue:*),Bash(gh label:*),Bash(node:*)"
+
+      - name: Show what the agent did
+        if: ${{ !cancelled() }}
+        run: cat .nightly/fix-summary.md >> "$GITHUB_STEP_SUMMARY" || echo "The agent wrote no summary." >> "$GITHUB_STEP_SUMMARY"
+
+  docs:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Pick tonight's page
+        id: page
+        run: echo "path=$(node docs/review-page.ts)" >> "$GITHUB_OUTPUT"
+
+      - name: Review the page
+        uses: anthropics/claude-code-action@f3b070c88125d33dbae5653df5f143101d4ea9dc # v1.0.276
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ env.DRY_RUN == 'true' && github.token || '' }}
+          prompt: |
+            Read .github/nightly/docs.md and follow it.
+
+            PAGE=${{ steps.page.outputs.path }}
+            RUN_URL=${{ env.RUN_URL }}
+            DRY_RUN=${{ env.DRY_RUN }}
+          claude_args: >-
+            --model opus
+            --permission-mode default
+            --allowedTools "Read,Edit,Write,Glob,Grep,Bash(yarn:*),Bash(git:*),Bash(gh pr:*),Bash(gh issue:*),Bash(node:*)"
+
+      - name: Show what the agent did
+        if: ${{ !cancelled() }}
+        run: cat .nightly/docs-summary.md >> "$GITHUB_STEP_SUMMARY" || echo "The agent wrote no summary." >> "$GITHUB_STEP_SUMMARY"

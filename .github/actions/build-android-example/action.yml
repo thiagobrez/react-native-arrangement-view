@@ -1,0 +1,45 @@
+name: Build Android example
+description: Build the example app's Release APK for the x86_64 e2e emulator, with the JavaScript bundled, and upload it as the example-android artifact
+
+outputs:
+  apk:
+    description: Path to the APK
+    value: apps/example-expo/android/app/build/outputs/apk/release/app-release.apk
+
+runs:
+  using: composite
+  steps:
+    - name: Install JDK
+      uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+
+    - name: Finalize Android SDK
+      shell: bash
+      run: |
+        /bin/bash -c "yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null"
+
+    - name: Prebuild expo app for Android
+      shell: bash
+      run: |
+        yarn example expo prebuild --platform android
+
+    - name: Build Release APK for the x86_64 e2e emulator, with the JS bundled
+      shell: bash
+      working-directory: apps/example-expo/android
+      env:
+        JAVA_OPTS: '-XX:MaxHeapSize=6g'
+      run: |
+        ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 --build-cache --no-daemon --console=plain
+
+    - name: Upload APK
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: example-android
+        path: apps/example-expo/android/app/build/outputs/apk/release/app-release.apk
+        if-no-files-found: error
+        retention-days: 7
