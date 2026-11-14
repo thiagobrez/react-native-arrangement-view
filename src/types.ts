@@ -29,10 +29,32 @@ export type Rect = Readonly<{
   height: number;
 }>;
 /**
- * WindowManager's posture for a fold, `FoldingFeature.State`, which is `FLAT`
- * or `HALF_OPENED`. Android only.
+ * A fold's posture on Android. It is WindowManager's `FoldingFeature.State`,
+ * `FLAT` or `HALF_OPENED`, or the hinge angle's under a `FoldThreshold`.
  */
 export type FoldState = 'flat' | 'halfOpen';
+/**
+ * Android only. Decides a fold's `state` by the hinge angle, in degrees,
+ * instead of by WindowManager's posture. A fold turns `halfOpen` once the
+ * angle is at or below `halfOpenAtDegrees`, and `flat` again once it is at or
+ * above `flatAtDegrees`. Between the two it keeps its state, so a hinge that
+ * rests near one of them doesn't flip the layout back and forth.
+ *
+ * The window keeps one history per threshold, so every observer in it with
+ * the same threshold reports the same state. A history starts at `flat` and
+ * takes the latest angle at once, or the hinge angle sensor's first reading.
+ * It starts over when the fold turns between vertical and horizontal, when
+ * the window loses its fold, and when the window's last observer with the
+ * threshold leaves it, as when the observer unmounts. On a device without a
+ * hinge angle sensor, `state` stays WindowManager's.
+ *
+ * Requires `0 < halfOpenAtDegrees < flatAtDegrees <= 180`. An invalid
+ * threshold throws when the observer renders, on iOS too.
+ */
+export type FoldThreshold = Readonly<{
+  halfOpenAtDegrees: number;
+  flatAtDegrees: number;
+}>;
 /**
  * A fold that runs through the observing view, in every posture the system
  * reports it. On Android it is flat or half-open, on iOS an inactive or active
@@ -63,9 +85,9 @@ export type Fold = Readonly<{
    */
   separating: boolean;
   /**
-   * Android: WindowManager's posture for the fold. iOS: always `null`, since
-   * UIKit gives a region no posture. The hinge's posture is
-   * `HingeState.status`.
+   * Android: WindowManager's posture for the fold, or the hinge angle's when
+   * the observer has a `foldThreshold`. iOS: always `null`, since UIKit gives a
+   * region no posture. The hinge's posture is `HingeState.status`.
    */
   state: FoldState | null;
 }>;
@@ -125,6 +147,8 @@ export interface SystemLayoutObserverProps {
   onSystemLayoutChange?: SystemLayoutHandler;
   /** iOS 27.1 and later. The extent in points of a bar on the bottom edge, to report `barInsets.bottom` for. */
   barExtents?: Readonly<{ bottom?: number }>;
+  /** Android only. Decides each fold's `state` by the hinge angle. iOS only validates it. */
+  foldThreshold?: FoldThreshold;
 }
 export type ArrangementLayout = Readonly<{
   /** The secondary pane is on screen: beside the primary, or behind it in overlay. */

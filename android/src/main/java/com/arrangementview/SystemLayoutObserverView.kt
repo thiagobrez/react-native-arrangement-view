@@ -14,6 +14,9 @@ import com.facebook.react.uimanager.ThemedReactContext
 class SystemLayoutObserverView(private val reactContext: ThemedReactContext) :
   View(reactContext), WindowFolds.Listener {
 
+  internal var stagedHalfOpenAtDegrees = -1.0
+  internal var stagedFlatAtDegrees = -1.0
+  private var threshold: FoldThreshold? = null
   private var folds: WindowFolds? = null
   private var reported: Report? = null
 
@@ -37,10 +40,21 @@ class SystemLayoutObserverView(private val reactContext: ThemedReactContext) :
 
   override fun onWindowFoldsChanged() = report()
 
+  fun onPropsUpdated() {
+    val next =
+      if (stagedHalfOpenAtDegrees < 0) null
+      else FoldThreshold(stagedHalfOpenAtDegrees, stagedFlatAtDegrees)
+    if (next == threshold) return
+    threshold = next
+    folds?.setThreshold(this, next)
+    report()
+  }
+
   private fun report() {
-    val features = subscribedFolds()?.features ?: return
+    val folds = subscribedFolds() ?: return
+    val features = folds.features ?: return
     if (width == 0 || height == 0) return
-    val report = measureInDp(features)
+    val report = measureInDp(folds, features)
     if (report == reported) return
     reported = report
     dispatchReactEvent(reactContext, EVENT, report.toEvent())
@@ -51,12 +65,12 @@ class SystemLayoutObserverView(private val reactContext: ThemedReactContext) :
     val activity = reactContext.currentActivity ?: return null
     if (!isAttachedToWindow) return null
     return WindowFolds.of(activity).also {
-      it.subscribe(this)
+      it.subscribe(this, threshold)
       folds = it
     }
   }
 
-  private fun measureInDp(features: List<FoldingFeature>): Report {
+  private fun measureInDp(folds: WindowFolds, features: List<FoldingFeature>): Report {
     val density = resources.displayMetrics.density
     val location = IntArray(2).also { getLocationInWindow(it) }
     val window = rootView
@@ -93,7 +107,7 @@ class SystemLayoutObserverView(private val reactContext: ThemedReactContext) :
                 bounds.width() / density,
                 bounds.height() / density),
             separating = feature.isSeparating,
-            state = if (feature.state == FoldingFeature.State.HALF_OPENED) "halfOpen" else "flat")
+            state = folds.state(feature, threshold))
         },
       occlusions =
         insets?.displayCutout?.boundingRects.orEmpty().map { rect ->
