@@ -5,12 +5,60 @@ __metadata:
   version: 8
   cacheKey: 10c0
 
+"@ai-sdk/anthropic@npm:^4.0.105":
+  version: 4.0.105
+  resolution: "@ai-sdk/anthropic@npm:4.0.105"
+  dependencies:
+    "@ai-sdk/provider": "npm:4.0.38"
+    "@ai-sdk/provider-utils": "npm:5.0.81"
+  peerDependencies:
+    zod: ^3.25.76 || ^4.1.8
+  checksum: 10c0/e6ef998110dcc84260c9c48717bf875afef6cf52d2b50fb14045ae77194a87dc3d58e20f27fa8dd8d97ce8cd13cf4f24048c41fdc8c3501516f2d8e7cb01eb22
+  languageName: node
+  linkType: hard
+
+"@ai-sdk/gateway@npm:4.0.146":
+  version: 4.0.146
+  resolution: "@ai-sdk/gateway@npm:4.0.146"
+  dependencies:
+    "@ai-sdk/provider": "npm:4.0.38"
+    "@ai-sdk/provider-utils": "npm:5.0.81"
+    "@vercel/oidc": "npm:3.2.0"
+  peerDependencies:
+    zod: ^3.25.76 || ^4.1.8
+  checksum: 10c0/05bccedf939a2617bdc5613efce78d7dc723735d405299545190a33027c7d3bf8984210c9032808ea4d532faec5f8ccaaf90d8c166a2bd0260773bb53bb5b4e0
+  languageName: node
+  linkType: hard
+
+"@ai-sdk/provider-utils@npm:5.0.81":
+  version: 5.0.81
+  resolution: "@ai-sdk/provider-utils@npm:5.0.81"
+  dependencies:
+    "@ai-sdk/provider": "npm:4.0.38"
+    "@standard-schema/spec": "npm:^1.1.0"
+    "@workflow/serde": "npm:4.1.0"
+    eventsource-parser: "npm:^3.0.8"
+  peerDependencies:
+    zod: ^3.25.76 || ^4.1.8
+  checksum: 10c0/ebf4e8f3e17b19e520c74a999520bbd80d6ec0cc87aaf9ba2fea6131b07926ed399a2381a4a9b159999788a287f550ba29e402138dd9874f31cc348bee487421
+  languageName: node
+  linkType: hard
+
 "@ai-sdk/provider@npm:4.0.37":
   version: 4.0.37
   resolution: "@ai-sdk/provider@npm:4.0.37"
   dependencies:
     json-schema: "npm:^0.4.0"
   checksum: 10c0/22f8a0478fbd987f68fb7698363386c9683efb4078c01f9b72dd63183fe45db3bbac84d15e4bfe052ab5bd237a33f74ec674dd14f0daba5375c336030539ec1b
+  languageName: node
+  linkType: hard
+
+"@ai-sdk/provider@npm:4.0.38":
+  version: 4.0.38
+  resolution: "@ai-sdk/provider@npm:4.0.38"
+  dependencies:
+    json-schema: "npm:^0.4.0"
+  checksum: 10c0/700b56f31bbb1706f976a9c9cae7919d61559a64ea422d92971d4b23bea66e51a5dc344c8e58827b1425dda5a2fbe3d39e49ca12a9901d148e0b21daaa9c41a0
   languageName: node
   linkType: hard
 
@@ -4600,6 +4648,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@vercel/oidc@npm:3.2.0":
+  version: 3.2.0
+  resolution: "@vercel/oidc@npm:3.2.0"
+  checksum: 10c0/98318d3236f58c296616c8c2e1655b268c7bf58525bcd985adac7af6d900e05fc610f6f03ce2ff4bdcd3df7885a40c0ca44fdc761f122dcfe15a78c2756b0243
+  languageName: node
+  linkType: hard
+
 "@vitest/expect@npm:5.1.0":
   version: 5.1.0
   resolution: "@vitest/expect@npm:5.1.0"
@@ -4638,6 +4693,13 @@ __metadata:
     convert-source-map: "npm:^2.0.0"
     tinyrainbow: "npm:^3.2.0"
   checksum: 10c0/db100196981bae64afc0d5eeff93205da7394f58deb4eee8e7354159b582486667432e562b4f1270257190951067c5ad4bff5ac21c338b2049d62ba0af663adc
+  languageName: node
+  linkType: hard
+
+"@workflow/serde@npm:4.1.0":
+  version: 4.1.0
+  resolution: "@workflow/serde@npm:4.1.0"
+  checksum: 10c0/8ec68cd9448b486bc8244d1f2b33d64d4af4b0fc18d33417699ce29345b21e4359d880c5ea5d66872def4576c0cddcfa2a63282d1f4d661c455663c075595e81
   languageName: node
   linkType: hard
 
@@ -4738,6 +4800,19 @@ __metadata:
   bin:
     agent-device: bin/agent-device.mjs
   checksum: 10c0/d1ca2f54a00651b52c7bb3014d3f16f0558ba814cacc3a4fcd5e0046aa6fe95d6ef1a87b653266e9c950e74c224a5141ae113fdd24c19bb08f5fd769760198c3
+  languageName: node
+  linkType: hard
+
+"ai@npm:^7.0.173":
+  version: 7.0.173
+  resolution: "ai@npm:7.0.173"
+  dependencies:
+    "@ai-sdk/gateway": "npm:4.0.146"
+    "@ai-sdk/provider": "npm:4.0.38"
+    "@ai-sdk/provider-utils": "npm:5.0.81"
+  peerDependencies:
+    zod: ^3.25.76 || ^4.1.8
+  checksum: 10c0/cd5689efc444f432c875b7256fada1a37a6270358de37d3fe6053b750ffd7a093f77149ba3443c41288b360d08e188da3ce5c6f9601ce3be11bb2615e1c71ebc
   languageName: node
   linkType: hard
 
@@ -6812,10 +6887,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"eventsource-parser@npm:^3.0.8":
+  version: 3.1.1
+  resolution: "eventsource-parser@npm:3.1.1"
+  checksum: 10c0/dd3236c61140587253dcaaf947de528ac0e7371caffdc53c77afaeee36a17661f00e251a6ea16af56c99be5ac138303e67b5d750630e7c41b02e3564e8ad8c44
+  languageName: node
+  linkType: hard
+
 "example-expo@workspace:apps/example-expo":
   version: 0.0.0-use.local
   resolution: "example-expo@workspace:apps/example-expo"
   dependencies:
+    "@ai-sdk/anthropic": "npm:^4.0.105"
     "@bottom-tabs/react-navigation": "npm:^1.4.0"
     "@e2e-dev/mobile": "npm:^0.12.7"
     "@expo/metro-runtime": "npm:~57.0.16"
@@ -6823,6 +6906,7 @@ __metadata:
     "@react-native-vector-icons/material-design-icons": "npm:^13.1.4"
     "@react-navigation/native": "npm:^7.4.1"
     "@react-navigation/native-stack": "npm:^7.19.2"
+    ai: "npm:^7.0.173"
     e2e: "npm:^0.23.1"
     expo: "npm:~57.0.24"
     expo-build-properties: "npm:~57.0.21"
@@ -6838,6 +6922,7 @@ __metadata:
     react-native-safe-area-context: "npm:~5.7.0"
     react-native-screens: "npm:~4.26.0"
     react-native-web: "npm:~0.21.0"
+    zod: "npm:^4.6.7"
   languageName: unknown
   linkType: soft
 
@@ -13600,7 +13685,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:4.6.7":
+"zod@npm:4.6.7, zod@npm:^4.6.7":
   version: 4.6.7
   resolution: "zod@npm:4.6.7"
   checksum: 10c0/4ce2eb14034317b7254e347ca37b5ad591cf8333147030cf05b9b5d31692d45073f7f2747aa50cf8c6b29012194d2b22978cecc89969cf34a0d18e89d0ee7d7b
