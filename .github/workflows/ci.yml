@@ -235,6 +235,7 @@ jobs:
 
   # Installs the tarball from build-library into a fresh Expo app outside the
   # monorepo, as an end user would, so nothing resolves through the workspace or src/.
+  # On iOS it builds the app with CocoaPods, then again with Swift Package Manager.
   consumer:
     name: consumer (${{ matrix.platform }})
     needs: build-library
@@ -325,6 +326,30 @@ jobs:
         working-directory: ${{ env.APP_DIR }}
         run: |
           xcodebuild -workspace ios/consumer.xcworkspace -scheme consumer -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build ONLY_ACTIVE_ARCH=YES -quiet
+
+      # Expo's prebuild moves the same app from CocoaPods to Swift Package Manager.
+      # Its SwiftPM build resolves expo-constants from the app root, where npm
+      # doesn't put it.
+      - name: Switch iOS to Swift Package Manager
+        if: matrix.platform == 'ios'
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          npx expo install expo-constants
+          node -e "
+            const fs = require('fs');
+            const config = JSON.parse(fs.readFileSync('app.json'));
+            config.expo.experiments = { ...config.expo.experiments, swiftPackageManager: true };
+            fs.writeFileSync('app.json', JSON.stringify(config, null, 2));
+          "
+          npx expo prebuild --platform ios
+
+      # Expo's macros don't build against Xcode's prebuilt swift-syntax, and CI
+      # can't approve package macros or plugins interactively.
+      - name: Build for iOS with Swift Package Manager
+        if: matrix.platform == 'ios'
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          xcodebuild -project ios/consumer.xcodeproj -scheme consumer -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build-spm ONLY_ACTIVE_ARCH=YES -skipMacroValidation -skipPackagePluginValidation -IDEPackageEnablePrebuilts=NO -quiet
 
       - name: Build for Android
         if: matrix.platform == 'android'
