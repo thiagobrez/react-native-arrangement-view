@@ -14,7 +14,12 @@
 
 ```sh
 yarn add react-native-arrangement-view
+
+# if using CocoaPods
 cd ios && pod install
+
+# if using Experimental Swift Package Manager support
+cd ios && npx react-native spm
 ```
 
 > Expo Go is not supported. Use a development build (`npx expo run:ios`, `npx expo run:android`).

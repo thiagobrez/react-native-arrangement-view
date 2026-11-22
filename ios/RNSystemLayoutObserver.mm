@@ -1,5 +1,5 @@
 #import "RNSystemLayoutObserver.h"
-#import "ArrangementView-Swift.h"
+#import "RNSystemLayoutReading.h"
 #import <react/renderer/components/RNArrangementViewSpec/ComponentDescriptors.h>
 #import <react/renderer/components/RNArrangementViewSpec/EventEmitters.h>
 #import <react/renderer/components/RNArrangementViewSpec/Props.h>
@@ -37,7 +37,7 @@ static Emitter::OnSystemLayoutChange RNSystemLayoutEvent(NSDictionary *layout) {
 }
 
 @implementation RNSystemLayoutObserver {
-  RNSystemLayoutReader *_reader;
+  NSObject<RNSystemLayoutReading> *_reader;
 }
 + (ComponentDescriptorProvider)componentDescriptorProvider {
   return concreteComponentDescriptorProvider<RNSystemLayoutObserverComponentDescriptor>();
@@ -46,7 +46,7 @@ static Emitter::OnSystemLayoutChange RNSystemLayoutEvent(NSDictionary *layout) {
 - (instancetype)initWithFrame:(CGRect)frame {
   if (self = [super initWithFrame:frame]) {
     _props = std::make_shared<const RNSystemLayoutObserverProps>();
-    _reader = [[RNSystemLayoutReader alloc] initWithView:self];
+    _reader = [[NSClassFromString(@"RNSystemLayoutReader") alloc] initWithView:self];
     __weak RNSystemLayoutObserver *weakSelf = self;
     _reader.onLayoutChange = ^(NSDictionary *layout) {
       RNSystemLayoutObserver *strongSelf = weakSelf;

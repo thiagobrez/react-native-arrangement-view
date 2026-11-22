@@ -1,13 +1,13 @@
 #import "RNArrangementView.h"
 #import "RNArrangementPane.h"
-#import "ArrangementView-Swift.h"
+#import "RNArrangementHosting.h"
 #import <react/renderer/components/RNArrangementViewSpec/ComponentDescriptors.h>
 #import <react/renderer/components/RNArrangementViewSpec/EventEmitters.h>
 #import <react/renderer/components/RNArrangementViewSpec/Props.h>
 using namespace facebook::react;
 
 @implementation RNArrangementView {
-  RNArrangementHost *_host;
+  UIView<RNArrangementHosting> *_host;
   NSMutableArray<UIView *> *_panes;
 }
 + (ComponentDescriptorProvider)componentDescriptorProvider {
@@ -18,7 +18,7 @@ using namespace facebook::react;
   if (self = [super initWithFrame:frame]) {
     _props = std::make_shared<const RNArrangementViewProps>();
     _panes = [NSMutableArray new];
-    _host = [[RNArrangementHost alloc] initWithFrame:self.bounds];
+    _host = [[NSClassFromString(@"RNArrangementHost") alloc] initWithFrame:self.bounds];
     self.contentView = _host;
     __weak RNArrangementView *weakSelf = self;
     _host.onHingeChange = ^(BOOL available, double angle, NSString *status) {

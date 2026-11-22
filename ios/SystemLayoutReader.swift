@@ -1,8 +1,11 @@
 import UIKit
+#if SWIFT_PACKAGE
+import ArrangementViewFabric
+#endif
 
 @MainActor @objc(RNSystemLayoutReader)
-public final class RNSystemLayoutReader: NSObject {
-  @objc public var onLayoutChange: ((NSDictionary) -> Void)?
+public final class RNSystemLayoutReader: NSObject, RNSystemLayoutReading {
+  @objc public var onLayoutChange: (([AnyHashable: Any]) -> Void)?
   private weak var view: UIView?
   private var barExtentBottom: CGFloat = -1
   private var lastLayout: NSDictionary?
@@ -72,7 +75,7 @@ public final class RNSystemLayoutReader: NSObject {
       }
     }
     #endif
-    let layout: NSDictionary = [
+    let layout: [AnyHashable: Any] = [
       "width": view.bounds.width, "height": view.bounds.height,
       "foldsAreLines": false,
       "scale": view.traitCollection.displayScale,
@@ -86,8 +89,8 @@ public final class RNSystemLayoutReader: NSObject {
       "occlusions": occlusions,
       "barInsets": ["bottom": barInsetBottom],
     ]
-    guard lastLayout?.isEqual(layout) != true else { return }
-    lastLayout = layout
+    guard lastLayout?.isEqual(to: layout) != true else { return }
+    lastLayout = layout as NSDictionary
     onLayoutChange?(layout)
   }
 
