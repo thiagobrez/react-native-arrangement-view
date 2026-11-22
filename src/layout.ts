@@ -82,7 +82,9 @@ export const LayoutContext = createContext<ReturnType<
   typeof createLayoutStore
 > | null>(null);
 
-export function usePanesChange(store: ReturnType<typeof createLayoutStore>) {
+export function usePanesChange(
+  store: ReturnType<typeof createLayoutStore>
+): NonNullable<NativeProps['onPanesChange']> {
   return useCallback<NonNullable<NativeProps['onPanesChange']>>(
     ({ nativeEvent: { primary, secondary, secondaryVisible } }) =>
       store.update(
