@@ -344,12 +344,14 @@ jobs:
           npx expo prebuild --platform ios
 
       # Expo's macros don't build against Xcode's prebuilt swift-syntax, and CI
-      # can't approve package macros or plugins interactively.
+      # can't approve package macros or plugins interactively. Derived data stays
+      # under ios/build, which the fingerprint of expo-constants' Debug build
+      # phase skips; elsewhere in the app it hashes the build as it grows.
       - name: Build for iOS with Swift Package Manager
         if: matrix.platform == 'ios'
         working-directory: ${{ env.APP_DIR }}
         run: |
-          xcodebuild -project ios/consumer.xcodeproj -scheme consumer -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build-spm ONLY_ACTIVE_ARCH=YES -skipMacroValidation -skipPackagePluginValidation -IDEPackageEnablePrebuilts=NO -quiet
+          xcodebuild -project ios/consumer.xcodeproj -scheme consumer -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build/spm ONLY_ACTIVE_ARCH=YES -skipMacroValidation -skipPackagePluginValidation -IDEPackageEnablePrebuilts=NO -quiet
 
       - name: Build for Android
         if: matrix.platform == 'android'
