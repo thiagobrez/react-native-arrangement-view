@@ -1,9 +1,6 @@
 // swift-tools-version: 6.0
 import PackageDescription
 
-// React Native's autolinking references this package from
-// build/generated/autolinking/libs/ArrangementView in the app's ios folder,
-// and SwiftPM resolves the paths below from there.
 let swiftSources = ["ArrangementHost.swift", "HingeWindows.swift", "SystemLayoutReader.swift"]
 
 let package = Package(
