@@ -9,7 +9,6 @@ using namespace facebook::react;
 #define RAV_SDK_HAS_HINGE_INTERACTION 1
 #endif
 
-// RNHingeWindows is Swift and keeps registerWindow: internal to the library.
 @protocol RNHingeWindowsRegistration
 + (void)registerWindow:(UIWindow *)window;
 @end
